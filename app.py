@@ -74,6 +74,15 @@ css = """
         font-size: 24px;
         font-weight: bold;
         color: #FFFFFF;
+        display: flex;
+        align-items: center;
+    }
+    .gradient-text {
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
     }
     .buttons-container {
         display: flex;
@@ -83,9 +92,9 @@ css = """
         gap: 10px;
     }
     .stButton button {
-        background-color: rgba(123, 97, 255, 0.1);
+        background-color: rgba(30, 144, 255, 0.1);
         color: white;
-        border: 1px solid rgba(123, 97, 255, 0.3);
+        border: 1px solid rgba(147, 112, 219, 0.3);
         border-radius: 8px;
         padding: 12px 15px;
         text-align: center;
@@ -94,8 +103,8 @@ css = """
         font-weight: 500;
     }
     .stButton button:hover {
-        background-color: rgba(123, 97, 255, 0.3);
-        border: 1px solid rgba(123, 97, 255, 0.5);
+        background-color: rgba(30, 144, 255, 0.3);
+        border: 1px solid rgba(147, 112, 219, 0.5);
     }
     .chat-box {
         margin-top: 30px;
@@ -121,12 +130,12 @@ css = """
     }
     .stTextInput input {
         background-color: rgba(30, 30, 30, 0.6);
-        border: 1px solid rgba(123, 97, 255, 0.3);
+        border: 1px solid rgba(30, 144, 255, 0.3);
         border-radius: 8px;
         color: white;
     }
     .stTextInput input:focus {
-        border: 1px solid rgba(123, 97, 255, 0.8);
+        border: 1px solid rgba(147, 112, 219, 0.8);
     }
 </style>
 """
@@ -203,35 +212,25 @@ with col1:
         """, unsafe_allow_html=True)
 
 with col2:
-    # Check if avatar image exists and display it with the title
+    # Display avatar image with the title using the blue-to-purple gradient for text
     avatar_path = Path("assets/avatar.png")
     if avatar_path.exists():
         col_img, col_text = st.columns([1, 3])
         with col_img:
-            st.image("assets/avatar.png", width=100)
+            st.image("assets/avatar.png", width=120)
         with col_text:
-            st.markdown('<div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>', unsafe_allow_html=True)
+            st.markdown("""
+            <div class="avatar-title">
+                <span class="gradient-text">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        # Fallback to SVG cloud avatar
-        avatar_html = """
-        <div class="avatar-container">
-            <svg width="60" height="60" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="avatarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <!-- Cloud shape with sun -->
-                <circle cx="140" cy="60" r="30" fill="url(#avatarGradient)" opacity="0.9"/>
-                <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#avatarGradient)"/>
-                <!-- Sun rays -->
-                <path d="M140,20 L140,5 M170,35 L185,20 M175,60 L190,60 M170,85 L185,100" stroke="url(#avatarGradient)" stroke-width="4"/>
-            </svg>
-            <div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>
+        # Fallback to text only with gradient
+        st.markdown("""
+        <div class="avatar-title">
+            <span class="gradient-text">CECE: YOUR CLIMATE & WEATHER AGENT</span>
         </div>
-        """
-        st.markdown(avatar_html, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
