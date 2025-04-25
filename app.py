@@ -207,7 +207,6 @@ st.markdown("""
 <div style="position: absolute; top: 0; right: 0; width: 45%; min-width: 400px; height: 300px; z-index: 1; overflow: visible; pointer-events: none;">
     <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: cover; object-position: top right;">
     
-    <!-- Feedback button positioned within the topography image area but with pointer-events allowed -->
     <div style="position: absolute; top: 60px; right: 20px; z-index: 100; pointer-events: auto;">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
             background: linear-gradient(90deg, #1E90FF, #9370DB);
