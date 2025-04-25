@@ -20,32 +20,37 @@ huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY", "")
 openai_api_key = os.getenv("OPENAI_API_KEY", "")
 
 # Initialize LLM based on available API keys and configuration
-def get_llm(provider="DeepSeek-V3"):
+def get_llm(provider="OpenAI"):
     try:
-        if provider == "DeepSeek-V3" and huggingface_api_key:
-            # Try a different, more reliable model on Hugging Face
-            llm = HuggingFaceHub(
-                repo_id="mistralai/Mistral-7B-Instruct-v0.2",  # More reliable model
-                model_kwargs={"temperature": 0.7, "max_length": 512},
-                huggingfacehub_api_token=huggingface_api_key
-            )
-        elif provider == "OpenAI" and openai_api_key:
+        # Always try to use OpenAI first if the key is available
+        if openai_api_key:
+            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+            # do not change this unless explicitly requested by the user
             llm = ChatOpenAI(
-                model_name="gpt-3.5-turbo",
+                model_name="gpt-4o",  # Using the latest GPT-4o model
                 temperature=0.7,
                 openai_api_key=openai_api_key
             )
+            return llm
+        # Fall back to Hugging Face models if OpenAI key is not available
         elif huggingface_api_key:
-            # Default to a simpler, more reliable model if provider not recognized
-            llm = HuggingFaceHub(
-                repo_id="google/flan-t5-xl",  # Simpler, more reliable model
-                model_kwargs={"temperature": 0.7, "max_length": 512},
-                huggingfacehub_api_token=huggingface_api_key
-            )
+            if provider == "DeepSeek-V3":
+                # Try a different, more reliable model on Hugging Face
+                llm = HuggingFaceHub(
+                    repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+                    model_kwargs={"temperature": 0.7, "max_length": 512},
+                    huggingfacehub_api_token=huggingface_api_key
+                )
+            else:
+                # Default to a simpler, more reliable model
+                llm = HuggingFaceHub(
+                    repo_id="google/flan-t5-xl",
+                    model_kwargs={"temperature": 0.7, "max_length": 512},
+                    huggingfacehub_api_token=huggingface_api_key
+                )
+            return llm
         else:
-            raise ValueError("No valid API key found for the specified provider")
-        
-        return llm
+            raise ValueError("No valid API key found. Please provide either OpenAI or Hugging Face API key.")
     except Exception as e:
         st.error(f"Error initializing language model: {str(e)}")
         return None
@@ -110,21 +115,54 @@ def get_vector_store(df=None):
         # If no persistent store exists and no df provided, return None
         return None
 
-# Process a query using RAG or fallback to direct responses
+# Process a query using direct OpenAI response with fallback options
 def process_query(query, df=None):
     import time
-    import random
     
     # Add a timeout to avoid infinite waiting
     try:
-        # Check if LLM is available
+        # Check if OpenAI is available
+        if openai_api_key:
+            # Directly use OpenAI for the best experience
+            try:
+                from openai import OpenAI
+                
+                # Initialize the OpenAI client
+                client = OpenAI(api_key=openai_api_key)
+                
+                # System message to guide the AI
+                system_message = """
+                You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
+                You help users with climate data visualization, scientific calculations, and understanding weather patterns.
+                Your responses should be friendly, helpful, and focused on climate science.
+                """
+                
+                # Send the request to OpenAI
+                response = client.chat.completions.create(
+                    model="gpt-4o",  # Latest model for best results
+                    messages=[
+                        {"role": "system", "content": system_message},
+                        {"role": "user", "content": query}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                
+                # Return the response
+                return response.choices[0].message.content
+            
+            except Exception as e:
+                st.warning(f"OpenAI query failed: {str(e)}. Trying LangChain approach...")
+                # Continue to the LangChain approach if OpenAI direct call fails
+        
+        # Try the LangChain approach
         llm = get_llm()
         
         # If LLM is not available, use the fallback responses
         if llm is None:
             return get_fallback_response(query)
         
-        # Try to get or create vector store with a timeout
+        # Try to get or create vector store
         vectorstore = None
         try:
             vectorstore = get_vector_store(df)
@@ -152,7 +190,7 @@ def process_query(query, df=None):
                     "Base your responses on the provided context and your knowledge of climate science."
                 )
                 
-                # Run the query with a timeout
+                # Run the query
                 response = qa({"question": query, "system_prompt": system_prompt})
                 
                 return response["answer"]
