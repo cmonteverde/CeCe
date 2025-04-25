@@ -246,19 +246,17 @@ st.markdown("""
 <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px; margin-bottom: 30px;">
 """, unsafe_allow_html=True)
 
-# Use streamlit's native image function instead of HTML
-col1, col2, col3 = st.columns([2, 5, 2])
-
-with col2:
-    cols = st.columns([1, 2.5])
-    with cols[0]:
-        st.image("assets/avatar.png", width=150)
-    with cols[1]:
-        st.markdown("""
-        <div style="margin-top: 28px;">
+# Center the title area with a custom HTML/CSS layout
+st.markdown("""
+<div style="display: flex; justify-content: center; align-items: center; margin: 40px auto; width: 100%;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+        <img src="assets/avatar.png" width="150" style="border-radius: 50%; border: 3px solid #4B6EFF;" />
+        <div style="margin-left: 20px;">
             <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 </div>
