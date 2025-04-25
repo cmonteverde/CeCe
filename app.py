@@ -112,6 +112,66 @@ css = """
         padding: 15px;
         background-color: rgba(30, 30, 30, 0.6);
     }
+    
+    /* Enhanced Chat Interface */
+    .chat-message {
+        display: flex;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    
+    .user-message {
+        background-color: rgba(30, 144, 255, 0.1);
+        border-left: 3px solid #1E90FF;
+        margin-left: 40px;
+    }
+    
+    .assistant-message {
+        background-color: rgba(147, 112, 219, 0.1);
+        border-left: 3px solid #9370DB;
+        margin-right: 40px;
+    }
+    
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+    
+    .message-content {
+        flex: 1;
+    }
+    
+    .message-sender {
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: #e0e0e0;
+    }
+    
+    .message-text {
+        color: #ffffff;
+        line-height: 1.5;
+    }
+    
+    .thinking-status {
+        display: flex;
+        align-items: center;
+        font-style: italic;
+        color: #9370DB;
+        padding: 8px 12px;
+        margin-left: 40px;
+        font-size: 14px;
+    }
+    
+    .processing-steps {
+        font-size: 12px;
+        color: #1E90FF;
+        margin-top: 4px;
+        font-style: italic;
+    }
     .bg-container {
         position: fixed;
         top: 0;
@@ -229,6 +289,8 @@ if 'user_location' not in st.session_state:
     st.session_state.user_location = {"lat": 37.7749, "lon": -122.4194}  # Default to San Francisco
 if 'auth_status' not in st.session_state:
     st.session_state.auth_status = None
+if 'thinking' not in st.session_state:
+    st.session_state.thinking = False
 
 # Logo in left corner (smaller)
 st.markdown("""
@@ -297,67 +359,51 @@ with col5:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Main chat input
-st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
-user_input = st.text_input("", key="chat_input", placeholder="Type here!")
+# Display the chat history in a more visually appealing way
+st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 
-# Process user input
-if user_input:
-    # Add user message to chat history
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    
-    # Show a temporary loading message
-    with st.spinner("CeCe is thinking..."):
-        try:
-            import os
-            openai_api_key = os.getenv("OPENAI_API_KEY")
-            
-            # Direct OpenAI integration without using rag_query.py
-            if openai_api_key:
-                try:
-                    import openai
-                    
-                    # Initialize OpenAI client
-                    client = openai.OpenAI(api_key=openai_api_key)
-                    
-                    # System message for CeCe's identity
-                    system_message = """
-                    You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
-                    You help users with climate data visualization, scientific calculations, and understanding weather patterns.
-                    Your responses should be friendly, helpful, and focused on climate science.
-                    """
-                    
-                    # Make the API request with a timeout
-                    response = client.chat.completions.create(
-                        model="gpt-4o",  # Using the latest model
-                        messages=[
-                            {"role": "system", "content": system_message},
-                            {"role": "user", "content": user_input}
-                        ],
-                        temperature=0.7,
-                        max_tokens=500,
-                        timeout=10  # 10 second timeout
-                    )
-                    
-                    # Get the response content
-                    response_content = response.choices[0].message.content
-                    
-                except Exception as e:
-                    # If OpenAI fails, use fallback responses
-                    response_content = get_fallback_response(user_input)
-            else:
-                # No OpenAI API key, use fallback responses
-                response_content = get_fallback_response(user_input)
-                
-        except Exception as e:
-            # Something went wrong, provide an error message
-            response_content = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
-    
-    # Add the response to chat history
-    st.session_state.chat_history.append({"role": "assistant", "content": response_content})
-    
-    # Clear the input field and refresh the page
-    st.rerun()
+# Chat header
+st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
+
+# Display existing chat messages
+if st.session_state.chat_history:
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.markdown(f"""
+            <div class="chat-message user-message">
+                <div class="message-content">
+                    <div class="message-sender">You</div>
+                    <div class="message-text">{message["content"]}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="chat-message assistant-message">
+                <div class="message-content">
+                    <div class="message-sender">CeCe (Climate Copilot)</div>
+                    <div class="message-text">{message["content"]}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# Display thinking status if processing
+if "thinking" in st.session_state and st.session_state.thinking:
+    st.markdown("""
+    <div class="thinking-status">
+        <div>CeCe is thinking...</div>
+        <div class="processing-steps">
+            • Analyzing your question<br>
+            • Checking climate data sources<br>
+            • Preparing a helpful response
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Chat input
+user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
 
 # Fallback response function
 def get_fallback_response(query):
@@ -381,6 +427,74 @@ def get_fallback_response(query):
     
     # Default response if no specific topic is matched
     return "I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and perform scientific calculations. Try one of the preset buttons above, or ask me a specific question about climate or weather data!"
+
+# Process user input
+if user_input:
+    # Add user message to chat history
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    
+    # Set thinking status to true and display the "thinking" indicator
+    st.session_state.thinking = True
+    
+    # Rerun to show the thinking status immediately
+    st.rerun()
+
+# If we're in thinking mode, process the query and generate a response
+if st.session_state.thinking:
+    try:
+        import os
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        
+        # Direct OpenAI integration without using rag_query.py
+        if openai_api_key:
+            try:
+                import openai
+                
+                # Initialize OpenAI client
+                client = openai.OpenAI(api_key=openai_api_key)
+                
+                # System message for CeCe's identity
+                system_message = """
+                You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
+                You help users with climate data visualization, scientific calculations, and understanding weather patterns.
+                Your responses should be friendly, helpful, and focused on climate science.
+                Include specific details about what data sources you would check and what visualizations you could generate.
+                """
+                
+                # Make the API request with a timeout
+                response = client.chat.completions.create(
+                    model="gpt-4o",  # Using the latest model
+                    messages=[
+                        {"role": "system", "content": system_message},
+                        {"role": "user", "content": st.session_state.chat_history[-2]["content"]}  # Get the latest user message
+                    ],
+                    temperature=0.7,
+                    max_tokens=500,
+                    timeout=10  # 10 second timeout
+                )
+                
+                # Get the response content
+                response_content = response.choices[0].message.content
+                
+            except Exception as e:
+                # If OpenAI fails, use fallback responses
+                response_content = get_fallback_response(st.session_state.chat_history[-2]["content"])
+        else:
+            # No OpenAI API key, use fallback responses
+            response_content = get_fallback_response(st.session_state.chat_history[-2]["content"])
+            
+    except Exception as e:
+        # Something went wrong, provide an error message
+        response_content = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
+    
+    # Add the response to chat history
+    st.session_state.chat_history.append({"role": "assistant", "content": response_content})
+    
+    # Set thinking to False
+    st.session_state.thinking = False
+    
+    # Clear the input field and refresh the page
+    st.rerun()
 
 # Import geopy for geocoding city names to coordinates
 from geopy.geocoders import Nominatim
