@@ -415,8 +415,8 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Chat input
 user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
 
-# Add padding at the bottom to ensure content doesn't get covered by footer
-st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
+# Add significant padding at the bottom to create more space between chat box and footer
+st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
 
 # Footer bar at the bottom of the page with both elements
 st.markdown("""
