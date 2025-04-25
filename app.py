@@ -246,20 +246,19 @@ st.markdown("""
 <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px; margin-bottom: 30px;">
 """, unsafe_allow_html=True)
 
-avatar_path = Path("assets/avatar.png")
-if avatar_path.exists():
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        # Use regular st.image for the avatar
-        col_img, col_text = st.columns([1, 3])
-        with col_img:
-            st.image("assets/avatar.png", width=120)
-        with col_text:
-            st.markdown("""
-            <div style="display: flex; align-items: center; height: 100%; white-space: nowrap;">
-                <span class="gradient-text" style="font-size: 32px; font-weight: bold; line-height: 1.2;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
-            </div>
-            """, unsafe_allow_html=True)
+# Use streamlit's native image function instead of HTML
+col1, col2, col3 = st.columns([2, 5, 2])
+
+with col2:
+    cols = st.columns([1, 3])
+    with cols[0]:
+        st.image("assets/avatar.png", width=120)
+    with cols[1]:
+        st.markdown("""
+        <div style="margin-top: 25px;">
+            <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("""
 </div>
