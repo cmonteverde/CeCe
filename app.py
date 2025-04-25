@@ -11,6 +11,7 @@ import json
 from datetime import datetime, timedelta
 import io
 import base64
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Since we don't have langchain and related modules installed yet,
@@ -45,6 +46,7 @@ css = """
     }
     .logo-container {
         margin-bottom: 20px;
+        text-align: center;
     }
     .avatar-container {
         display: flex;
@@ -56,29 +58,35 @@ css = """
         margin-left: 20px;
         font-size: 24px;
         font-weight: bold;
+        color: #7B61FF;
     }
     .buttons-container {
         display: flex;
         justify-content: space-between;
         flex-wrap: wrap;
         margin-bottom: 30px;
+        gap: 10px;
     }
-    .button-card {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        margin: 5px;
-        cursor: pointer;
+    .stButton button {
+        background-color: rgba(123, 97, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(123, 97, 255, 0.3);
+        border-radius: 8px;
+        padding: 12px 15px;
         text-align: center;
         transition: all 0.3s;
-        flex: 1;
-        min-width: 150px;
+        width: 100%;
+        font-weight: 500;
     }
-    .button-card:hover {
-        background-color: rgba(255, 255, 255, 0.2);
+    .stButton button:hover {
+        background-color: rgba(123, 97, 255, 0.3);
+        border: 1px solid rgba(123, 97, 255, 0.5);
     }
     .chat-box {
         margin-top: 30px;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: rgba(30, 30, 30, 0.6);
     }
     .bg-container {
         position: fixed;
@@ -94,6 +102,16 @@ css = """
         font-weight: bold;
         text-align: center;
         margin-bottom: 20px;
+        color: #7B61FF;
+    }
+    .stTextInput input {
+        background-color: rgba(30, 30, 30, 0.6);
+        border: 1px solid rgba(123, 97, 255, 0.3);
+        border-radius: 8px;
+        color: white;
+    }
+    .stTextInput input:focus {
+        border: 1px solid rgba(123, 97, 255, 0.8);
     }
 </style>
 """
@@ -139,25 +157,31 @@ if 'auth_status' not in st.session_state:
 # Logo and Avatar section
 col1, col2, col3 = st.columns([1, 3, 1])
 with col1:
-    st.markdown("""
-    <div class="logo-container">
-        <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#logoGradient)"/>
-            <circle cx="150" cy="50" r="15" fill="url(#logoGradient)"/>
-            <path d="M145,35 L155,25 M160,45 L170,35 M155,60 L165,70" stroke="url(#logoGradient)" stroke-width="4"/>
-            <text x="50" y="190" font-family="Arial" font-size="24" fill="url(#logoGradient)">CeCe</text>
-        </svg>
-    </div>
-    """, unsafe_allow_html=True)
+    # Check if logo file exists and display it
+    logo_path = Path("assets/logo.png")
+    if logo_path.exists():
+        st.image("assets/logo.png", width=150)
+    else:
+        st.markdown("""
+        <div class="logo-container">
+            <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#logoGradient)"/>
+                <circle cx="150" cy="50" r="15" fill="url(#logoGradient)"/>
+                <path d="M145,35 L155,25 M160,45 L170,35 M155,60 L165,70" stroke="url(#logoGradient)" stroke-width="4"/>
+                <text x="50" y="190" font-family="Arial" font-size="24" fill="url(#logoGradient)">CeCe</text>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("""
+    # Create a cloud icon with sun for the avatar using the same color scheme as the logo
+    avatar_html = """
     <div class="avatar-container">
         <svg width="60" height="60" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -166,14 +190,16 @@ with col2:
                     <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
                 </linearGradient>
             </defs>
-            <circle cx="100" cy="100" r="90" fill="#1E1E1E" stroke="url(#avatarGradient)" stroke-width="5"/>
+            <!-- Cloud shape with sun -->
+            <circle cx="140" cy="60" r="30" fill="url(#avatarGradient)" opacity="0.9"/>
             <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#avatarGradient)"/>
-            <circle cx="150" cy="50" r="15" fill="url(#avatarGradient)"/>
-            <path d="M145,35 L155,25 M160,45 L170,35 M155,60 L165,70" stroke="url(#avatarGradient)" stroke-width="4"/>
+            <!-- Sun rays -->
+            <path d="M140,20 L140,5 M170,35 L185,20 M175,60 L190,60 M170,85 L185,100" stroke="url(#avatarGradient)" stroke-width="4"/>
         </svg>
         <div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(avatar_html, unsafe_allow_html=True)
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
