@@ -405,8 +405,8 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Chat input
 user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
 
-# Fallback response function
-def get_fallback_response(query):
+# Fallback response function 
+def fallback_response(query):
     # A dictionary of predefined responses for common queries
     climate_responses = {
         "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
@@ -477,11 +477,11 @@ if st.session_state.thinking:
                 response_content = response.choices[0].message.content
                 
             except Exception as e:
-                # If OpenAI fails, use fallback responses
-                response_content = get_fallback_response(st.session_state.chat_history[-2]["content"])
+                # If OpenAI fails, use a simple fallback response
+                response_content = fallback_response(st.session_state.chat_history[-2]["content"])
         else:
-            # No OpenAI API key, use fallback responses
-            response_content = get_fallback_response(st.session_state.chat_history[-2]["content"])
+            # No OpenAI API key, use a simple fallback response
+            response_content = fallback_response(st.session_state.chat_history[-2]["content"])
             
     except Exception as e:
         # Something went wrong, provide an error message
