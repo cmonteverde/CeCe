@@ -209,9 +209,9 @@ st.markdown("""
 </div>
 """.format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
 
-# Add feedback button separately
+# Add feedback button at the bottom right
 st.markdown("""
-<div style="position: fixed; top: 60px; right: 20px; z-index: 100;">
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 100;">
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
         background: linear-gradient(90deg, #1E90FF, #9370DB);
         color: white;
@@ -437,9 +437,9 @@ user_input = st.text_input("", key="chat_input", placeholder="Type your question
 # Add empty space for visual separation
 st.markdown("<div style='height: 60px'></div>", unsafe_allow_html=True)
 
-# Made with love footer at the very bottom, after all content
+# Made with love footer at the very bottom, fixed position
 st.markdown("""
-<div style="position: relative; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; margin-top: 20px; margin-bottom: 20px;">
+<div style="position: fixed; bottom: 20px; left: 0; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; z-index: 100;">
     Made with 
     <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
     by 
