@@ -259,8 +259,7 @@ st.markdown(f"""
 <div style="display: flex; justify-content: center; align-items: center; margin: 0 auto; width: 100%;">
     <div style="display: flex; align-items: center; justify-content: center;">
         <img src="data:image/png;base64,{avatar_base64}" width="150" 
-            style="border-radius: 50%; border: 4px solid; border-image-slice: 1; 
-            border-image-source: linear-gradient(to bottom right, #4B6EFF, #B45FFF); margin-right: 20px;">
+            style="border-radius: 50%; margin-right: 20px;">
         <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">
             CECE: YOUR CLIMATE & WEATHER AGENT
         </span>
