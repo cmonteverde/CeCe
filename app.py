@@ -309,30 +309,78 @@ if user_input:
     # Show a temporary loading message
     with st.spinner("CeCe is thinking..."):
         try:
-            # Check if we have the required API keys
-            from rag_query import process_query
             import os
-            
-            # Check which API keys are available
-            huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
             openai_api_key = os.getenv("OPENAI_API_KEY")
             
-            if not huggingface_api_key and not openai_api_key:
-                # No API keys available, provide a default response
-                response = "I'm CeCe, your Climate Copilot. I'd love to help you with that! To use my AI chat features, an API key for Hugging Face or OpenAI is needed. In the meantime, you can try out the preset buttons above for climate data visualizations and analysis."
+            # Direct OpenAI integration without using rag_query.py
+            if openai_api_key:
+                try:
+                    import openai
+                    
+                    # Initialize OpenAI client
+                    client = openai.OpenAI(api_key=openai_api_key)
+                    
+                    # System message for CeCe's identity
+                    system_message = """
+                    You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
+                    You help users with climate data visualization, scientific calculations, and understanding weather patterns.
+                    Your responses should be friendly, helpful, and focused on climate science.
+                    """
+                    
+                    # Make the API request with a timeout
+                    response = client.chat.completions.create(
+                        model="gpt-4o",  # Using the latest model
+                        messages=[
+                            {"role": "system", "content": system_message},
+                            {"role": "user", "content": user_input}
+                        ],
+                        temperature=0.7,
+                        max_tokens=500,
+                        timeout=10  # 10 second timeout
+                    )
+                    
+                    # Get the response content
+                    response_content = response.choices[0].message.content
+                    
+                except Exception as e:
+                    # If OpenAI fails, use fallback responses
+                    response_content = get_fallback_response(user_input)
             else:
-                # Use the RAG system to generate a response
-                uploaded_data = st.session_state.get("uploaded_data", None)
-                response = process_query(user_input, uploaded_data)
+                # No OpenAI API key, use fallback responses
+                response_content = get_fallback_response(user_input)
+                
         except Exception as e:
             # Something went wrong, provide an error message
-            response = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
+            response_content = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
     
     # Add the response to chat history
-    st.session_state.chat_history.append({"role": "assistant", "content": response})
+    st.session_state.chat_history.append({"role": "assistant", "content": response_content})
     
     # Clear the input field and refresh the page
     st.rerun()
+
+# Fallback response function
+def get_fallback_response(query):
+    # A dictionary of predefined responses for common queries
+    climate_responses = {
+        "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
+        "precipitation": "Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps. Try the 'Generate a precipitation map' button above!",
+        "climate change": "Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.",
+        "weather": "Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.",
+        "forecast": "While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.",
+        "hello": "Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. How can I assist you today?",
+        "help": "I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data.",
+        "rain": "I can help you analyze precipitation patterns, but I don't have access to real-time weather forecasts. For the most accurate rain forecasts, I recommend checking a dedicated weather service. Would you like to explore historical precipitation data for your area instead?"
+    }
+    
+    # Check if the query contains any of our predefined topics
+    query_lower = query.lower()
+    for topic, response in climate_responses.items():
+        if topic in query_lower:
+            return response
+    
+    # Default response if no specific topic is matched
+    return "I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and perform scientific calculations. Try one of the preset buttons above, or ask me a specific question about climate or weather data!"
 
 # Import geopy for geocoding city names to coordinates
 from geopy.geocoders import Nominatim
