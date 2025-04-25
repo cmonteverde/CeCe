@@ -415,12 +415,12 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Chat input
 user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
 
-# Add empty space for visual separation
-st.markdown("<div style='height: 60px'></div>", unsafe_allow_html=True)
+# Add padding at the bottom to ensure content doesn't get covered by footer
+st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
 
-# Footer bar at the bottom of the page (not fixed) with both elements
+# Footer bar at the bottom of the page with both elements
 st.markdown("""
-<div style="position: relative; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+<div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; display: flex; justify-content: space-between; align-items: center;">
     <div style="width: 25%; margin-left: 30px;">
         <!-- Empty left division for spacing -->
     </div>
