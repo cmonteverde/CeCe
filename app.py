@@ -11,6 +11,7 @@ import json
 from datetime import datetime, timedelta
 import io
 import base64
+from base64 import b64encode
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -204,15 +205,15 @@ st.markdown(css, unsafe_allow_html=True)
 # Add topography decoration in top right corner
 st.markdown("""
 <div style="position: fixed; top: 10px; right: 10px; z-index: 9998; width: 150px; height: 150px;">
-    <img src="https://raw.githubusercontent.com/corriebar/climate-copilot/main/attached_assets/Map%20typography.png" style="width: 100%; height: 100%; object-fit: contain;">
+    <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: contain;">
 </div>
-""", unsafe_allow_html=True)
+""".format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
 
 # Add floating feedback button
 st.markdown("""
 <div style="position: fixed; top: 60px; right: 20px; z-index: 9999;">
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
-        background: linear-gradient(90deg, #8A2BE2, #9932CC);
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
         color: white;
         padding: 10px 15px;
         border-radius: 50px;
@@ -226,17 +227,6 @@ st.markdown("""
     ">
         <span style="margin-right: 6px;">💬</span> Share feedback
     </a>
-</div>
-""", unsafe_allow_html=True)
-
-# Made with love footer 
-st.markdown("""
-<div style="position: fixed; bottom: 10px; left: 0; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; z-index: 100;">
-    Made with 
-    <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
-    by 
-    <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
-    <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -443,6 +433,17 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input
 user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
+
+# Made with love footer that sticks to the bottom of the page (not fixed)
+st.markdown("""
+<div style="position: absolute; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; margin-top: 50px;">
+    Made with 
+    <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
+    by 
+    <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
+    <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
+</div>
+""", unsafe_allow_html=True)
 
 # Fallback response function 
 def fallback_response(query):
