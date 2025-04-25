@@ -203,24 +203,58 @@ st.markdown(css, unsafe_allow_html=True)
 
 # Add floating feedback button
 st.markdown("""
-<a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    ">
+        <span style="margin-right: 8px; font-size: 18px;">💬</span> Share your feedback
+    </a>
+</div>
+
+<!-- Made with love footer -->
+<div style="
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(90deg, #1E90FF, #9370DB);
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
     color: white;
-    padding: 12px 20px;
-    border-radius: 50px;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
+    font-size: 14px;
+    z-index: 100;
 ">
-    <span style="margin-right: 8px;">💬</span> Share your feedback
-</a>
+    Made with 
+    <span style="
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    ">❤</span> 
+    by 
+    <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="
+        text-decoration: none;
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    ">Corrie</a> + 
+    <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="
+        text-decoration: none;
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: bold;
+    ">Matt</a>
+</div>
 """, unsafe_allow_html=True)
 
 # Add topographic background patterns and corner elements
