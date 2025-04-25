@@ -303,14 +303,35 @@ user_input = st.text_input("", key="chat_input", placeholder="Type here!")
 
 # Process user input
 if user_input:
+    # Add user message to chat history
     st.session_state.chat_history.append({"role": "user", "content": user_input})
     
-    # Since we don't have the RAG system working yet, provide a default response
-    response = "I'm CeCe, your Climate Copilot. I'd love to help you with that! Currently, my AI features are being set up. In the meantime, you can try out the preset buttons above for climate data visualizations and analysis."
+    # Show a temporary loading message
+    with st.spinner("CeCe is thinking..."):
+        try:
+            # Check if we have the required API keys
+            from rag_query import process_query
+            import os
+            
+            # Check which API keys are available
+            huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            
+            if not huggingface_api_key and not openai_api_key:
+                # No API keys available, provide a default response
+                response = "I'm CeCe, your Climate Copilot. I'd love to help you with that! To use my AI chat features, an API key for Hugging Face or OpenAI is needed. In the meantime, you can try out the preset buttons above for climate data visualizations and analysis."
+            else:
+                # Use the RAG system to generate a response
+                uploaded_data = st.session_state.get("uploaded_data", None)
+                response = process_query(user_input, uploaded_data)
+        except Exception as e:
+            # Something went wrong, provide an error message
+            response = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
     
+    # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response})
     
-    # Clear the input field
+    # Clear the input field and refresh the page
     st.rerun()
 
 # Import geopy for geocoding city names to coordinates
