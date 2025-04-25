@@ -37,6 +37,21 @@ st.set_page_config(
     }
 )
 
+# Set the page background to completely black
+st.markdown("""
+<style>
+    .appview-container, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: #000000;
+    }
+    [data-testid="stToolbar"] {
+        right: 2rem;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #0D0D0D;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Custom CSS for styling
 css = """
 <style>
@@ -58,7 +73,7 @@ css = """
         margin-left: 20px;
         font-size: 24px;
         font-weight: bold;
-        color: #7B61FF;
+        color: #FFFFFF;
     }
     .buttons-container {
         display: flex;
@@ -102,7 +117,7 @@ css = """
         font-weight: bold;
         text-align: center;
         margin-bottom: 20px;
-        color: #7B61FF;
+        color: #FFFFFF;
     }
     .stTextInput input {
         background-color: rgba(30, 30, 30, 0.6);
@@ -117,20 +132,28 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
-# Add topographic background pattern
+# Add subtle topographic background pattern (blue/purple gradient on black)
 st.markdown("""
 <div class="bg-container">
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <defs>
-            <pattern id="topo" patternUnits="userSpaceOnUse" width="1000" height="1000">
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 50)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 100)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 150)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 200)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 250)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 300)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 350)"/>
-                <path d="M0,0 Q250,150 500,0 T1000,0" stroke="#4B3EFF" stroke-width="1" fill="none" opacity="0.3" transform="translate(0, 400)"/>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:0.4" />
+                <stop offset="100%" style="stop-color:#9370DB;stop-opacity:0.4" />
+            </linearGradient>
+            <pattern id="topo" patternUnits="userSpaceOnUse" width="1200" height="1200">
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 50)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 100)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 150)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 200)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 250)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 300)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 350)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 400)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 450)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 500)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 550)"/>
+                <path d="M0,0 Q300,180 600,0 T1200,0" stroke="url(#lineGradient)" stroke-width="1" fill="none" opacity="0.15" transform="translate(0, 600)"/>
             </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#topo)"/>
@@ -180,26 +203,35 @@ with col1:
         """, unsafe_allow_html=True)
 
 with col2:
-    # Create a cloud icon with sun for the avatar using the same color scheme as the logo
-    avatar_html = """
-    <div class="avatar-container">
-        <svg width="60" height="60" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="avatarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <!-- Cloud shape with sun -->
-            <circle cx="140" cy="60" r="30" fill="url(#avatarGradient)" opacity="0.9"/>
-            <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#avatarGradient)"/>
-            <!-- Sun rays -->
-            <path d="M140,20 L140,5 M170,35 L185,20 M175,60 L190,60 M170,85 L185,100" stroke="url(#avatarGradient)" stroke-width="4"/>
-        </svg>
-        <div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>
-    </div>
-    """
-    st.markdown(avatar_html, unsafe_allow_html=True)
+    # Check if avatar image exists and display it with the title
+    avatar_path = Path("assets/avatar.png")
+    if avatar_path.exists():
+        col_img, col_text = st.columns([1, 3])
+        with col_img:
+            st.image("assets/avatar.png", width=100)
+        with col_text:
+            st.markdown('<div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>', unsafe_allow_html=True)
+    else:
+        # Fallback to SVG cloud avatar
+        avatar_html = """
+        <div class="avatar-container">
+            <svg width="60" height="60" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="avatarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <!-- Cloud shape with sun -->
+                <circle cx="140" cy="60" r="30" fill="url(#avatarGradient)" opacity="0.9"/>
+                <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#avatarGradient)"/>
+                <!-- Sun rays -->
+                <path d="M140,20 L140,5 M170,35 L185,20 M175,60 L190,60 M170,85 L185,100" stroke="url(#avatarGradient)" stroke-width="4"/>
+            </svg>
+            <div class="avatar-title">CECE: YOUR CLIMATE & WEATHER AGENT</div>
+        </div>
+        """
+        st.markdown(avatar_html, unsafe_allow_html=True)
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
