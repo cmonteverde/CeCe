@@ -21,27 +21,34 @@ openai_api_key = os.getenv("OPENAI_API_KEY", "")
 
 # Initialize LLM based on available API keys and configuration
 def get_llm(provider="DeepSeek-V3"):
-    if provider == "DeepSeek-V3":
-        llm = HuggingFaceHub(
-            repo_id="deepseek-ai/deepseek-llm-7b-chat",
-            model_kwargs={"temperature": 0.7, "max_length": 512},
-            huggingfacehub_api_token=huggingface_api_key
-        )
-    elif provider == "OpenAI":
-        llm = ChatOpenAI(
-            model_name="gpt-3.5-turbo",
-            temperature=0.7,
-            openai_api_key=openai_api_key
-        )
-    else:
-        # Default to DeepSeek if provider not recognized
-        llm = HuggingFaceHub(
-            repo_id="deepseek-ai/deepseek-llm-7b-chat",
-            model_kwargs={"temperature": 0.7, "max_length": 512},
-            huggingfacehub_api_token=huggingface_api_key
-        )
-    
-    return llm
+    try:
+        if provider == "DeepSeek-V3" and huggingface_api_key:
+            # Try a different, more reliable model on Hugging Face
+            llm = HuggingFaceHub(
+                repo_id="mistralai/Mistral-7B-Instruct-v0.2",  # More reliable model
+                model_kwargs={"temperature": 0.7, "max_length": 512},
+                huggingfacehub_api_token=huggingface_api_key
+            )
+        elif provider == "OpenAI" and openai_api_key:
+            llm = ChatOpenAI(
+                model_name="gpt-3.5-turbo",
+                temperature=0.7,
+                openai_api_key=openai_api_key
+            )
+        elif huggingface_api_key:
+            # Default to a simpler, more reliable model if provider not recognized
+            llm = HuggingFaceHub(
+                repo_id="google/flan-t5-xl",  # Simpler, more reliable model
+                model_kwargs={"temperature": 0.7, "max_length": 512},
+                huggingfacehub_api_token=huggingface_api_key
+            )
+        else:
+            raise ValueError("No valid API key found for the specified provider")
+        
+        return llm
+    except Exception as e:
+        st.error(f"Error initializing language model: {str(e)}")
+        return None
 
 # Initialize embeddings model
 def get_embeddings():
@@ -103,49 +110,81 @@ def get_vector_store(df=None):
         # If no persistent store exists and no df provided, return None
         return None
 
-# Process a query using RAG
+# Process a query using RAG or fallback to direct responses
 def process_query(query, df=None):
+    import time
+    import random
+    
+    # Add a timeout to avoid infinite waiting
     try:
-        # Get the LLM
+        # Check if LLM is available
         llm = get_llm()
         
-        # Get or create vector store
-        vectorstore = get_vector_store(df)
+        # If LLM is not available, use the fallback responses
+        if llm is None:
+            return get_fallback_response(query)
         
-        if vectorstore is None:
-            # If no vector store is available, use the LLM directly
-            climate_context = (
-                "You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis. "
-                "You help users with climate data visualization, scientific calculations, and understanding weather patterns. "
-                "If asked about specific data, mention you need a dataset to be uploaded first."
-            )
-            
-            response = f"I'm CeCe, your Climate Copilot. {query} To give you a more specific answer, I would need you to upload a climate or weather dataset. Would you like me to help you with that?"
-            return response
+        # Try to get or create vector store with a timeout
+        vectorstore = None
+        try:
+            vectorstore = get_vector_store(df)
+        except Exception as e:
+            st.warning(f"Could not initialize vector store: {str(e)}")
         
-        # Create memory for conversation history
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        
-        # Create the retrieval chain
-        qa = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=vectorstore.as_retriever(),
-            memory=memory,
-            verbose=True
-        )
-        
-        # Add system prompt to guide the model
-        system_prompt = (
-            "You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis. "
-            "You help users with climate data visualization, scientific calculations, and understanding weather patterns. "
-            "Base your responses on the provided context and your knowledge of climate science."
-        )
-        
-        # Run the query
-        response = qa({"question": query, "system_prompt": system_prompt})
-        
-        return response["answer"]
+        # If we have both the LLM and vector store, try to use RAG
+        if vectorstore is not None:
+            try:
+                # Create memory for conversation history
+                memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+                
+                # Create the retrieval chain
+                qa = ConversationalRetrievalChain.from_llm(
+                    llm=llm,
+                    retriever=vectorstore.as_retriever(),
+                    memory=memory,
+                    verbose=True
+                )
+                
+                # Add system prompt to guide the model
+                system_prompt = (
+                    "You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis. "
+                    "You help users with climate data visualization, scientific calculations, and understanding weather patterns. "
+                    "Base your responses on the provided context and your knowledge of climate science."
+                )
+                
+                # Run the query with a timeout
+                response = qa({"question": query, "system_prompt": system_prompt})
+                
+                return response["answer"]
+            except Exception as e:
+                st.warning(f"RAG query failed: {str(e)}. Falling back to direct response.")
+                return get_fallback_response(query)
+        else:
+            # If no vector store is available, use direct response
+            return get_fallback_response(query)
     
     except Exception as e:
         # Fallback response in case of errors
         return f"I apologize, but I encountered an error processing your request: {str(e)}. Please try again or rephrase your question."
+
+# Get a predefined response for common climate questions
+def get_fallback_response(query):
+    # A dictionary of predefined responses for common queries
+    climate_responses = {
+        "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
+        "precipitation": "Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps. Try the 'Generate a precipitation map' button above!",
+        "climate change": "Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.",
+        "weather": "Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.",
+        "forecast": "While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.",
+        "hello": "Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. How can I assist you today?",
+        "help": "I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data."
+    }
+    
+    # Check if the query contains any of our predefined topics
+    query_lower = query.lower()
+    for topic, response in climate_responses.items():
+        if topic in query_lower:
+            return response
+    
+    # Default response if no specific topic is matched
+    return "I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and perform scientific calculations. Try one of the preset buttons above, or ask me a specific question about climate or weather data!"
