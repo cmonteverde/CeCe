@@ -203,20 +203,21 @@ st.markdown(css, unsafe_allow_html=True)
 
 # Add floating feedback button
 st.markdown("""
-<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
         background: linear-gradient(90deg, #1E90FF, #9370DB);
         color: white;
-        padding: 12px 20px;
+        padding: 10px 15px;
         border-radius: 50px;
         text-decoration: none;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         font-weight: 600;
         display: inline-flex;
         align-items: center;
+        font-size: 14px;
         transition: all 0.3s ease;
     ">
-        <span style="margin-right: 8px; font-size: 18px;">💬</span> Share your feedback
+        <span style="margin-right: 6px;">💬</span> Share feedback
     </a>
 </div>
 
