@@ -141,7 +141,7 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
-# Add subtle topographic background pattern (blue/purple gradient on black)
+# Add topographic background patterns and corner elements
 st.markdown("""
 <div class="bg-container">
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -168,6 +168,50 @@ st.markdown("""
         <rect width="100%" height="100%" fill="url(#topo)"/>
     </svg>
 </div>
+
+<!-- Topography map in bottom left corner -->
+<div style="position: fixed; bottom: 0; left: 0; width: 300px; height: 300px; z-index: -1; opacity: 0.7;">
+    <svg width="100%" height="100%" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="cornerGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:0.6" />
+                <stop offset="100%" style="stop-color:#9370DB;stop-opacity:0.6" />
+            </linearGradient>
+        </defs>
+        <!-- Topographic map elements -->
+        <path d="M0,300 C50,280 100,290 150,270 C200,250 250,230 300,250 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <path d="M0,280 C60,260 120,270 180,250 C240,230 270,210 300,230 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <path d="M0,260 C70,240 140,250 210,230 C280,210 290,190 300,210 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <path d="M0,240 C80,220 160,230 240,210 L300,190 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <path d="M0,220 C90,200 180,210 270,190 L300,170 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <path d="M0,200 C100,180 200,190 300,170 L300,300 Z" fill="none" stroke="url(#cornerGradient1)" stroke-width="1.5" />
+        <circle cx="50" cy="250" r="5" fill="url(#cornerGradient1)" />
+        <circle cx="150" cy="220" r="3" fill="url(#cornerGradient1)" />
+        <circle cx="230" cy="180" r="4" fill="url(#cornerGradient1)" />
+    </svg>
+</div>
+
+<!-- Topography map in upper right corner -->
+<div style="position: fixed; top: 0; right: 0; width: 300px; height: 300px; z-index: -1; opacity: 0.7;">
+    <svg width="100%" height="100%" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="cornerGradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:0.6" />
+                <stop offset="100%" style="stop-color:#9370DB;stop-opacity:0.6" />
+            </linearGradient>
+        </defs>
+        <!-- Topographic map elements -->
+        <path d="M300,0 C250,20 200,10 150,30 C100,50 50,70 0,50 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <path d="M300,20 C240,40 180,30 120,50 C60,70 30,90 0,70 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <path d="M300,40 C230,60 160,50 90,70 C20,90 10,110 0,90 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <path d="M300,60 C220,80 140,70 60,90 L0,110 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <path d="M300,80 C210,100 120,90 30,110 L0,130 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <path d="M300,100 C200,120 100,110 0,130 L0,0 Z" fill="none" stroke="url(#cornerGradient2)" stroke-width="1.5" />
+        <circle cx="250" cy="50" r="5" fill="url(#cornerGradient2)" />
+        <circle cx="150" cy="80" r="3" fill="url(#cornerGradient2)" />
+        <circle cx="70" cy="120" r="4" fill="url(#cornerGradient2)" />
+    </svg>
+</div>
 """, unsafe_allow_html=True)
 
 # Initialize session state variables
@@ -186,51 +230,39 @@ if 'user_location' not in st.session_state:
 if 'auth_status' not in st.session_state:
     st.session_state.auth_status = None
 
-# Logo and Avatar section
-col1, col2, col3 = st.columns([1, 3, 1])
-with col1:
-    # Check if logo file exists and display it
-    logo_path = Path("assets/logo.png")
-    if logo_path.exists():
-        st.image("assets/logo.png", width=150)
-    else:
-        st.markdown("""
-        <div class="logo-container">
-            <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#logoGradient)"/>
-                <circle cx="150" cy="50" r="15" fill="url(#logoGradient)"/>
-                <path d="M145,35 L155,25 M160,45 L170,35 M155,60 L165,70" stroke="url(#logoGradient)" stroke-width="4"/>
-                <text x="50" y="190" font-family="Arial" font-size="24" fill="url(#logoGradient)">CeCe</text>
-            </svg>
-        </div>
-        """, unsafe_allow_html=True)
+# Logo in left corner (smaller)
+st.markdown("""
+<div style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+""", unsafe_allow_html=True)
+logo_path = Path("assets/logo.png")
+if logo_path.exists():
+    st.image("assets/logo.png", width=100)
+st.markdown("""
+</div>
+""", unsafe_allow_html=True)
 
-with col2:
-    # Display avatar image with the title using the blue-to-purple gradient for text
-    avatar_path = Path("assets/avatar.png")
-    if avatar_path.exists():
+# Centered Avatar and Title
+st.markdown("""
+<div style="display: flex; justify-content: center; align-items: center; margin-top: 20px; margin-bottom: 30px;">
+""", unsafe_allow_html=True)
+
+avatar_path = Path("assets/avatar.png")
+if avatar_path.exists():
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
         col_img, col_text = st.columns([1, 3])
         with col_img:
-            st.image("assets/avatar.png", width=120)
+            st.image("assets/avatar.png", width=100)
         with col_text:
             st.markdown("""
-            <div class="avatar-title">
-                <span class="gradient-text">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+            <div style="padding-top: 10px;">
+                <span class="gradient-text" style="font-size: 24px; font-weight: bold;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
             </div>
             """, unsafe_allow_html=True)
-    else:
-        # Fallback to text only with gradient
-        st.markdown("""
-        <div class="avatar-title">
-            <span class="gradient-text">CECE: YOUR CLIMATE & WEATHER AGENT</span>
-        </div>
-        """, unsafe_allow_html=True)
+
+st.markdown("""
+</div>
+""", unsafe_allow_html=True)
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
