@@ -202,30 +202,33 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
-# Add topography decoration and feedback button - better integrated together
+# Add topography decoration 
 st.markdown("""
 <div style="position: absolute; top: 0; right: 0; width: 45%; min-width: 400px; height: 300px; z-index: 1; overflow: visible; pointer-events: none;">
     <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: cover; object-position: top right;">
-    
-    <div style="position: absolute; top: 60px; right: 20px; z-index: 100; pointer-events: auto;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
-            background: linear-gradient(90deg, #1E90FF, #9370DB);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50px;
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        ">
-            <span style="margin-right: 6px;">💬</span> Share feedback
-        </a>
-    </div>
 </div>
 """.format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
+
+# Add feedback button separately
+st.markdown("""
+<div style="position: fixed; top: 60px; right: 20px; z-index: 100;">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    ">
+        <span style="margin-right: 6px;">💬</span> Share feedback
+    </a>
+</div>
+""", unsafe_allow_html=True)
 
 # Add topographic background patterns and corner elements
 st.markdown("""
