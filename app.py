@@ -286,7 +286,9 @@ st.markdown("""
 
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
+    st.session_state.chat_history = [
+        {"role": "assistant", "content": "👋 Hi there! I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and understand weather patterns. Try one of the preset buttons above or ask me a question about climate data! For example, you could ask about temperature trends in your area, how to interpret climate anomalies, or what factors contribute to extreme weather events."}
+    ]
 if 'uploaded_data' not in st.session_state:
     st.session_state.uploaded_data = None
 if 'processed_data' not in st.session_state:
