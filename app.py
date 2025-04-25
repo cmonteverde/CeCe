@@ -249,12 +249,21 @@ st.markdown("""
 # Center the title area with a single centered container 
 st.markdown('<div style="padding: 10px 0;"></div>', unsafe_allow_html=True)  # Reduced padding at top
 
-# Create centered container with logo - with border around avatar
-st.markdown("""
-<div style="display: flex; justify-content: center; margin: 0 auto; width: 100%;">
+# Using direct HTML with base64 encoding to ensure image display
+from base64 import b64encode
+with open("public/avatar_fixed.png", "rb") as f:
+    avatar_base64 = b64encode(f.read()).decode()
+
+# Create centered container with avatar image and text
+st.markdown(f"""
+<div style="display: flex; justify-content: center; align-items: center; margin: 0 auto; width: 100%;">
     <div style="display: flex; align-items: center; justify-content: center;">
-        <img src="assets/avatar.png" width="150" style="border-radius: 50%; border: 4px solid; border-image-slice: 1; border-image-source: linear-gradient(to bottom right, #4B6EFF, #B45FFF); margin-right: 20px;">
-        <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+        <img src="data:image/png;base64,{avatar_base64}" width="150" 
+            style="border-radius: 50%; border: 4px solid; border-image-slice: 1; 
+            border-image-source: linear-gradient(to bottom right, #4B6EFF, #B45FFF); margin-right: 20px;">
+        <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">
+            CECE: YOUR CLIMATE & WEATHER AGENT
+        </span>
     </div>
 </div>
 """, unsafe_allow_html=True)
