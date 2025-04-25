@@ -246,20 +246,18 @@ st.markdown("""
 <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px; margin-bottom: 30px;">
 """, unsafe_allow_html=True)
 
-# Center the title area with Streamlit columns for better image handling
-st.markdown('<div style="padding: 30px 0;"></div>', unsafe_allow_html=True)
-col1, col2, col3 = st.columns([1, 3, 1])
+# Center the title area with a single centered container 
+st.markdown('<div style="padding: 10px 0;"></div>', unsafe_allow_html=True)  # Reduced padding at top
 
-with col2:
-    title_cols = st.columns([1, 2])  
-    with title_cols[0]:
-        st.image("assets/avatar.png", width=150)
-    with title_cols[1]:
-        st.markdown("""
-        <div style="display: flex; align-items: center; height: 100%; padding-top: 15px;">
-            <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
-        </div>
-        """, unsafe_allow_html=True)
+# Create centered container with logo
+st.markdown("""
+<div style="display: flex; justify-content: center; margin: 0 auto; width: 100%;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+        <img src="assets/avatar.png" width="150" style="margin-right: 20px;">
+        <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 </div>
