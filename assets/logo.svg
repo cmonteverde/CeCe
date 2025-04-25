@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <path d="M100,40 C70,40 45,60 45,85 C45,100 55,115 70,120 L70,140 C70,145 75,150 80,150 L120,150 C125,150 130,145 130,140 L130,120 C145,115 155,100 155,85 C155,60 130,40 100,40 Z" fill="url(#logoGradient)"/>
+    <circle cx="150" cy="50" r="15" fill="url(#logoGradient)"/>
+    <path d="M145,35 L155,25 M160,45 L170,35 M155,60 L165,70" stroke="url(#logoGradient)" stroke-width="4"/>
+    <text x="50" y="190" font-family="Arial" font-size="24" fill="url(#logoGradient)">CeCe</text>
+    <text x="50" y="210" font-family="Arial" font-size="16" fill="url(#logoGradient)">Climate Copilot</text>
+</svg>
