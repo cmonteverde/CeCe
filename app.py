@@ -201,6 +201,28 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
+# Add floating feedback button
+st.markdown("""
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, #1E90FF, #9370DB);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+">
+    <span style="margin-right: 8px;">💬</span> Share your feedback
+</a>
+""", unsafe_allow_html=True)
+
 # Add topographic background patterns and corner elements
 st.markdown("""
 <div class="bg-container">
@@ -359,11 +381,11 @@ with col5:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Display the chat history in a more visually appealing way
-st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-
-# Chat header
+# Display the title question directly (without the chat-box container)
 st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
+
+# Display the chat history in a more visually appealing way
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display existing chat messages
 if st.session_state.chat_history:
