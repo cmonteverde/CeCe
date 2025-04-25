@@ -421,14 +421,17 @@ st.markdown("<div style='height: 60px'></div>", unsafe_allow_html=True)
 # Footer bar at the bottom of the page (not fixed) with both elements
 st.markdown("""
 <div style="position: relative; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div style="margin-left: 30px; color: white; font-size: 14px;">
+    <div style="width: 25%; margin-left: 30px;">
+        <!-- Empty left division for spacing -->
+    </div>
+    <div style="flex-grow: 0; color: white; font-size: 14px; text-align: center;">
         Made with 
         <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
         by 
         <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
         <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
     </div>
-    <div style="margin-right: 30px;">
+    <div style="width: 25%; margin-right: 30px; text-align: right;">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
             background: linear-gradient(90deg, #1E90FF, #9370DB);
             color: white;
