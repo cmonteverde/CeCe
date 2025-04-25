@@ -434,9 +434,12 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Chat input
 user_input = st.text_input("", key="chat_input", placeholder="Type your question here...")
 
-# Made with love footer that sticks to the bottom of the page (not fixed)
+# Add empty space for visual separation
+st.markdown("<div style='height: 60px'></div>", unsafe_allow_html=True)
+
+# Made with love footer at the very bottom, after all content
 st.markdown("""
-<div style="position: absolute; bottom: 0; left: 0; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; margin-top: 50px;">
+<div style="position: relative; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; margin-top: 20px; margin-bottom: 20px;">
     Made with 
     <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
     by 
