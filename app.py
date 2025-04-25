@@ -250,12 +250,12 @@ st.markdown("""
 col1, col2, col3 = st.columns([2, 5, 2])
 
 with col2:
-    cols = st.columns([1, 3])
+    cols = st.columns([1, 2.5])
     with cols[0]:
-        st.image("assets/avatar.png", width=120)
+        st.image("assets/avatar.png", width=150)
     with cols[1]:
         st.markdown("""
-        <div style="margin-top: 25px;">
+        <div style="margin-top: 28px;">
             <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
         </div>
         """, unsafe_allow_html=True)
