@@ -202,10 +202,10 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
-# Add topography decoration in top right corner
+# Add topography decoration in top right corner - larger and more prominent
 st.markdown("""
-<div style="position: fixed; top: 10px; right: 10px; z-index: 9998; width: 150px; height: 150px;">
-    <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: contain;">
+<div style="position: fixed; top: 0; right: 0; z-index: 9998; width: 33%; height: 100%; opacity: 0.8; pointer-events: none;">
+    <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: contain; object-position: top right;">
 </div>
 """.format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
 
