@@ -313,18 +313,53 @@ if user_input:
     # Clear the input field
     st.rerun()
 
+# Import geopy for geocoding city names to coordinates
+from geopy.geocoders import Nominatim
+
+# Function to convert city name to coordinates
+def get_city_coordinates(city_name):
+    try:
+        geolocator = Nominatim(user_agent="climate_copilot")
+        location = geolocator.geocode(city_name)
+        if location:
+            return location.latitude, location.longitude
+        else:
+            return None, None
+    except Exception as e:
+        st.error(f"Error geocoding city: {str(e)}")
+        return None, None
+
 # Function handling section
 if st.session_state.active_function == "precipitation_map":
     st.subheader("Precipitation Map for Your Region")
     
-    # Location input
-    col1, col2 = st.columns(2)
-    with col1:
-        latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], min_value=-90.0, max_value=90.0)
-    with col2:
-        longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], min_value=-180.0, max_value=180.0)
+    # Location input method selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True)
     
-    st.session_state.user_location = {"lat": latitude, "lon": longitude}
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                             value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city)
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], min_value=-90.0, max_value=90.0)
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], min_value=-180.0, max_value=180.0)
+        
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
     
     # Date range
     col1, col2 = st.columns(2)
@@ -461,12 +496,32 @@ elif st.session_state.active_function == "export_anomalies":
     else:  # NASA POWER API
         st.info("This feature will connect to the NASA POWER API to fetch climate data for a specified location and date range.")
         
-        # Location input
-        col1, col2 = st.columns(2)
-        with col1:
-            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], min_value=-90.0, max_value=90.0, key="nasa_lat")
-        with col2:
-            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], min_value=-180.0, max_value=180.0, key="nasa_lon")
+        # Location input method selection
+        location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="nasa_location_method")
+        
+        if location_method == "City Name":
+            city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                                value="San Francisco, CA" if "nasa_last_city" not in st.session_state else st.session_state.nasa_last_city,
+                                key="nasa_city")
+            
+            if city:
+                st.session_state.nasa_last_city = city
+                lat, lon = get_city_coordinates(city)
+                if lat and lon:
+                    st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                    latitude = lat
+                    longitude = lon
+                    st.session_state.user_location = {"lat": latitude, "lon": longitude}
+                else:
+                    st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                    latitude = st.session_state.user_location["lat"]
+                    longitude = st.session_state.user_location["lon"]
+        else:
+            col1, col2 = st.columns(2)
+            with col1:
+                latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], min_value=-90.0, max_value=90.0, key="nasa_lat")
+            with col2:
+                longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], min_value=-180.0, max_value=180.0, key="nasa_lon")
         
         # Date range
         col1, col2 = st.columns(2)
