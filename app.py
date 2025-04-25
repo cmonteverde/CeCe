@@ -209,26 +209,7 @@ st.markdown("""
 </div>
 """.format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
 
-# Add feedback button at the bottom right
-st.markdown("""
-<div style="position: fixed; bottom: 20px; right: 20px; z-index: 100;">
-    <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
-        background: linear-gradient(90deg, #1E90FF, #9370DB);
-        color: white;
-        padding: 10px 15px;
-        border-radius: 50px;
-        text-decoration: none;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        font-size: 14px;
-        transition: all 0.3s ease;
-    ">
-        <span style="margin-right: 6px;">💬</span> Share feedback
-    </a>
-</div>
-""", unsafe_allow_html=True)
+# Remove the feedback button from here - we'll add it to the footer below
 
 # Add topographic background patterns and corner elements
 st.markdown("""
@@ -437,14 +418,33 @@ user_input = st.text_input("", key="chat_input", placeholder="Type your question
 # Add empty space for visual separation
 st.markdown("<div style='height: 60px'></div>", unsafe_allow_html=True)
 
-# Made with love footer at the very bottom, fixed position
+# Footer bar at the bottom of the page (not fixed) with both elements
 st.markdown("""
-<div style="position: fixed; bottom: 20px; left: 0; width: 100%; text-align: center; padding: 10px; color: white; font-size: 14px; z-index: 100;">
-    Made with 
-    <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
-    by 
-    <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
-    <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
+<div style="position: relative; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="margin-left: 30px; color: white; font-size: 14px;">
+        Made with 
+        <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
+        by 
+        <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
+        <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
+    </div>
+    <div style="margin-right: 30px;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
+            background: linear-gradient(90deg, #1E90FF, #9370DB);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        ">
+            <span style="margin-right: 6px;">💬</span> Share feedback
+        </a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
