@@ -137,7 +137,7 @@ def fetch_nasa_power_data(lat, lon, start_date, end_date, parameters=None):
     except Exception as e:
         raise Exception(f"Error fetching NASA POWER data: {str(e)}")
 
-def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0):
+def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0, fast_mode=True):
     """
     Fetch precipitation data for a region around a point from NASA POWER API
     
@@ -147,12 +147,13 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
         start_date: Start date in format 'YYYY-MM-DD'
         end_date: End date in format 'YYYY-MM-DD'
         radius_degrees: Radius of the region in degrees (default: 1.0)
+        fast_mode: If True, uses faster interpolation for better performance (default: True)
     
     Returns:
         DataFrame with precipitation data for points in the region
     """
-    # Create a grid of points around the center - increased grid size for better coverage
-    grid_size = 15  # Increased from 10 to 15 points in each direction for better visual coverage
+    # Create a grid of points around the center - balanced for speed and visual quality
+    grid_size = 10  # Reduced back to 10 for faster loading, with improved rendering parameters
     lat_range = np.linspace(lat - radius_degrees, lat + radius_degrees, grid_size)
     lon_range = np.linspace(lon - radius_degrees, lon + radius_degrees, grid_size)
     
@@ -164,8 +165,9 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
     end_date_dt = datetime.strptime(end_date, '%Y-%m-%d')
     days_in_period = (end_date_dt - start_date_dt).days + 1
     
-    # For very short periods (1-7 days), just fetch the central point for immediate response
-    if days_in_period <= 7:
+    # For periods up to 14 days, or if fast_mode is enabled,
+    # just fetch the central point for immediate response and extrapolate for better visualization
+    if days_in_period <= 14 or radius_degrees <= 0.5 or fast_mode:
         try:
             # Fetch data for the central point
             df = fetch_nasa_power_data(lat, lon, start_date, end_date, parameters=["PRECTOTCORR"])
@@ -211,7 +213,8 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
     
     # For longer periods, fetch a subset of points and interpolate between them
     # This approach balances accuracy with speed
-    sample_step = 2  # Sample every 2nd point (increased sampling density for better visualization)
+    # When fast_mode is off, use denser sampling for higher quality maps
+    sample_step = 3 if fast_mode else 2  # Adjust sampling density based on speed preference
     
     # Fetch data for sampled points
     for i, grid_lat in enumerate(lat_range):

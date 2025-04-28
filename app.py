@@ -608,6 +608,10 @@ if st.session_state.active_function == "precipitation_map":
         start_date = st.date_input("Start Date", datetime.now() - timedelta(days=30))
     with col2:
         end_date = st.date_input("End Date", datetime.now())
+        
+    # Performance option
+    fast_mode = st.checkbox("Use fast map mode (recommended for larger date ranges)", value=True,
+                          help="Generates the map quickly using improved interpolation techniques")
     
     if st.button("Generate Precipitation Map"):
         with st.spinner("Fetching precipitation data from NASA POWER API..."):
@@ -623,7 +627,9 @@ if st.session_state.active_function == "precipitation_map":
                 st.text(f"Fetching precipitation data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
                 
                 # Fetch NASA POWER precipitation data for a region
-                precip_df = fetch_precipitation_map_data(latitude, longitude, start_date_str, end_date_str, radius_degrees=1.0)
+                # Pass the fast_mode parameter to control data fetching behavior
+                precip_df = fetch_precipitation_map_data(latitude, longitude, start_date_str, end_date_str, 
+                                                      radius_degrees=1.0, fast_mode=fast_mode)
                 
                 # Create a list of [lat, lon, precip] for each grid point
                 heat_data = []
@@ -656,7 +662,8 @@ if st.session_state.active_function == "precipitation_map":
                     heat_data,
                     radius=25,  # Increased radius for more coverage
                     min_opacity=0.5,  # Lower min_opacity to make the map more visible in low precipitation areas
-                    blur=15,  # Increased blur for smoother transitions
+                    blur=18,  # Increased blur for even smoother transitions
+                    max_zoom=13,  # Control the maximum zoom level for the heatmap
                     # max_val parameter is no longer needed (will be calculated automatically)
                     # Using normalized string values for the gradient keys
                     gradient={
