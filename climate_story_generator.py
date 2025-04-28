@@ -13,10 +13,6 @@ from datetime import datetime, timedelta
 import openai
 import json
 
-# Initialize OpenAI client
-openai_api_key = os.getenv("OPENAI_API_KEY")
-client = openai.OpenAI(api_key=openai_api_key) if openai_api_key else None
-
 def generate_climate_story(data, location, timeframe, story_type="personal"):
     """
     Generate a personalized climate story based on data and location
@@ -30,13 +26,19 @@ def generate_climate_story(data, location, timeframe, story_type="personal"):
     Returns:
         Dictionary containing the story components (text, insights, visualization_suggestions)
     """
+    # Initialize OpenAI client (do this here to capture any changes to environment variables)
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    
     # Ensure we have an OpenAI API key
-    if not client:
+    if not openai_api_key:
         return {
             "text": "Unable to generate climate story: OpenAI API key not found.",
             "insights": [],
             "visualization_suggestions": []
         }
+        
+    # Create the OpenAI client
+    client = openai.OpenAI(api_key=openai_api_key)
     
     # Process the data to extract key insights
     insights = extract_climate_insights(data)
