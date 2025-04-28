@@ -649,18 +649,23 @@ if st.session_state.active_function == "precipitation_map":
                 
                 # Add the heatmap to the map
                 from folium.plugins import HeatMap
+                
+                # Create a heatmap with string-based gradient values
+                # Note: Folium HeatMap gradient keys must be strings representing float values between 0 and 1
                 HeatMap(
                     heat_data,
                     radius=15,
                     min_opacity=0.7,
                     blur=10,
-                    max_val=max_precip,
+                    # max_val parameter is no longer needed (will be calculated automatically)
+                    # Using normalized string values for the gradient keys
                     gradient={
-                        "0.2": 'blue',
-                        "0.4": 'cyan', 
-                        "0.6": 'lime',
-                        "0.8": 'yellow',
-                        "1.0": 'red'
+                        '0.0': 'blue',
+                        '0.2': 'cyan',
+                        '0.4': 'lime',
+                        '0.6': 'yellow',
+                        '0.8': 'orange',
+                        '1.0': 'red'
                     }
                 ).add_to(m)
                 
@@ -782,11 +787,12 @@ if st.session_state.active_function == "precipitation_map":
                 
                 from folium.plugins import HeatMap
                 HeatMap(heat_data, radius=15, gradient={
-                    "0.2": 'blue',
-                    "0.4": 'cyan',
-                    "0.6": 'lime',
-                    "0.8": 'yellow',
-                    "1.0": 'red'
+                    '0.0': 'blue',
+                    '0.2': 'cyan',
+                    '0.4': 'lime',
+                    '0.6': 'yellow',
+                    '0.8': 'orange',
+                    '1.0': 'red'
                 }).add_to(m)
                 
                 # Add a marker for the selected location
@@ -802,9 +808,6 @@ if st.session_state.active_function == "precipitation_map":
                 
                 # Add note about the simulated data
                 st.warning("This is simulated data for demonstration purposes only. It does not represent real precipitation patterns.")
-                
-            except Exception as e:
-                st.error(f"Error generating precipitation map: {str(e)}")
 
 elif st.session_state.active_function == "climate_story":
     st.subheader("Interactive Climate Story Generator")

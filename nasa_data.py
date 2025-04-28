@@ -173,6 +173,10 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
             # Calculate total precipitation for the period
             central_precip = df['PRECTOTCORR'].sum()
             
+            # For zero or very low precipitation, set a minimum value for visualization
+            if central_precip < 0.1:
+                central_precip = 0.1
+            
             # Generate a realistic precipitation distribution based on the central point
             # This approximation is faster than making hundreds of API calls
             for grid_lat in lat_range:
@@ -188,6 +192,9 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
                     
                     # Calculate precipitation for this point
                     point_precip = central_precip * variation
+                    
+                    # Ensure precipitation is a positive number
+                    point_precip = max(0.01, point_precip)
                     
                     # Add to the results
                     precip_data.append({
@@ -221,6 +228,9 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
                 
                 # Calculate total precipitation for the period
                 total_precip = df['PRECTOTCORR'].sum()
+                
+                # Ensure precipitation is a positive number
+                total_precip = max(0.01, total_precip)
                 
                 # Add to the results
                 precip_data.append({
@@ -277,6 +287,9 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
                 # Add some realistic variation
                 variation = 0.9 + 0.2 * np.random.random()
                 interpolated_precip = weighted_precip * variation
+                
+                # Ensure precipitation is a positive number
+                interpolated_precip = max(0.01, interpolated_precip)
                 
                 full_grid_data.append({
                     'latitude': grid_lat,
