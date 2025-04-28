@@ -605,12 +605,187 @@ if st.session_state.active_function == "precipitation_map":
         end_date = st.date_input("End Date", datetime.now())
     
     if st.button("Generate Precipitation Map"):
-        with st.spinner("Fetching precipitation data from NASA POWER API..."):
+        with st.spinner("Fetching ERA5 reanalysis precipitation data..."):
             try:
-                # This would normally fetch real data from NASA POWER API
-                # For now, generate a sample map for demonstration
+                # Get real precipitation data from ERA5
+                from era5_data import fetch_era5_precipitation_map
                 
-                m = folium.Map(location=[latitude, longitude], zoom_start=10)
+                # Convert dates to string format for API
+                start_date_str = start_date.strftime('%Y-%m-%d')
+                end_date_str = end_date.strftime('%Y-%m-%d')
+                
+                # Status message
+                st.text(f"Fetching ERA5 reanalysis data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
+                
+                # Try to fetch ERA5 data
+                precip_ds = fetch_era5_precipitation_map(latitude, longitude, start_date_str, end_date_str, radius_degrees=1.0)
+                
+                # Check if we have the right variable in the dataset
+                if 'total_precipitation_mm' in precip_ds:
+                    precip_var = 'total_precipitation_mm'
+                else:
+                    # Look for other possible names
+                    for var in ['tp_mm', 'tp', 'total_precipitation']:
+                        if var in precip_ds:
+                            precip_var = var
+                            break
+                    else:
+                        raise ValueError("Precipitation variable not found in ERA5 data")
+                
+                # Extract data for creating the heatmap
+                lats = precip_ds.latitude.values
+                lons = precip_ds.longitude.values
+                precip_values = precip_ds[precip_var].values
+                
+                # Verify we have valid data
+                if np.isnan(precip_values).all():
+                    raise ValueError("All ERA5 precipitation values are NaN")
+                
+                # Create a list of [lat, lon, precip] for each grid point
+                heat_data = []
+                for i in range(len(lats)):
+                    for j in range(len(lons)):
+                        precip = float(precip_values[i, j])
+                        if not np.isnan(precip):
+                            heat_data.append([float(lats[i]), float(lons[j]), precip])
+                
+                # Get the max value for scaling the heatmap
+                max_precip = max([x[2] for x in heat_data]) if heat_data else 100
+                
+                # Create a base map centered on the location
+                m = folium.Map(location=[latitude, longitude], zoom_start=7, 
+                              tiles="cartodb dark_matter")
+                
+                # Add a marker for the selected location
+                folium.Marker(
+                    [latitude, longitude],
+                    popup=f"Selected Location: {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}",
+                    icon=folium.Icon(color="purple")
+                ).add_to(m)
+                
+                # Add the heatmap to the map
+                from folium.plugins import HeatMap
+                HeatMap(
+                    heat_data,
+                    radius=15,
+                    min_opacity=0.7,
+                    blur=10,
+                    max_val=max_precip,
+                    gradient={
+                        0.2: 'blue',
+                        0.4: 'cyan',
+                        0.6: 'lime',
+                        0.8: 'yellow',
+                        1.0: 'red'
+                    }
+                ).add_to(m)
+                
+                # Add a legend
+                legend_html = '''
+                <div style="position: fixed; 
+                            bottom: 50px; right: 50px; 
+                            background-color: rgba(0, 0, 0, 0.7);
+                            border-radius: 5px;
+                            padding: 10px;
+                            color: white;
+                            font-family: Arial, sans-serif;
+                            z-index: 9999;">
+                    <p><strong>Precipitation (mm)</strong></p>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: blue; width: 20px; height: 20px; margin-right: 5px;"></div>
+                        <span>Low (0-20%)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: cyan; width: 20px; height: 20px; margin-right: 5px;"></div>
+                        <span>Moderate (20-40%)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: lime; width: 20px; height: 20px; margin-right: 5px;"></div>
+                        <span>Significant (40-60%)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: yellow; width: 20px; height: 20px; margin-right: 5px;"></div>
+                        <span>Heavy (60-80%)</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: red; width: 20px; height: 20px; margin-right: 5px;"></div>
+                        <span>Extreme (80-100%)</span>
+                    </div>
+                </div>
+                '''
+                
+                m.get_root().html.add_child(folium.Element(legend_html))
+                
+                # Title for the map
+                title_html = f'''
+                <h3 style="position: absolute; 
+                            top: 10px; left: 50%; 
+                            transform: translateX(-50%);
+                            z-index: 9999; 
+                            background-color: rgba(0, 0, 0, 0.7);
+                            color: white; 
+                            padding: 10px; 
+                            border-radius: 5px; 
+                            font-family: Arial, sans-serif;">
+                    Precipitation Map for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}
+                </h3>
+                '''
+                
+                m.get_root().html.add_child(folium.Element(title_html))
+                
+                # Display the map
+                st.subheader(f"ERA5 Precipitation Map ({start_date_str} to {end_date_str})")
+                folium_static(m)
+                
+                # Add context about the data
+                st.info(f"This map shows real ERA5 reanalysis precipitation data around your selected location for the date range {start_date_str} to {end_date_str}. Data source: Copernicus Climate Data Store (CDS).")
+                
+                # Add "What is ERA5" explanation
+                with st.expander("What is ERA5 reanalysis data?"):
+                    st.markdown("""
+                    **ERA5** is the fifth generation ECMWF (European Centre for Medium-Range Weather Forecasts) atmospheric reanalysis of the global climate. 
+                    
+                    Reanalysis combines model data with observations from across the world into a globally complete and consistent dataset. ERA5 provides hourly estimates of a large number of atmospheric, land and oceanic climate variables, offering a comprehensive picture of Earth's weather and climate.
+                    
+                    Key features of ERA5 data:
+                    - **High resolution**: ~31 km grid spacing globally
+                    - **Frequent updates**: Hourly data availability
+                    - **Long time range**: Data available from 1940 to present
+                    - **Reliability**: Produced by one of the world's leading weather forecasting centers
+                    
+                    The precipitation data shown on this map represents the total accumulated precipitation (rain, snow, etc.) over the selected time period, measured in millimeters.
+                    """)
+                
+                # Option to download the map
+                st.download_button(
+                    label="Download Map as HTML",
+                    data=m._repr_html_(),
+                    file_name="precipitation_map.html",
+                    mime="text/html"
+                )
+                
+            except Exception as e:
+                # If ERA5 data fetching fails, display error and fallback to simulated data
+                st.error(f"Error fetching ERA5 data: {str(e)}")
+                st.warning("Falling back to simulated precipitation data for demonstration. To use real ERA5 data, you need to set up CDS API credentials.")
+                
+                # Link to CDS API registration
+                st.markdown("""
+                ### How to set up CDS API access:
+                1. Register for a free account on the [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/user/register)
+                2. Once registered, go to your [user profile](https://cds.climate.copernicus.eu/user)
+                3. Copy your API key and create a file named `.cdsapirc` in your home directory with:
+                
+                ```
+                url: https://cds.climate.copernicus.eu/api/v2
+                key: your-api-key
+                ```
+                
+                Replace `your-api-key` with the key from your profile.
+                """)
+                
+                # Create a fallback map
+                m = folium.Map(location=[latitude, longitude], zoom_start=10, tiles="cartodb dark_matter")
                 
                 # Add a heatmap layer for precipitation
                 import random
@@ -624,29 +799,27 @@ if st.session_state.active_function == "precipitation_map":
                     heat_data.append([heat_lat, heat_lon, intensity])
                 
                 from folium.plugins import HeatMap
-                HeatMap(heat_data, radius=15).add_to(m)
+                HeatMap(heat_data, radius=15, gradient={
+                    0.2: 'blue',
+                    0.4: 'cyan',
+                    0.6: 'lime',
+                    0.8: 'yellow',
+                    1.0: 'red'
+                }).add_to(m)
                 
                 # Add a marker for the selected location
                 folium.Marker(
                     [latitude, longitude],
                     popup=f"Selected Location ({latitude:.4f}, {longitude:.4f})",
-                    icon=folium.Icon(color="blue")
+                    icon=folium.Icon(color="purple")
                 ).add_to(m)
                 
                 # Display the map
-                st.subheader(f"Precipitation Heatmap ({start_date} to {end_date})")
+                st.subheader(f"Simulated Precipitation Heatmap (DEMO MODE)")
                 folium_static(m)
                 
-                # Add some context about the data
-                st.info(f"This map shows simulated precipitation data around your selected location. In the full implementation, this would use real data from the NASA POWER API for the date range {start_date} to {end_date}.")
-                
-                # Option to download the map
-                st.download_button(
-                    label="Download Map as HTML",
-                    data=m._repr_html_(),
-                    file_name="precipitation_map.html",
-                    mime="text/html"
-                )
+                # Add note about the simulated data
+                st.warning("This is simulated data for demonstration purposes only. It does not represent real precipitation patterns.")
                 
             except Exception as e:
                 st.error(f"Error generating precipitation map: {str(e)}")
