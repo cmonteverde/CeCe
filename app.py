@@ -23,6 +23,7 @@ import climate_algorithms
 # import auth
 # import vector_store
 import load_docs
+import climate_resilience
 
 # Load environment variables
 load_dotenv()
@@ -621,7 +622,7 @@ for i, (industry_id, icon) in enumerate(industry_icons.items()):
         """, unsafe_allow_html=True)
         
         # Use Streamlit button (invisible but clickable)
-        if st.button(f"Select {industry_id}", key=f"industry_{industry_id}", label_visibility="collapsed"):
+        if st.button(f"Select {industry_id}", key=f"industry_{industry_id}"):
             st.session_state.industry_selected = industry_id
             st.session_state.active_function = "industry_map"
             st.rerun()
@@ -1595,6 +1596,357 @@ elif st.session_state.active_function == "industry_map":
     
     # Add context about the data
     st.info(f"This visualization represents climate risk analysis for the {industry_data['name']} sector based on historical climate data and projected patterns. The data is derived from NASA POWER API and climate models. Use this visualization to understand regional climate risks and develop targeted mitigation strategies.")
+
+elif st.session_state.active_function == "climate_resilience":
+    st.subheader("Climate Resilience Prediction Tool")
+    
+    # Show explanation
+    st.markdown("""
+    <div style="padding: 15px; background-color: rgba(30, 144, 255, 0.1); border-radius: 8px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0; color: #1E90FF;">About this Tool</h4>
+        <p style="color: white;">
+        This tool provides predictive modeling to suggest adaptive strategies for various industries based on projected climate scenarios. 
+        Select a location, industry, time horizon, and climate scenario to generate a comprehensive resilience report.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Create two columns for inputs
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Location input method selection
+        location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], 
+                                 horizontal=True, key="resilience_location_method")
+        
+        if location_method == "City Name":
+            city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                                 value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city,
+                                 key="resilience_city")
+            
+            if city:
+                st.session_state.last_city = city
+                lat, lon = get_city_coordinates(city)
+                if lat and lon:
+                    st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                    latitude = lat
+                    longitude = lon
+                    st.session_state.user_location = {"lat": latitude, "lon": longitude}
+                else:
+                    st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                    latitude = st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749
+                    longitude = st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194
+            else:
+                latitude = st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749
+                longitude = st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194
+        else:
+            # Direct coordinate input
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749, 
+                                      min_value=-90.0, max_value=90.0, step=0.01, key="resilience_lat")
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194, 
+                                       min_value=-180.0, max_value=180.0, step=0.01, key="resilience_lon")
+            st.session_state.user_location = {"lat": latitude, "lon": longitude}
+        
+        # Industry selection
+        industry_options = ["aerospace", "agriculture", "energy", "insurance", "forestry", "catastrophes"]
+        industry_names = {
+            "aerospace": "Aerospace",
+            "agriculture": "Agriculture",
+            "energy": "Energy",
+            "insurance": "Insurance",
+            "forestry": "Forestry",
+            "catastrophes": "Catastrophe Management"
+        }
+        
+        selected_industry = st.selectbox("Select Industry", 
+                                       options=industry_options,
+                                       format_func=lambda x: industry_names[x],
+                                       key="resilience_industry")
+    
+    with col2:
+        # Time horizon selection
+        target_year = st.slider("Target Year for Projection", 
+                              min_value=2030, 
+                              max_value=2100, 
+                              value=2050, 
+                              step=5,
+                              key="resilience_year")
+        
+        # Climate scenario selection
+        scenario_options = ["optimistic", "moderate", "severe"]
+        scenario_descriptions = {
+            "optimistic": "Optimistic Scenario (RCP 2.6) - Limited warming",
+            "moderate": "Moderate Scenario (RCP 4.5) - Intermediate warming",
+            "severe": "Severe Scenario (RCP 8.5) - High emissions scenario"
+        }
+        
+        selected_scenario = st.selectbox("Select Climate Scenario", 
+                                      options=scenario_options,
+                                      format_func=lambda x: scenario_descriptions[x],
+                                      key="resilience_scenario")
+        
+        # Button to generate the report
+        generate_report = st.button("Generate Resilience Report", type="primary", key="generate_resilience_report")
+    
+    # Display a folium map with the selected location
+    m = folium.Map(location=[latitude, longitude], zoom_start=5, control_scale=True)
+    folium.Marker(
+        [latitude, longitude],
+        popup=f"Selected Location: {city if location_method == 'City Name' else f'{latitude:.4f}, {longitude:.4f}'}",
+        icon=folium.Icon(color="blue", icon="info-sign")
+    ).add_to(m)
+    
+    # Add the map to the Streamlit app
+    st_data = folium_static(m)
+    
+    # Generate and display the resilience report when the button is clicked
+    if generate_report:
+        with st.spinner(f"Generating climate resilience report for {industry_names[selected_industry]} industry in {target_year}..."):
+            # Call the climate_resilience module to generate the report
+            try:
+                report = climate_resilience.generate_resilience_report(
+                    lat=latitude,
+                    lon=longitude,
+                    industry=selected_industry,
+                    target_year=target_year,
+                    scenario=selected_scenario
+                )
+                
+                # Display the report in an organized fashion
+                st.subheader(f"Climate Resilience Report: {industry_names[selected_industry]} Industry")
+                
+                # Scenario and location information
+                st.markdown(f"""
+                <div style="padding: 15px; background-color: rgba(30, 30, 30, 0.6); border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #1E90FF;">Report Summary</h4>
+                    <table style="width: 100%; color: white;">
+                        <tr>
+                            <td style="width: 30%; font-weight: bold;">Location:</td>
+                            <td>{city if location_method == 'City Name' else f'{latitude:.4f}, {longitude:.4f}'}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Projection Year:</td>
+                            <td>{target_year}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Climate Scenario:</td>
+                            <td>{report['scenario']}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Description:</td>
+                            <td>{report['climate_projections']['scenario_description']}</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Climate projections visualization
+                st.markdown("<h4 style='color: #1E90FF;'>Climate Projections</h4>", unsafe_allow_html=True)
+                
+                # Use plotly to create visualization of key metrics
+                fig = go.Figure()
+                
+                # Temperature change
+                fig.add_trace(go.Indicator(
+                    mode = "number+delta",
+                    value = report['climate_projections']['temperature']['projected'],
+                    title = {"text": "Temperature (°C)"},
+                    delta = {'reference': report['climate_projections']['temperature']['baseline'], 'relative': False},
+                    domain = {'row': 0, 'column': 0}
+                ))
+                
+                # Precipitation change
+                fig.add_trace(go.Indicator(
+                    mode = "number+delta",
+                    value = report['climate_projections']['precipitation']['projected'],
+                    title = {"text": "Precipitation (mm)"},
+                    delta = {'reference': report['climate_projections']['precipitation']['baseline'], 'relative': False},
+                    domain = {'row': 0, 'column': 1}
+                ))
+                
+                # Extreme weather multiplier
+                fig.add_trace(go.Indicator(
+                    mode = "number",
+                    value = report['climate_projections']['extreme_weather']['heat_days_multiplier'],
+                    title = {"text": "Extreme Heat Days Multiplier"},
+                    domain = {'row': 1, 'column': 0}
+                ))
+                
+                # Sea level rise
+                fig.add_trace(go.Indicator(
+                    mode = "number",
+                    value = report['climate_projections']['sea_level_rise'],
+                    title = {"text": "Sea Level Rise (m)"},
+                    domain = {'row': 1, 'column': 1}
+                ))
+                
+                # Update layout
+                fig.update_layout(
+                    grid = {'rows': 2, 'columns': 2, 'pattern': "independent"},
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="white")
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Show seasonal changes in temperature and precipitation
+                st.markdown("<h4 style='color: #1E90FF;'>Seasonal Changes</h4>", unsafe_allow_html=True)
+                
+                # Create dataframes for seasonal data
+                seasons = ["winter", "spring", "summer", "fall"]
+                temp_changes = [report['climate_projections']['temperature']['seasonal_changes'][season] for season in seasons]
+                precip_changes = [report['climate_projections']['precipitation']['seasonal_changes'][season] for season in seasons]
+                
+                # Create a plotly figure for seasonal changes
+                fig = go.Figure()
+                
+                # Add temperature changes
+                fig.add_trace(go.Bar(
+                    x=seasons,
+                    y=temp_changes,
+                    name='Temperature Change (°C)',
+                    marker_color='rgba(30, 144, 255, 0.7)'
+                ))
+                
+                # Add precipitation changes on secondary y-axis
+                fig.add_trace(go.Bar(
+                    x=seasons,
+                    y=precip_changes,
+                    name='Precipitation Change (%)',
+                    marker_color='rgba(147, 112, 219, 0.7)',
+                    yaxis='y2'
+                ))
+                
+                # Update layout
+                fig.update_layout(
+                    barmode='group',
+                    title="Seasonal Climate Changes",
+                    xaxis=dict(title="Season"),
+                    yaxis=dict(title="Temperature Change (°C)", side="left"),
+                    yaxis2=dict(title="Precipitation Change (%)", side="right", overlaying="y"),
+                    legend=dict(x=0.1, y=1.1, orientation="h"),
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="white")
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Industry impact assessment
+                impact_severity = report['impact_assessment']['adjusted_severity']
+                severity_colors = {
+                    "low": "#4CAF50",
+                    "moderate": "#FFC107",
+                    "high": "#FF9800",
+                    "severe": "#F44336"
+                }
+                
+                st.markdown(f"""
+                <h4 style='color: #1E90FF;'>Industry Impact Assessment</h4>
+                <div style="padding: 15px; background-color: rgba(30, 30, 30, 0.6); border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="font-weight: bold; margin-right: 10px; color: white;">Impact Severity:</div>
+                        <div style="background-color: {severity_colors[impact_severity]}; color: white; padding: 3px 10px; border-radius: 15px; text-transform: uppercase; font-weight: bold;">
+                            {impact_severity}
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; color: white;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">Key Impact Areas:</div>
+                        <ul style="margin-top: 5px;">
+                """, unsafe_allow_html=True)
+                
+                for impact in report['impact_assessment']['impact_areas']:
+                    st.markdown(f"<li style='color: white; margin-bottom: 5px;'>{impact}</li>", unsafe_allow_html=True)
+                
+                st.markdown("""
+                        </ul>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Adaptive strategies
+                st.markdown("<h4 style='color: #1E90FF;'>Recommended Adaptive Strategies</h4>", unsafe_allow_html=True)
+                
+                # Create tabs for different timeline categories
+                timeline_tabs = st.tabs(["Near-term (1-5 years)", "Mid-term (5-15 years)", "Long-term (15+ years)"])
+                
+                with timeline_tabs[0]:
+                    if report['implementation_timeline']['near_term']:
+                        for i, strategy in enumerate(report['implementation_timeline']['near_term']):
+                            st.markdown(f"""
+                            <div style="padding: 12px; background-color: rgba(76, 175, 80, 0.1); border-left: 3px solid #4CAF50; 
+                                        border-radius: 4px; margin-bottom: 10px;">
+                                <div style="color: white;">{strategy}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("No near-term strategies identified for this scenario.")
+                
+                with timeline_tabs[1]:
+                    if report['implementation_timeline']['mid_term']:
+                        for i, strategy in enumerate(report['implementation_timeline']['mid_term']):
+                            st.markdown(f"""
+                            <div style="padding: 12px; background-color: rgba(255, 193, 7, 0.1); border-left: 3px solid #FFC107; 
+                                        border-radius: 4px; margin-bottom: 10px;">
+                                <div style="color: white;">{strategy}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("No mid-term strategies identified for this scenario.")
+                
+                with timeline_tabs[2]:
+                    if report['implementation_timeline']['long_term']:
+                        for i, strategy in enumerate(report['implementation_timeline']['long_term']):
+                            st.markdown(f"""
+                            <div style="padding: 12px; background-color: rgba(244, 67, 54, 0.1); border-left: 3px solid #F44336; 
+                                        border-radius: 4px; margin-bottom: 10px;">
+                                <div style="color: white;">{strategy}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("No long-term strategies identified for this scenario.")
+                
+                # Cost implication
+                cost_colors = {
+                    "low": "#4CAF50",
+                    "moderate": "#FFC107",
+                    "high": "#FF9800",
+                    "transformative": "#F44336"
+                }
+                
+                st.markdown(f"""
+                <div style="padding: 15px; background-color: rgba(30, 30, 30, 0.6); border-radius: 8px; margin-top: 20px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #1E90FF;">Implementation Considerations</h4>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="font-weight: bold; margin-right: 10px; color: white;">Cost Implication:</div>
+                        <div style="background-color: {cost_colors[report['cost_implication']]}; color: white; padding: 3px 10px; border-radius: 15px; text-transform: uppercase; font-weight: bold;">
+                            {report['cost_implication']}
+                        </div>
+                    </div>
+                    <div style="color: white; margin-top: 10px;">
+                        Planning for implementation should consider both the timeline recommendations and the associated cost implications.
+                        Industries with higher severity impacts typically require more immediate and comprehensive adaptation measures.
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Add option to export the report as JSON
+                report_json = json.dumps(report, indent=2)
+                b64 = base64.b64encode(report_json.encode()).decode()
+                href = f"""<a href="data:application/json;base64,{b64}" download="climate_resilience_report_{selected_industry}_{target_year}.json" style="text-decoration: none;">
+                    <button style="background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                        Download Full Report (JSON)
+                    </button>
+                </a>"""
+                st.markdown(href, unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error(f"An error occurred while generating the report: {str(e)}")
+                st.error("Please try again with different parameters or check the console for more details.")
+                raise e
 
 elif st.session_state.active_function == "climate_story":
     st.subheader("Interactive Climate Story Generator")
