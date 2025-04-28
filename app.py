@@ -1411,9 +1411,8 @@ if st.session_state.active_function == "rainfall_comparison":
     if st.button("Compare Rainfall"):
         with st.spinner("Comparing rainfall data between seasons..."):
             try:
-                # Generate sample data for demonstration
-                import random
-                import numpy as np
+                # Fetch real precipitation data from NASA POWER API
+                from nasa_data import get_rainfall_comparison
                 
                 # Define season date ranges for current and previous year
                 season_dates = {
@@ -1470,51 +1469,24 @@ if st.session_state.active_function == "rainfall_comparison":
                         prev_start = datetime(current_year - 1, start_month, start_day)
                         prev_end = datetime(current_year - 1, end_month, end_day)
                 
-                # Function to generate realistic precipitation data
-                def generate_precip(date, base_amount=2.0, seasonal_factor=1.0, noise_level=3.0):
-                    # Base amount adjusted by season
-                    base = base_amount * seasonal_factor
-                    
-                    # Add random variation
-                    noise = max(0, random.expovariate(1.0 / noise_level))
-                    
-                    # Make some days have zero precipitation
-                    if random.random() < 0.6:  # 60% chance of being dry
-                        return 0
-                    
-                    return base + noise
+                # Convert dates to string format for API
+                current_start_str = current_start.strftime('%Y-%m-%d')
+                current_end_str = current_end.strftime('%Y-%m-%d')
+                prev_start_str = prev_start.strftime('%Y-%m-%d')
+                prev_end_str = prev_end.strftime('%Y-%m-%d')
                 
-                # Generate seasonal factors based on location and season
-                # This is very simplified - in reality, seasonal patterns vary greatly by geography
-                season_factors = {
-                    "Winter": 1.5 if abs(latitude) > 30 else 0.8,  # More rain in winter for mid/high latitudes
-                    "Spring": 1.2,
-                    "Summer": 0.7 if abs(latitude) > 30 else 1.5,  # More rain in summer for tropical regions
-                    "Fall": 1.0
-                }
+                # Status message
+                st.text(f"Fetching precipitation data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} for {season} season...")
                 
-                # Generate daily data for current season
-                current_dates = pd.date_range(start=current_start, end=current_end, freq='D')
-                current_precip = [generate_precip(date, seasonal_factor=season_factors[season]) for date in current_dates]
-                
-                # Generate daily data for previous season
-                prev_dates = pd.date_range(start=prev_start, end=prev_end, freq='D')
-                # Slightly modify the precipitation pattern for last year (for interesting comparison)
-                prev_season_factor = season_factors[season] * (0.8 + random.random() * 0.4)  # 0.8 to 1.2 times this year's factor
-                prev_precip = [generate_precip(date, seasonal_factor=prev_season_factor) for date in prev_dates]
-                
-                # Create dataframes
-                current_df = pd.DataFrame({
-                    'Date': current_dates,
-                    'Precipitation (mm)': current_precip,
-                    'Year': 'This Year'
-                })
-                
-                prev_df = pd.DataFrame({
-                    'Date': prev_dates,
-                    'Precipitation (mm)': prev_precip,
-                    'Year': 'Last Year'
-                })
+                # Get rainfall comparison from NASA POWER API
+                current_df, prev_df = get_rainfall_comparison(
+                    latitude, 
+                    longitude, 
+                    current_start_str, 
+                    current_end_str, 
+                    prev_start_str, 
+                    prev_end_str
+                )
                 
                 # Combine the data
                 combined_df = pd.concat([current_df, prev_df])
@@ -1613,7 +1585,7 @@ if st.session_state.active_function == "rainfall_comparison":
                 
                 # Context about the data
                 comparison_result = "wetter" if current_total > prev_total else "drier"
-                st.info(f"Based on this simulated data, the {season.lower()} season this year is {comparison_result} than last year. In a real implementation, this would use actual climate data from NASA POWER API or similar sources.")
+                st.info(f"Based on NASA POWER climate data, the {season.lower()} season this year is {comparison_result} than last year. This analysis uses real precipitation data for your selected location.")
                 
                 # Option to download the data
                 csv_data = combined_df.to_csv(index=False).encode('utf-8')
