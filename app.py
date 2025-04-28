@@ -347,7 +347,7 @@ st.markdown("""
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 
 with col1:
     if st.button("📍 Generate a precipitation map for my region"):
@@ -372,6 +372,11 @@ with col4:
 with col5:
     if st.button("📉 Export climate anomalies as a table"):
         st.session_state.active_function = "export_anomalies"
+        st.rerun()
+        
+with col6:
+    if st.button("📝 Generate interactive climate story"):
+        st.session_state.active_function = "climate_story"
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
