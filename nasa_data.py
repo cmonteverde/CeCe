@@ -151,8 +151,8 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
     Returns:
         DataFrame with precipitation data for points in the region
     """
-    # Create a grid of points around the center - using a smaller grid for faster performance
-    grid_size = 10  # Reduced from 20 to 10 points in each direction for faster response
+    # Create a grid of points around the center - increased grid size for better coverage
+    grid_size = 15  # Increased from 10 to 15 points in each direction for better visual coverage
     lat_range = np.linspace(lat - radius_degrees, lat + radius_degrees, grid_size)
     lon_range = np.linspace(lon - radius_degrees, lon + radius_degrees, grid_size)
     
@@ -211,7 +211,7 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
     
     # For longer periods, fetch a subset of points and interpolate between them
     # This approach balances accuracy with speed
-    sample_step = 3  # Sample every 3rd point
+    sample_step = 2  # Sample every 2nd point (increased sampling density for better visualization)
     
     # Fetch data for sampled points
     for i, grid_lat in enumerate(lat_range):

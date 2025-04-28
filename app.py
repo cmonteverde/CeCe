@@ -650,13 +650,13 @@ if st.session_state.active_function == "precipitation_map":
                 # Add the heatmap to the map
                 from folium.plugins import HeatMap
                 
-                # Create a heatmap with string-based gradient values
+                # Create a heatmap with string-based gradient values and improved parameters
                 # Note: Folium HeatMap gradient keys must be strings representing float values between 0 and 1
                 HeatMap(
                     heat_data,
-                    radius=15,
-                    min_opacity=0.7,
-                    blur=10,
+                    radius=25,  # Increased radius for more coverage
+                    min_opacity=0.5,  # Lower min_opacity to make the map more visible in low precipitation areas
+                    blur=15,  # Increased blur for smoother transitions
                     # max_val parameter is no longer needed (will be calculated automatically)
                     # Using normalized string values for the gradient keys
                     gradient={
@@ -786,14 +786,20 @@ if st.session_state.active_function == "precipitation_map":
                     heat_data.append([heat_lat, heat_lon, intensity])
                 
                 from folium.plugins import HeatMap
-                HeatMap(heat_data, radius=15, gradient={
-                    '0.0': 'blue',
-                    '0.2': 'cyan',
-                    '0.4': 'lime',
-                    '0.6': 'yellow',
-                    '0.8': 'orange',
-                    '1.0': 'red'
-                }).add_to(m)
+                HeatMap(
+                    heat_data, 
+                    radius=25,  # Increased radius for more coverage
+                    min_opacity=0.5,  # Lower min_opacity for better visibility
+                    blur=15,  # Increased blur for smoother transitions
+                    gradient={
+                        '0.0': 'blue',
+                        '0.2': 'cyan',
+                        '0.4': 'lime',
+                        '0.6': 'yellow',
+                        '0.8': 'orange',
+                        '1.0': 'red'
+                    }
+                ).add_to(m)
                 
                 # Add a marker for the selected location
                 folium.Marker(
