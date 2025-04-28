@@ -488,7 +488,41 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Industry-specific buttons
+# Create centered container with avatar image and text
+st.markdown(f"""
+<div style="display: flex; justify-content: center; align-items: center; margin: 0 auto; width: 100%;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+        <img src="data:image/png;base64,{avatar_base64}" width="150" 
+            style="border-radius: 50%; margin-right: 20px;">
+        <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">
+            CECE: YOUR CLIMATE & WEATHER AGENT
+        </span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+</div>
+""", unsafe_allow_html=True)
+
+# Display the chat history to show welcome message first
+st.markdown('<div class="chat-container" style="margin-bottom: 20px;">', unsafe_allow_html=True)
+
+# Display welcome message only
+if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
+    welcome_message = st.session_state.chat_history[0]
+    st.markdown(f"""
+    <div class="chat-message assistant-message">
+        <div class="message-content">
+            <div class="message-sender">CeCe (Climate Copilot)</div>
+            <div class="message-text">{welcome_message["content"]}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Industry-specific buttons below the welcome message
 st.markdown("""
 <div style="margin-bottom: 15px; text-align: center;">
     <h3 style="color: white; font-size: 18px; margin-bottom: 15px;">
@@ -497,7 +531,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="industry-buttons-container">', unsafe_allow_html=True)
+st.markdown('<div class="industry-buttons-container" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 15px;">', unsafe_allow_html=True)
 
 # Generate SVG icons for each industry
 industry_icons = {
@@ -568,56 +602,29 @@ industry_icons = {
     </svg>"""
 }
 
-# Create JavaScript for industry button clicks
-button_js = """
-<script>
-function selectIndustry(industry) {
-    // Send the industry selection to Streamlit
-    window.parent.postMessage({type: 'streamlit:setComponentValue', value: industry}, '*');
-}
-</script>
-"""
-st.markdown(button_js, unsafe_allow_html=True)
+# Use Streamlit columns to create a horizontal layout for industry buttons
+st.markdown("</div>", unsafe_allow_html=True)  # Close the container
 
-# Generate industry buttons with SVG icons
-industry_buttons_html = ""
-for industry_id, icon in industry_icons.items():
-    industry_data = industry_regions[industry_id]
-    industry_buttons_html += f"""
-    <div class="industry-button" onclick="selectIndustry('{industry_id}')" 
-        style="cursor: pointer; border: 1px solid rgba(147, 112, 219, 0.3);">
-        <div class="industry-button-bg"></div>
-        <div style="width: 60px; height: 60px; margin-bottom: 8px;">
-            {icon}
+# Create a 6-column layout for the industry buttons
+cols = st.columns(6)
+
+# Add industry buttons with icons using Streamlit components
+for i, (industry_id, icon) in enumerate(industry_icons.items()):
+    with cols[i % 6]:
+        st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 10px;">
+            <div style="width: 80px; height: 80px; margin: 0 auto;">
+                {icon}
+            </div>
+            <p style="font-size: 14px; color: white; margin-top: 8px;">{industry_regions[industry_id]["name"]}</p>
         </div>
-        <div class="industry-button-text">{industry_data["name"]}</div>
-    </div>
-    """
-
-# Add all buttons to the container
-st.markdown(industry_buttons_html, unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Create a streamlit component to capture the click
-industry_component = st.empty()
-industry_selection = industry_component.text_input("", key="industry_input", label_visibility="collapsed")
-
-# Handle the industry selection
-if industry_selection:
-    if industry_selection in industry_regions.keys():
-        st.session_state.industry_selected = industry_selection
-        st.session_state.active_function = "industry_map"
-        st.rerun()
-    else:
-        st.session_state.industry_selection = ""  # Reset on invalid input
+        """, unsafe_allow_html=True)
         
-# CSS to hide the industry input box
-st.markdown("""
-<style>
-    /* Hide the industry input component but keep it functional */
-    [data-testid="stText"] {height: 0 !important; width: 0 !important; position: absolute; top: -9999px;}
-</style>
-""", unsafe_allow_html=True)
+        # Use Streamlit button (invisible but clickable)
+        if st.button(f"Select {industry_id}", key=f"industry_{industry_id}", label_visibility="collapsed"):
+            st.session_state.industry_selected = industry_id
+            st.session_state.active_function = "industry_map"
+            st.rerun()
 
 # Button cards
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
@@ -644,8 +651,8 @@ with col4:
         st.rerun()
 
 with col5:
-    if st.button("📉 Export climate anomalies as a table"):
-        st.session_state.active_function = "export_anomalies"
+    if st.button("🔮 Climate resilience predictions"):
+        st.session_state.active_function = "climate_resilience"
         st.rerun()
         
 with col6:
