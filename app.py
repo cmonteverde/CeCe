@@ -352,22 +352,27 @@ col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     if st.button("📍 Generate a precipitation map for my region"):
         st.session_state.active_function = "precipitation_map"
+        st.rerun()
 
 with col2:
     if st.button("📊 Show temperature trends from the past 5 years"):
         st.session_state.active_function = "temperature_trends"
+        st.rerun()
 
 with col3:
     if st.button("⚠️ Identify extreme heat days in my area"):
         st.session_state.active_function = "extreme_heat"
+        st.rerun()
 
 with col4:
     if st.button("🗓️ Compare rainfall this season vs. last year"):
         st.session_state.active_function = "rainfall_comparison"
+        st.rerun()
 
 with col5:
     if st.button("📉 Export climate anomalies as a table"):
         st.session_state.active_function = "export_anomalies"
+        st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -907,3 +912,1009 @@ with st.sidebar:
     # Save settings button
     if st.button("Save Settings"):
         st.success("Settings saved!")
+
+# Adding the missing function implementations for the preset buttons
+if st.session_state.active_function == "temperature_trends":
+    st.subheader("Temperature Trends from the Past 5 Years")
+    
+    # Location selection similar to precipitation map
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="temp_location_method")
+    
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                             value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city,
+                             key="temp_city_input")
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
+                                      min_value=-90.0, max_value=90.0, key="temp_lat_input")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
+                                       min_value=-180.0, max_value=180.0, key="temp_lon_input")
+        
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
+    
+    # Date range selection
+    col1, col2 = st.columns(2)
+    with col1:
+        end_date = st.date_input("End Date (Today)", datetime.now(), key="temp_end_date")
+    with col2:
+        # Calculate start date as 5 years ago from end date
+        start_date = st.date_input("Start Date (5 years ago)", end_date - timedelta(days=5*365), key="temp_start_date")
+    
+    if st.button("Generate Temperature Trends"):
+        with st.spinner("Generating temperature trends for the past 5 years..."):
+            try:
+                # This would normally fetch real data from NASA POWER API
+                # For now, create a sample visualization
+                
+                # Generate sample data: monthly temperatures over 5 years
+                import random
+                import numpy as np
+                
+                # Generate dates for 5 years of monthly data
+                dates = pd.date_range(start=start_date, end=end_date, freq='M')
+                
+                # Function to generate seasonal temperature data with random variation
+                def seasonal_temp(date, base_temp=15.0, amplitude=10.0, noise_level=3.0):
+                    # Simulate seasons: warmest in July-August, coldest in January-February
+                    day_of_year = date.dayofyear
+                    seasonal_component = amplitude * np.cos(2 * np.pi * (day_of_year - 205) / 365.0)
+                    # Add some random noise
+                    noise = (random.random() - 0.5) * noise_level
+                    # Add a slight warming trend over time (climate change)
+                    years_elapsed = (date.year - start_date.year) + (date.month - start_date.month)/12
+                    warming_trend = 0.2 * years_elapsed  # 0.2°C per year warming trend
+                    
+                    return base_temp + seasonal_component + noise + warming_trend
+                
+                # Generate temperature data
+                temps = [seasonal_temp(date) for date in dates]
+                
+                # Create dataframe
+                df = pd.DataFrame({
+                    'Date': dates,
+                    'Temperature (°C)': temps
+                })
+                
+                # Calculate a 12-month moving average
+                df['12-Month Moving Avg'] = df['Temperature (°C)'].rolling(window=12).mean()
+                
+                # Calculate the trend line using linear regression
+                from scipy import stats
+                x = np.arange(len(df))
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x, df['Temperature (°C)'])
+                df['Trend'] = intercept + slope * x
+                
+                # Create a Plotly visualization
+                fig = px.line(df, x='Date', y='Temperature (°C)', title=f'Monthly Temperature Trends for {city if location_method == "City Name" else f"({latitude:.2f}, {longitude:.2f})"}')
+                
+                # Add the moving average line
+                fig.add_scatter(x=df['Date'], y=df['12-Month Moving Avg'], mode='lines', name='12-Month Moving Average', line=dict(color='red'))
+                
+                # Add the trend line
+                fig.add_scatter(x=df['Date'], y=df['Trend'], mode='lines', name='Long-term Trend', line=dict(color='green', dash='dash'))
+                
+                # Customize the layout
+                fig.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title='Temperature (°C)',
+                    legend_title='',
+                    template='plotly_dark',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                
+                # Display the chart
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Display key insights
+                trend_per_decade = slope * 120  # 120 months in a decade
+                st.subheader("Key Insights")
+                
+                insights_col1, insights_col2 = st.columns(2)
+                with insights_col1:
+                    st.metric("Average Temperature", f"{df['Temperature (°C)'].mean():.1f}°C", delta=None)
+                    st.metric("Temperature Range", f"{df['Temperature (°C)'].min():.1f}°C to {df['Temperature (°C)'].max():.1f}°C", delta=None)
+                
+                with insights_col2:
+                    st.metric("Trend per Decade", f"{trend_per_decade:.2f}°C", 
+                             delta="warming" if trend_per_decade > 0 else "cooling")
+                    st.metric("Seasonal Variation", f"{df['Temperature (°C)'].std():.1f}°C", delta=None)
+                
+                # Add context about the data
+                st.info(f"This chart shows simulated monthly temperature data for your selected location. The trend line indicates an overall temperature change of approximately {trend_per_decade:.2f}°C per decade. In a real implementation, this would use actual climate data from NASA POWER API or similar sources.")
+                
+                # Option to download the data
+                csv_data = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Temperature Data as CSV",
+                    data=csv_data,
+                    file_name="temperature_trends.csv",
+                    mime="text/csv"
+                )
+                
+            except Exception as e:
+                st.error(f"Error generating temperature trends: {str(e)}")
+
+if st.session_state.active_function == "extreme_heat":
+    st.subheader("Identify Extreme Heat Days in Your Area")
+    
+    # Location selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="heat_location_method")
+    
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                             value="Phoenix, AZ" if "last_city" not in st.session_state else st.session_state.last_city,
+                             key="heat_city_input")
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
+                                      min_value=-90.0, max_value=90.0, key="heat_lat_input")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
+                                       min_value=-180.0, max_value=180.0, key="heat_lon_input")
+        
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
+    
+    # Parameters for extreme heat identification
+    col1, col2 = st.columns(2)
+    with col1:
+        year = st.selectbox("Select Year", list(range(datetime.now().year, datetime.now().year - 10, -1)), key="heat_year")
+    with col2:
+        percentile = st.slider("Extreme Heat Threshold (Percentile)", min_value=90, max_value=99, value=95, key="heat_percentile")
+    
+    # Options for analysis
+    analysis_type = st.radio("Analysis Type", ["By Maximum Temperature", "By Heat Index (Temperature + Humidity)"], key="heat_analysis_type")
+    
+    if st.button("Identify Extreme Heat Days"):
+        with st.spinner("Analyzing temperature data to identify extreme heat days..."):
+            try:
+                # Generate sample data for demonstration
+                import random
+                import numpy as np
+                
+                # Generate daily temperatures for the selected year
+                start_date = datetime(year, 1, 1)
+                end_date = datetime(year, 12, 31)
+                dates = pd.date_range(start=start_date, end=end_date, freq='D')
+                
+                # Function to generate realistic temperatures
+                def generate_temp(date, base_temp=25.0, amplitude=15.0, noise_level=5.0):
+                    # Higher temperatures in summer, lower in winter
+                    day_of_year = date.dayofyear
+                    seasonal_component = amplitude * np.cos(2 * np.pi * (day_of_year - 205) / 365.0)
+                    # Add some random noise
+                    noise = (random.random() - 0.5) * noise_level
+                    # Location-based adjustments (e.g., higher temps for lower latitudes)
+                    latitude_factor = -0.2 * abs(latitude) + 10  # Higher temps closer to equator
+                    
+                    return max(0, base_temp - seasonal_component + noise + latitude_factor)
+                
+                # Generate humidity levels
+                def generate_humidity(date, temp):
+                    # Higher humidity in summer, somewhat correlated with temp
+                    base_humidity = 50
+                    # Add seasonal variation
+                    day_of_year = date.dayofyear
+                    seasonal_component = 20 * np.sin(2 * np.pi * (day_of_year - 100) / 365.0)
+                    # Add random variation
+                    noise = (random.random() - 0.5) * 15
+                    # Slight inverse correlation with very high temperatures (hot days are often drier)
+                    temp_factor = -0.2 * max(0, temp - 30) 
+                    
+                    return min(100, max(10, base_humidity + seasonal_component + noise + temp_factor))
+                
+                # Generate the data
+                temps = [generate_temp(date) for date in dates]
+                humidity = [generate_humidity(date, temp) for date, temp in zip(dates, temps)]
+                
+                # Calculate heat index if that's the selected option
+                if analysis_type == "By Heat Index (Temperature + Humidity)":
+                    # Simple heat index calculation
+                    def heat_index(temp_c, rh):
+                        # Convert C to F for the standard heat index formula
+                        temp_f = (temp_c * 9/5) + 32
+                        
+                        # Simple heat index formula (simplified version)
+                        hi_f = 0.5 * (temp_f + 61.0 + ((temp_f - 68.0) * 1.2) + (rh * 0.094))
+                        
+                        # More precise calculation for high temperatures
+                        if temp_f >= 80:
+                            hi_f = -42.379 + 2.04901523 * temp_f + 10.14333127 * rh - 0.22475541 * temp_f * rh - 0.00683783 * temp_f * temp_f - 0.05481717 * rh * rh + 0.00122874 * temp_f * temp_f * rh + 0.00085282 * temp_f * rh * rh - 0.00000199 * temp_f * temp_f * rh * rh
+                        
+                        # Convert back to Celsius
+                        hi_c = (hi_f - 32) * 5/9
+                        return hi_c
+                    
+                    heat_indices = [heat_index(t, h) for t, h in zip(temps, humidity)]
+                    df = pd.DataFrame({
+                        'Date': dates,
+                        'Temperature (°C)': temps,
+                        'Relative Humidity (%)': humidity,
+                        'Heat Index (°C)': heat_indices
+                    })
+                    
+                    # Determine extreme heat days based on heat index
+                    threshold = np.percentile(df['Heat Index (°C)'], percentile)
+                    df['Is Extreme Heat'] = df['Heat Index (°C)'] > threshold
+                    
+                    # Value to analyze
+                    analysis_value = 'Heat Index (°C)'
+                    
+                else:  # By Maximum Temperature
+                    df = pd.DataFrame({
+                        'Date': dates,
+                        'Temperature (°C)': temps,
+                        'Relative Humidity (%)': humidity
+                    })
+                    
+                    # Determine extreme heat days based on temperature
+                    threshold = np.percentile(df['Temperature (°C)'], percentile)
+                    df['Is Extreme Heat'] = df['Temperature (°C)'] > threshold
+                    
+                    # Value to analyze
+                    analysis_value = 'Temperature (°C)'
+                
+                # Filter to extreme heat days
+                extreme_days = df[df['Is Extreme Heat']].copy()
+                
+                # Display the results
+                st.subheader(f"Extreme Heat Days in {year} (Above {percentile}th Percentile)")
+                
+                # Show the threshold
+                st.info(f"Threshold value: {threshold:.1f}°C {analysis_value.split(' ')[0]}")
+                
+                # Create calendar heatmap
+                fig = px.scatter(df, x=df['Date'].dt.month, y=df['Date'].dt.day, 
+                               color=df[analysis_value],
+                               color_continuous_scale='Turbo',  # Red-hot color scale
+                               title=f"Heat Calendar for {year}",
+                               labels={'x': 'Month', 'y': 'Day', 'color': analysis_value},
+                               size_max=10,
+                               height=400)
+                
+                # Add custom shapes for extreme heat days
+                for idx, row in extreme_days.iterrows():
+                    month = row['Date'].month
+                    day = row['Date'].day
+                    fig.add_shape(
+                        type="circle",
+                        x0=month - 0.3, y0=day - 0.3,
+                        x1=month + 0.3, y1=day + 0.3,
+                        line=dict(color="red", width=2),
+                        fillcolor="rgba(255,0,0,0)"
+                    )
+                
+                # Customize the layout
+                fig.update_layout(
+                    xaxis=dict(
+                        tickmode='array',
+                        tickvals=list(range(1, 13)),
+                        ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    ),
+                    yaxis=dict(
+                        autorange="reversed"  # To have day 1 at the top
+                    ),
+                    template='plotly_dark',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Display statistics
+                st.subheader("Heat Statistics")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Extreme Heat Days", f"{len(extreme_days)}", delta=None)
+                with col2:
+                    avg_extreme = extreme_days[analysis_value].mean()
+                    st.metric("Average " + analysis_value, f"{avg_extreme:.1f}°C", delta=None)
+                with col3:
+                    max_extreme = extreme_days[analysis_value].max()
+                    max_date = extreme_days.loc[extreme_days[analysis_value].idxmax(), 'Date'].strftime('%b %d')
+                    st.metric("Maximum " + analysis_value, f"{max_extreme:.1f}°C on {max_date}", delta=None)
+                
+                # Display extreme days data table
+                st.subheader("List of Extreme Heat Days")
+                # Format the table for display
+                display_df = extreme_days.copy()
+                display_df['Date'] = display_df['Date'].dt.strftime('%b %d, %Y')
+                # Round numeric columns to 1 decimal place
+                numeric_cols = display_df.select_dtypes(include=[np.number]).columns
+                display_df[numeric_cols] = display_df[numeric_cols].round(1)
+                
+                # Sort by the analysis value in descending order
+                display_df = display_df.sort_values(by=analysis_value, ascending=False)
+                
+                # Show the table
+                st.dataframe(display_df)
+                
+                # Option to download the data
+                csv_data = display_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Extreme Heat Days Data as CSV",
+                    data=csv_data,
+                    file_name="extreme_heat_days.csv",
+                    mime="text/csv"
+                )
+                
+                # Add context about the data
+                st.info(f"This analysis shows simulated extreme heat days for your selected location. In a real implementation, this would use actual climate data from NASA POWER API or similar sources, and could include more sophisticated heat metrics like wet-bulb temperature for heat stress analysis.")
+                
+            except Exception as e:
+                st.error(f"Error identifying extreme heat days: {str(e)}")
+
+if st.session_state.active_function == "rainfall_comparison":
+    st.subheader("Compare Rainfall: This Season vs. Last Year")
+    
+    # Location selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="rain_location_method")
+    
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                             value="Seattle, WA" if "last_city" not in st.session_state else st.session_state.last_city,
+                             key="rain_city_input")
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
+                                      min_value=-90.0, max_value=90.0, key="rain_lat_input")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
+                                       min_value=-180.0, max_value=180.0, key="rain_lon_input")
+        
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
+    
+    # Define seasons
+    current_month = datetime.now().month
+    # Approximate seasons (adjust as needed for your application)
+    season_mapping = {
+        12: "Winter", 1: "Winter", 2: "Winter",
+        3: "Spring", 4: "Spring", 5: "Spring",
+        6: "Summer", 7: "Summer", 8: "Summer",
+        9: "Fall", 10: "Fall", 11: "Fall"
+    }
+    current_season = season_mapping[current_month]
+    
+    # Allow user to select a different season
+    season = st.selectbox("Select Season to Compare", ["Winter", "Spring", "Summer", "Fall"], 
+                         index=list(["Winter", "Spring", "Summer", "Fall"]).index(current_season),
+                         key="rain_season")
+    
+    # Define the current year and last year
+    current_year = datetime.now().year
+    
+    if st.button("Compare Rainfall"):
+        with st.spinner("Comparing rainfall data between seasons..."):
+            try:
+                # Generate sample data for demonstration
+                import random
+                import numpy as np
+                
+                # Define season date ranges for current and previous year
+                season_dates = {
+                    "Winter": {"start_month": 12, "start_day": 1, "end_month": 2, "end_day": 28},
+                    "Spring": {"start_month": 3, "start_day": 1, "end_month": 5, "end_day": 31},
+                    "Summer": {"start_month": 6, "start_day": 1, "end_month": 8, "end_day": 31},
+                    "Fall": {"start_month": 9, "start_day": 1, "end_month": 11, "end_day": 30}
+                }
+                
+                # Handle the case where winter spans across years
+                if season == "Winter":
+                    # Current winter
+                    if current_month in [12, 1, 2]:
+                        if current_month == 12:
+                            current_start = datetime(current_year, 12, 1)
+                            current_end = datetime(current_year + 1, 2, 28)
+                        else:  # Jan or Feb
+                            current_start = datetime(current_year - 1, 12, 1)
+                            current_end = datetime(current_year, 2, 28)
+                        
+                        # Previous winter
+                        prev_start = datetime(current_year - 1, 12, 1)
+                        prev_end = datetime(current_year, 2, 28)
+                    else:
+                        # If we're not in winter, compare the most recent winter to the one before
+                        current_start = datetime(current_year - 1, 12, 1)
+                        current_end = datetime(current_year, 2, 28)
+                        prev_start = datetime(current_year - 2, 12, 1)
+                        prev_end = datetime(current_year - 1, 2, 28)
+                else:
+                    # For other seasons
+                    start_month = season_dates[season]["start_month"]
+                    start_day = season_dates[season]["start_day"]
+                    end_month = season_dates[season]["end_month"]
+                    end_day = season_dates[season]["end_day"]
+                    
+                    # Check if the selected season has already passed in the current year
+                    if current_month > end_month:
+                        # Season has passed, so "current" is this year
+                        current_start = datetime(current_year, start_month, start_day)
+                        current_end = datetime(current_year, end_month, end_day)
+                        prev_start = datetime(current_year - 1, start_month, start_day)
+                        prev_end = datetime(current_year - 1, end_month, end_day)
+                    elif current_month < start_month:
+                        # Season hasn't started yet, so "current" is last year
+                        current_start = datetime(current_year - 1, start_month, start_day)
+                        current_end = datetime(current_year - 1, end_month, end_day)
+                        prev_start = datetime(current_year - 2, start_month, start_day)
+                        prev_end = datetime(current_year - 2, end_month, end_day)
+                    else:
+                        # We're in the season now, so it's ongoing
+                        current_start = datetime(current_year, start_month, start_day)
+                        current_end = datetime.now()
+                        prev_start = datetime(current_year - 1, start_month, start_day)
+                        prev_end = datetime(current_year - 1, end_month, end_day)
+                
+                # Function to generate realistic precipitation data
+                def generate_precip(date, base_amount=2.0, seasonal_factor=1.0, noise_level=3.0):
+                    # Base amount adjusted by season
+                    base = base_amount * seasonal_factor
+                    
+                    # Add random variation
+                    noise = max(0, random.expovariate(1.0 / noise_level))
+                    
+                    # Make some days have zero precipitation
+                    if random.random() < 0.6:  # 60% chance of being dry
+                        return 0
+                    
+                    return base + noise
+                
+                # Generate seasonal factors based on location and season
+                # This is very simplified - in reality, seasonal patterns vary greatly by geography
+                season_factors = {
+                    "Winter": 1.5 if abs(latitude) > 30 else 0.8,  # More rain in winter for mid/high latitudes
+                    "Spring": 1.2,
+                    "Summer": 0.7 if abs(latitude) > 30 else 1.5,  # More rain in summer for tropical regions
+                    "Fall": 1.0
+                }
+                
+                # Generate daily data for current season
+                current_dates = pd.date_range(start=current_start, end=current_end, freq='D')
+                current_precip = [generate_precip(date, seasonal_factor=season_factors[season]) for date in current_dates]
+                
+                # Generate daily data for previous season
+                prev_dates = pd.date_range(start=prev_start, end=prev_end, freq='D')
+                # Slightly modify the precipitation pattern for last year (for interesting comparison)
+                prev_season_factor = season_factors[season] * (0.8 + random.random() * 0.4)  # 0.8 to 1.2 times this year's factor
+                prev_precip = [generate_precip(date, seasonal_factor=prev_season_factor) for date in prev_dates]
+                
+                # Create dataframes
+                current_df = pd.DataFrame({
+                    'Date': current_dates,
+                    'Precipitation (mm)': current_precip,
+                    'Year': 'This Year'
+                })
+                
+                prev_df = pd.DataFrame({
+                    'Date': prev_dates,
+                    'Precipitation (mm)': prev_precip,
+                    'Year': 'Last Year'
+                })
+                
+                # Combine the data
+                combined_df = pd.concat([current_df, prev_df])
+                
+                # Calculate cumulative precipitation
+                current_cumulative = current_df['Precipitation (mm)'].cumsum()
+                prev_cumulative = prev_df['Precipitation (mm)'].cumsum()
+                
+                # Calculate statistics
+                current_total = current_df['Precipitation (mm)'].sum()
+                prev_total = prev_df['Precipitation (mm)'].sum()
+                current_days_with_rain = len(current_df[current_df['Precipitation (mm)'] > 0])
+                prev_days_with_rain = len(prev_df[prev_df['Precipitation (mm)'] > 0])
+                
+                # Normalize the dates to display them on the same x-axis (days from start of season)
+                current_df['Day of Season'] = range(len(current_df))
+                prev_df['Day of Season'] = range(len(prev_df))
+                
+                # Create the comparison plots
+                
+                # 1. Daily precipitation comparison
+                fig1 = px.bar(combined_df, x='Date', y='Precipitation (mm)', color='Year',
+                             barmode='group', title=f"{season} Daily Precipitation Comparison",
+                             color_discrete_map={'This Year': '#1E90FF', 'Last Year': '#9370DB'})
+                
+                fig1.update_layout(
+                    xaxis_title='Date',
+                    yaxis_title='Precipitation (mm)',
+                    legend_title='',
+                    template='plotly_dark',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                
+                st.plotly_chart(fig1, use_container_width=True)
+                
+                # 2. Cumulative precipitation comparison
+                fig2 = go.Figure()
+                
+                # Add current year line
+                fig2.add_trace(go.Scatter(
+                    x=current_df['Day of Season'],
+                    y=current_cumulative,
+                    mode='lines',
+                    name='This Year',
+                    line=dict(color='#1E90FF', width=3)
+                ))
+                
+                # Add previous year line
+                fig2.add_trace(go.Scatter(
+                    x=prev_df['Day of Season'],
+                    y=prev_cumulative,
+                    mode='lines',
+                    name='Last Year',
+                    line=dict(color='#9370DB', width=3)
+                ))
+                
+                # Update layout
+                fig2.update_layout(
+                    title=f"{season} Cumulative Precipitation Comparison",
+                    xaxis_title='Days from Start of Season',
+                    yaxis_title='Cumulative Precipitation (mm)',
+                    legend_title='',
+                    template='plotly_dark',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                
+                st.plotly_chart(fig2, use_container_width=True)
+                
+                # Display statistics
+                st.subheader("Rainfall Statistics")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    percent_change = ((current_total - prev_total) / prev_total * 100) if prev_total > 0 else 0
+                    st.metric("Total Precipitation", 
+                             f"{current_total:.1f} mm", 
+                             delta=f"{percent_change:.1f}% vs last year")
+                
+                with col2:
+                    st.metric("Days with Rain", 
+                             f"{current_days_with_rain}", 
+                             delta=f"{current_days_with_rain - prev_days_with_rain} days vs last year")
+                
+                with col3:
+                    current_avg = current_total / max(1, len(current_df))
+                    prev_avg = prev_total / max(1, len(prev_df))
+                    avg_percent_change = ((current_avg - prev_avg) / prev_avg * 100) if prev_avg > 0 else 0
+                    st.metric("Avg. Daily Precipitation", 
+                             f"{current_avg:.1f} mm", 
+                             delta=f"{avg_percent_change:.1f}% vs last year")
+                
+                # Context about the data
+                comparison_result = "wetter" if current_total > prev_total else "drier"
+                st.info(f"Based on this simulated data, the {season.lower()} season this year is {comparison_result} than last year. In a real implementation, this would use actual climate data from NASA POWER API or similar sources.")
+                
+                # Option to download the data
+                csv_data = combined_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Rainfall Comparison Data as CSV",
+                    data=csv_data,
+                    file_name="rainfall_comparison.csv",
+                    mime="text/csv"
+                )
+                
+            except Exception as e:
+                st.error(f"Error comparing rainfall data: {str(e)}")
+
+if st.session_state.active_function == "export_anomalies":
+    st.subheader("Export Climate Anomalies as a Table")
+    
+    # Location selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="anomaly_location_method")
+    
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                             value="Boulder, CO" if "last_city" not in st.session_state else st.session_state.last_city,
+                             key="anomaly_city_input")
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
+                                      min_value=-90.0, max_value=90.0, key="anomaly_lat_input")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
+                                       min_value=-180.0, max_value=180.0, key="anomaly_lon_input")
+        
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
+    
+    # Date range selection
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        selected_period = st.selectbox("Time Period", 
+                                     ["Last 5 Years", "Last 10 Years", "Last 30 Years", "Custom Range"],
+                                     key="anomaly_period")
+    
+    # Set the date range based on the selected period
+    end_date = datetime.now()
+    
+    if selected_period == "Last 5 Years":
+        start_date = datetime(end_date.year - 5, 1, 1)
+    elif selected_period == "Last 10 Years":
+        start_date = datetime(end_date.year - 10, 1, 1)
+    elif selected_period == "Last 30 Years":
+        start_date = datetime(end_date.year - 30, 1, 1)
+    else:  # Custom Range
+        with col2:
+            start_date = st.date_input("Start Date", 
+                                      datetime(end_date.year - 10, 1, 1),
+                                      key="anomaly_start_date")
+        with col3:
+            end_date = st.date_input("End Date", 
+                                    end_date,
+                                    key="anomaly_end_date")
+    
+    # Variable selection
+    variable = st.selectbox("Climate Variable", 
+                          ["Temperature", "Precipitation", "Humidity", "Wind Speed"],
+                          key="anomaly_variable")
+    
+    # Baseline selection
+    baseline_period = st.selectbox("Baseline Period", 
+                                 ["1951-1980", "1971-2000", "1981-2010", "1991-2020"],
+                                 key="anomaly_baseline")
+    
+    # Calculate button
+    if st.button("Calculate and Export Anomalies"):
+        with st.spinner("Calculating climate anomalies..."):
+            try:
+                # Generate sample data for demonstration
+                import random
+                import numpy as np
+                
+                # Generate monthly data for the selected period
+                date_range = pd.date_range(start=start_date, end=end_date, freq='M')
+                
+                # Function to generate seasonal data with a trend and random variation
+                def seasonal_data(date, variable, base_value, trend_per_year=0.03):
+                    # Base seasonal pattern
+                    month = date.month
+                    if variable == "Temperature":
+                        # Temperature peaks in summer months
+                        seasonal_factor = -np.cos(np.pi * month / 6) * 10
+                        base = base_value + seasonal_factor
+                        # Add trend (warming)
+                        years_since_2000 = date.year + date.month/12 - 2000
+                        trend = years_since_2000 * trend_per_year
+                        # Add random variation
+                        noise = np.random.normal(0, 1.5)
+                        return base + trend + noise
+                    
+                    elif variable == "Precipitation":
+                        # Precipitation varies by month and has less of a clear trend
+                        if month in [6, 7, 8]:  # Summer
+                            seasonal_factor = 1.2
+                        elif month in [12, 1, 2]:  # Winter
+                            seasonal_factor = 0.8
+                        else:
+                            seasonal_factor = 1.0
+                        
+                        base = base_value * seasonal_factor
+                        # Add slight trend (e.g., drying or wetting depending on location)
+                        # This is highly location-dependent in reality
+                        if abs(latitude) > 40:  # Higher latitudes getting wetter
+                            trend_direction = 0.005
+                        else:  # Lower latitudes getting drier
+                            trend_direction = -0.003
+                        
+                        years_since_2000 = date.year + date.month/12 - 2000
+                        trend = 1 + years_since_2000 * trend_direction
+                        
+                        # Add random variation (precipitation is more variable)
+                        noise_factor = 1 + np.random.normal(0, 0.3)
+                        return base * trend * max(0, noise_factor)
+                    
+                    elif variable == "Humidity":
+                        # Humidity often correlates inversely with temperature in many regions
+                        seasonal_factor = np.cos(np.pi * month / 6) * 10
+                        base = base_value + seasonal_factor
+                        # Add slight trend
+                        years_since_2000 = date.year + date.month/12 - 2000
+                        trend = years_since_2000 * 0.01
+                        # Add random variation
+                        noise = np.random.normal(0, 3)
+                        return min(100, max(0, base + trend + noise))
+                    
+                    else:  # Wind Speed
+                        # Wind patterns vary by season
+                        if month in [3, 4, 5]:  # Spring often windier
+                            seasonal_factor = 1.3
+                        else:
+                            seasonal_factor = 1.0
+                        
+                        base = base_value * seasonal_factor
+                        # Wind trends are complex and location-specific
+                        # For simplicity, adding minimal trend
+                        years_since_2000 = date.year + date.month/12 - 2000
+                        trend = 1 + years_since_2000 * 0.001
+                        
+                        # Add random variation
+                        noise_factor = 1 + np.random.normal(0, 0.2)
+                        return max(0, base * trend * noise_factor)
+                
+                # Set base values based on variable and approximate latitude
+                if variable == "Temperature":
+                    # Base temperature varies by latitude
+                    base_value = 25 - 0.5 * abs(latitude)
+                    unit = "°C"
+                elif variable == "Precipitation":
+                    # Base precipitation varies by region
+                    if abs(latitude) < 15:  # Tropical
+                        base_value = 150
+                    elif abs(latitude) < 40:  # Temperate
+                        base_value = 80
+                    else:  # Polar regions
+                        base_value = 40
+                    unit = "mm/month"
+                elif variable == "Humidity":
+                    # Base humidity
+                    base_value = 60
+                    unit = "%"
+                else:  # Wind Speed
+                    base_value = 12
+                    unit = "km/h"
+                
+                # Generate the data
+                values = [seasonal_data(date, variable, base_value) for date in date_range]
+                
+                # Create dataframe
+                df = pd.DataFrame({
+                    'Date': date_range,
+                    'Year': date_range.year,
+                    'Month': date_range.month,
+                    f'{variable} ({unit})': values
+                })
+                
+                # Calculate baseline averages for each month
+                # In reality, this would use historical data for the selected baseline period
+                baseline_monthly_avgs = {}
+                
+                # Parse baseline period years
+                baseline_start_year, baseline_end_year = map(int, baseline_period.split('-'))
+                
+                # Simulate baseline data
+                baseline_years = list(range(baseline_start_year, baseline_end_year + 1))
+                for month in range(1, 13):
+                    month_values = []
+                    for year in baseline_years:
+                        # Create a date in the baseline period
+                        baseline_date = datetime(year, month, 15)
+                        # Generate data for this date
+                        value = seasonal_data(baseline_date, variable, base_value)
+                        month_values.append(value)
+                    # Calculate the average for this month across all baseline years
+                    baseline_monthly_avgs[month] = np.mean(month_values)
+                
+                # Calculate anomalies relative to the baseline
+                anomalies = []
+                for _, row in df.iterrows():
+                    month = row['Month']
+                    value = row[f'{variable} ({unit})']
+                    baseline = baseline_monthly_avgs[month]
+                    
+                    if variable == "Temperature":
+                        # For temperature, simple difference
+                        anomaly = value - baseline
+                    else:
+                        # For other variables, use percent difference
+                        anomaly = (value - baseline) / baseline * 100 if baseline > 0 else 0
+                    
+                    anomalies.append(anomaly)
+                
+                # Add anomalies to the dataframe
+                if variable == "Temperature":
+                    df['Anomaly'] = anomalies
+                    df['Anomaly Unit'] = "°C"
+                else:
+                    df['Anomaly'] = anomalies
+                    df['Anomaly Unit'] = "%"
+                
+                # Display the anomalies table
+                st.subheader(f"{variable} Anomalies Relative to {baseline_period}")
+                
+                # Format the dataframe for display
+                display_df = df.copy()
+                display_df['Date'] = display_df['Date'].dt.strftime('%b %Y')
+                
+                # Round values for display
+                if variable == "Temperature":
+                    display_df[f'{variable} ({unit})'] = display_df[f'{variable} ({unit})'].round(1)
+                    display_df['Anomaly'] = display_df['Anomaly'].round(1)
+                else:
+                    display_df[f'{variable} ({unit})'] = display_df[f'{variable} ({unit})'].round(1)
+                    display_df['Anomaly'] = display_df['Anomaly'].round(1)
+                
+                # Create a color-coded dataframe for the anomalies
+                st.dataframe(
+                    display_df,
+                    column_config={
+                        'Anomaly': st.column_config.NumberColumn(
+                            f"{variable} Anomaly ({display_df['Anomaly Unit'].iloc[0]})",
+                            format="%.1f" + (" °C" if variable == "Temperature" else " %"),
+                            help=f"Difference from {baseline_period} baseline",
+                        )
+                    },
+                    hide_index=True
+                )
+                
+                # Create visualization of anomalies
+                if variable == "Temperature":
+                    # Color mapping for temperature anomalies
+                    colors = ['blue' if a < -1 else 'lightblue' if a < 0 
+                             else 'salmon' if a < 1 else 'red' for a in df['Anomaly']]
+                    
+                    # Create plot
+                    fig = px.bar(
+                        df, 
+                        x='Date', 
+                        y='Anomaly',
+                        title=f"Monthly Temperature Anomalies Relative to {baseline_period}",
+                        labels={'Anomaly': 'Temperature Anomaly (°C)', 'Date': ''},
+                        color='Anomaly',
+                        color_continuous_scale='RdBu_r'
+                    )
+                else:
+                    # For non-temperature variables, use a diverging color scale centered at 0
+                    fig = px.bar(
+                        df, 
+                        x='Date', 
+                        y='Anomaly',
+                        title=f"Monthly {variable} Anomalies Relative to {baseline_period}",
+                        labels={'Anomaly': f'{variable} Anomaly (%)', 'Date': ''},
+                        color='Anomaly',
+                        color_continuous_scale='RdBu'
+                    )
+                
+                # Layout customization
+                fig.update_layout(
+                    xaxis=dict(
+                        tickmode='array',
+                        tickvals=df['Date'][::12],  # Show tick every 12 months
+                        ticktext=[d.strftime('%Y') for d in df['Date'][::12]]
+                    ),
+                    template='plotly_dark',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color='white')
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Calculate some statistics about the anomalies
+                mean_anomaly = df['Anomaly'].mean()
+                trend_per_decade = df['Anomaly'].iloc[-60:].mean() - df['Anomaly'].iloc[:60].mean() if len(df) > 120 else np.nan
+                
+                # Display statistics
+                st.subheader("Anomaly Statistics")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if variable == "Temperature":
+                        st.metric("Mean Anomaly", f"{mean_anomaly:.2f} °C", 
+                                 delta=f"{mean_anomaly:.2f} °C" if mean_anomaly != 0 else None)
+                    else:
+                        st.metric("Mean Anomaly", f"{mean_anomaly:.1f}%", 
+                                 delta=f"{mean_anomaly:.1f}%" if mean_anomaly != 0 else None)
+                
+                with col2:
+                    if not np.isnan(trend_per_decade):
+                        if variable == "Temperature":
+                            st.metric("Recent Trend (per decade)", f"{trend_per_decade:.2f} °C", 
+                                     delta=f"{trend_per_decade:.2f} °C" if trend_per_decade != 0 else None)
+                        else:
+                            st.metric("Recent Trend (per decade)", f"{trend_per_decade:.1f}%", 
+                                     delta=f"{trend_per_decade:.1f}%" if trend_per_decade != 0 else None)
+                
+                with col3:
+                    extreme_anomalies = len(df[abs(df['Anomaly']) > (2 if variable == "Temperature" else 50)])
+                    st.metric("Extreme Anomalies", f"{extreme_anomalies}", 
+                             delta=None)
+                
+                # Allow downloading the data
+                csv = df.to_csv(index=False).encode('utf-8')
+                
+                st.download_button(
+                    label=f"Download {variable} Anomalies as CSV",
+                    data=csv,
+                    file_name=f"{variable.lower()}_anomalies_{baseline_period}.csv",
+                    mime="text/csv"
+                )
+                
+                # Add Excel export option
+                excel_buffer = io.BytesIO()
+                with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                    df.to_excel(writer, sheet_name='Anomalies', index=False)
+                    
+                    # Add a summary sheet
+                    summary_data = {
+                        'Statistic': ['Mean Anomaly', 'Trend per Decade', 'Extreme Anomalies', 
+                                     'Baseline Period', 'Data Period'],
+                        'Value': [
+                            f"{mean_anomaly:.2f} {display_df['Anomaly Unit'].iloc[0]}", 
+                            f"{trend_per_decade:.2f} {display_df['Anomaly Unit'].iloc[0]} per decade" if not np.isnan(trend_per_decade) else "N/A",
+                            str(extreme_anomalies),
+                            baseline_period,
+                            f"{start_date.strftime('%b %Y')} to {end_date.strftime('%b %Y')}"
+                        ]
+                    }
+                    pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
+                
+                excel_data = excel_buffer.getvalue()
+                
+                st.download_button(
+                    label=f"Download {variable} Anomalies as Excel",
+                    data=excel_data,
+                    file_name=f"{variable.lower()}_anomalies_{baseline_period}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+                
+                # Add context about the data
+                st.info(f"This chart shows simulated {variable.lower()} anomalies for your selected location relative to a {baseline_period} baseline. In a real implementation, this would use actual climate data from NASA POWER API or similar sources. Positive anomalies indicate values above the baseline, while negative anomalies indicate values below the baseline.")
+                
+            except Exception as e:
+                st.error(f"Error calculating climate anomalies: {str(e)}")
