@@ -656,11 +656,11 @@ if st.session_state.active_function == "precipitation_map":
                     blur=10,
                     max_val=max_precip,
                     gradient={
-                        0.2: 'blue',
-                        0.4: 'cyan',
-                        0.6: 'lime',
-                        0.8: 'yellow',
-                        1.0: 'red'
+                        "0.2": 'blue',
+                        "0.4": 'cyan', 
+                        "0.6": 'lime',
+                        "0.8": 'yellow',
+                        "1.0": 'red'
                     }
                 ).add_to(m)
                 
@@ -782,11 +782,11 @@ if st.session_state.active_function == "precipitation_map":
                 
                 from folium.plugins import HeatMap
                 HeatMap(heat_data, radius=15, gradient={
-                    0.2: 'blue',
-                    0.4: 'cyan',
-                    0.6: 'lime',
-                    0.8: 'yellow',
-                    1.0: 'red'
+                    "0.2": 'blue',
+                    "0.4": 'cyan',
+                    "0.6": 'lime',
+                    "0.8": 'yellow',
+                    "1.0": 'red'
                 }).add_to(m)
                 
                 # Add a marker for the selected location
