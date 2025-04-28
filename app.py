@@ -1673,156 +1673,25 @@ if st.session_state.active_function == "export_anomalies":
     if st.button("Calculate and Export Anomalies"):
         with st.spinner("Calculating climate anomalies..."):
             try:
-                # Generate sample data for demonstration
-                import random
-                import numpy as np
+                # Fetch real climate data from NASA POWER API
+                from nasa_data import calculate_climate_anomalies
                 
-                # Generate monthly data for the selected period
-                date_range = pd.date_range(start=start_date, end=end_date, freq='M')
+                # Convert dates to string format for API
+                start_date_str = start_date.strftime('%Y-%m-%d') 
+                end_date_str = end_date.strftime('%Y-%m-%d')
                 
-                # Function to generate seasonal data with a trend and random variation
-                def seasonal_data(date, variable, base_value, trend_per_year=0.03):
-                    # Base seasonal pattern
-                    month = date.month
-                    if variable == "Temperature":
-                        # Temperature peaks in summer months
-                        seasonal_factor = -np.cos(np.pi * month / 6) * 10
-                        base = base_value + seasonal_factor
-                        # Add trend (warming)
-                        years_since_2000 = date.year + date.month/12 - 2000
-                        trend = years_since_2000 * trend_per_year
-                        # Add random variation
-                        noise = np.random.normal(0, 1.5)
-                        return base + trend + noise
-                    
-                    elif variable == "Precipitation":
-                        # Precipitation varies by month and has less of a clear trend
-                        if month in [6, 7, 8]:  # Summer
-                            seasonal_factor = 1.2
-                        elif month in [12, 1, 2]:  # Winter
-                            seasonal_factor = 0.8
-                        else:
-                            seasonal_factor = 1.0
-                        
-                        base = base_value * seasonal_factor
-                        # Add slight trend (e.g., drying or wetting depending on location)
-                        # This is highly location-dependent in reality
-                        if abs(latitude) > 40:  # Higher latitudes getting wetter
-                            trend_direction = 0.005
-                        else:  # Lower latitudes getting drier
-                            trend_direction = -0.003
-                        
-                        years_since_2000 = date.year + date.month/12 - 2000
-                        trend = 1 + years_since_2000 * trend_direction
-                        
-                        # Add random variation (precipitation is more variable)
-                        noise_factor = 1 + np.random.normal(0, 0.3)
-                        return base * trend * max(0, noise_factor)
-                    
-                    elif variable == "Humidity":
-                        # Humidity often correlates inversely with temperature in many regions
-                        seasonal_factor = np.cos(np.pi * month / 6) * 10
-                        base = base_value + seasonal_factor
-                        # Add slight trend
-                        years_since_2000 = date.year + date.month/12 - 2000
-                        trend = years_since_2000 * 0.01
-                        # Add random variation
-                        noise = np.random.normal(0, 3)
-                        return min(100, max(0, base + trend + noise))
-                    
-                    else:  # Wind Speed
-                        # Wind patterns vary by season
-                        if month in [3, 4, 5]:  # Spring often windier
-                            seasonal_factor = 1.3
-                        else:
-                            seasonal_factor = 1.0
-                        
-                        base = base_value * seasonal_factor
-                        # Wind trends are complex and location-specific
-                        # For simplicity, adding minimal trend
-                        years_since_2000 = date.year + date.month/12 - 2000
-                        trend = 1 + years_since_2000 * 0.001
-                        
-                        # Add random variation
-                        noise_factor = 1 + np.random.normal(0, 0.2)
-                        return max(0, base * trend * noise_factor)
+                # Status message
+                st.text(f"Fetching climate data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} for {variable.lower()}...")
                 
-                # Set base values based on variable and approximate latitude
-                if variable == "Temperature":
-                    # Base temperature varies by latitude
-                    base_value = 25 - 0.5 * abs(latitude)
-                    unit = "°C"
-                elif variable == "Precipitation":
-                    # Base precipitation varies by region
-                    if abs(latitude) < 15:  # Tropical
-                        base_value = 150
-                    elif abs(latitude) < 40:  # Temperate
-                        base_value = 80
-                    else:  # Polar regions
-                        base_value = 40
-                    unit = "mm/month"
-                elif variable == "Humidity":
-                    # Base humidity
-                    base_value = 60
-                    unit = "%"
-                else:  # Wind Speed
-                    base_value = 12
-                    unit = "km/h"
-                
-                # Generate the data
-                values = [seasonal_data(date, variable, base_value) for date in date_range]
-                
-                # Create dataframe
-                df = pd.DataFrame({
-                    'Date': date_range,
-                    'Year': date_range.year,
-                    'Month': date_range.month,
-                    f'{variable} ({unit})': values
-                })
-                
-                # Calculate baseline averages for each month
-                # In reality, this would use historical data for the selected baseline period
-                baseline_monthly_avgs = {}
-                
-                # Parse baseline period years
-                baseline_start_year, baseline_end_year = map(int, baseline_period.split('-'))
-                
-                # Simulate baseline data
-                baseline_years = list(range(baseline_start_year, baseline_end_year + 1))
-                for month in range(1, 13):
-                    month_values = []
-                    for year in baseline_years:
-                        # Create a date in the baseline period
-                        baseline_date = datetime(year, month, 15)
-                        # Generate data for this date
-                        value = seasonal_data(baseline_date, variable, base_value)
-                        month_values.append(value)
-                    # Calculate the average for this month across all baseline years
-                    baseline_monthly_avgs[month] = np.mean(month_values)
-                
-                # Calculate anomalies relative to the baseline
-                anomalies = []
-                for _, row in df.iterrows():
-                    month = row['Month']
-                    value = row[f'{variable} ({unit})']
-                    baseline = baseline_monthly_avgs[month]
-                    
-                    if variable == "Temperature":
-                        # For temperature, simple difference
-                        anomaly = value - baseline
-                    else:
-                        # For other variables, use percent difference
-                        anomaly = (value - baseline) / baseline * 100 if baseline > 0 else 0
-                    
-                    anomalies.append(anomaly)
-                
-                # Add anomalies to the dataframe
-                if variable == "Temperature":
-                    df['Anomaly'] = anomalies
-                    df['Anomaly Unit'] = "°C"
-                else:
-                    df['Anomaly'] = anomalies
-                    df['Anomaly Unit'] = "%"
+                # Get climate anomalies data from NASA POWER API
+                df = calculate_climate_anomalies(
+                    latitude,
+                    longitude,
+                    start_date_str,
+                    end_date_str,
+                    variable.lower(),
+                    baseline_period
+                )
                 
                 # Display the anomalies table
                 st.subheader(f"{variable} Anomalies Relative to {baseline_period}")
@@ -1832,12 +1701,13 @@ if st.session_state.active_function == "export_anomalies":
                 display_df['Date'] = display_df['Date'].dt.strftime('%b %Y')
                 
                 # Round values for display
-                if variable == "Temperature":
-                    display_df[f'{variable} ({unit})'] = display_df[f'{variable} ({unit})'].round(1)
-                    display_df['Anomaly'] = display_df['Anomaly'].round(1)
-                else:
-                    display_df[f'{variable} ({unit})'] = display_df[f'{variable} ({unit})'].round(1)
-                    display_df['Anomaly'] = display_df['Anomaly'].round(1)
+                value_cols = [col for col in display_df.columns if col not in ['Date', 'Year', 'Month', 'Anomaly', 'Anomaly Unit']]
+                if len(value_cols) > 0:
+                    for col in value_cols:
+                        display_df[col] = display_df[col].round(1)
+                
+                # Round anomaly values
+                display_df['Anomaly'] = display_df['Anomaly'].round(1)
                 
                 # Create a color-coded dataframe for the anomalies
                 st.dataframe(
@@ -1964,7 +1834,7 @@ if st.session_state.active_function == "export_anomalies":
                 )
                 
                 # Add context about the data
-                st.info(f"This chart shows simulated {variable.lower()} anomalies for your selected location relative to a {baseline_period} baseline. In a real implementation, this would use actual climate data from NASA POWER API or similar sources. Positive anomalies indicate values above the baseline, while negative anomalies indicate values below the baseline.")
+                st.info(f"This chart shows {variable.lower()} anomalies for your selected location relative to a {baseline_period} baseline using NASA POWER climate data. Positive anomalies indicate values above the baseline, while negative anomalies indicate values below the baseline.")
                 
             except Exception as e:
                 st.error(f"Error calculating climate anomalies: {str(e)}")
