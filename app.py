@@ -1619,33 +1619,63 @@ elif st.session_state.active_function == "climate_resilience":
         location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], 
                                  horizontal=True, key="resilience_location_method")
         
+        # Initialize location session variables if not present
+        if "user_location" not in st.session_state:
+            st.session_state.user_location = {"lat": 37.7749, "lon": -122.4194}
+        if "last_city" not in st.session_state:
+            st.session_state.last_city = "San Francisco, CA"
+        
+        # Flag to track if location has changed
+        if "resilience_data_needs_update" not in st.session_state:
+            st.session_state.resilience_data_needs_update = True
+        
         if location_method == "City Name":
             city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
-                                 value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city,
+                                 value=st.session_state.last_city,
                                  key="resilience_city")
             
             if city:
-                st.session_state.last_city = city
-                lat, lon = get_city_coordinates(city)
-                if lat and lon:
-                    st.success(f"Location found: {lat:.4f}, {lon:.4f}")
-                    latitude = lat
-                    longitude = lon
-                    st.session_state.user_location = {"lat": latitude, "lon": longitude}
+                # Only geocode if city changed
+                if city != st.session_state.last_city:
+                    st.session_state.last_city = city
+                    lat, lon = get_city_coordinates(city)
+                    if lat and lon:
+                        st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                        
+                        # Check if location has changed
+                        if (abs(st.session_state.user_location.get("lat", 0) - lat) > 0.001 or 
+                            abs(st.session_state.user_location.get("lon", 0) - lon) > 0.001):
+                            st.session_state.user_location = {"lat": lat, "lon": lon}
+                            # Force a refresh of resilience data
+                            st.session_state.resilience_data_needs_update = True
+                            st.info("Location updated! Climate data will refresh when you generate the report.")
+                            
+                        latitude = lat
+                        longitude = lon
+                    else:
+                        st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                        latitude = st.session_state.user_location["lat"]
+                        longitude = st.session_state.user_location["lon"]
                 else:
-                    st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
-                    latitude = st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749
-                    longitude = st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194
+                    latitude = st.session_state.user_location["lat"]
+                    longitude = st.session_state.user_location["lon"]
             else:
-                latitude = st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749
-                longitude = st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
         else:
             # Direct coordinate input
-            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"] if "user_location" in st.session_state else 37.7749, 
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
                                       min_value=-90.0, max_value=90.0, step=0.01, key="resilience_lat")
-            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"] if "user_location" in st.session_state else -122.4194, 
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
                                        min_value=-180.0, max_value=180.0, step=0.01, key="resilience_lon")
-            st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            
+            # Check if coordinates have changed
+            if (abs(st.session_state.user_location.get("lat", 0) - latitude) > 0.001 or 
+                abs(st.session_state.user_location.get("lon", 0) - longitude) > 0.001):
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+                # Force a refresh of resilience data
+                st.session_state.resilience_data_needs_update = True
+                st.info("Location updated! Climate data will refresh when you generate the report.")
         
         # Industry selection
         industry_options = ["aerospace", "agriculture", "energy", "insurance", "forestry", "catastrophes"]
@@ -1704,6 +1734,12 @@ elif st.session_state.active_function == "climate_resilience":
         with st.spinner(f"Generating climate resilience report for {industry_names[selected_industry]} industry in {target_year}..."):
             # Call the climate_resilience module to generate the report
             try:
+                # Reset the update flag since we're fetching new data
+                st.session_state.resilience_data_needs_update = False
+                
+                # Log key parameters for debugging
+                st.write(f"Fetching climate data for: {latitude}, {longitude}")
+                
                 report = climate_resilience.generate_resilience_report(
                     lat=latitude,
                     lon=longitude,

@@ -389,17 +389,26 @@ def get_climate_projections(lat, lon, target_year=2050, scenario="moderate"):
     baseline_end = datetime.now().strftime("%Y-%m-%d")
     
     try:
-        # Get historical temperature data
-        baseline_temps = nasa_data.get_temperature_trends(lat, lon, baseline_start, baseline_end)
-        
-        # Extract basic metrics
-        if isinstance(baseline_temps, tuple) and len(baseline_temps) > 0:
-            baseline_temps_df = baseline_temps[0]
-            baseline_temp = baseline_temps_df['Temperature (°C)'].mean() if 'Temperature (°C)' in baseline_temps_df else 15.0
-            baseline_temp_max = baseline_temps_df['Max Temperature (°C)'].mean() if 'Max Temperature (°C)' in baseline_temps_df else baseline_temp + 5.0
-            baseline_temp_min = baseline_temps_df['Min Temperature (°C)'].mean() if 'Min Temperature (°C)' in baseline_temps_df else baseline_temp - 5.0
-        else:
-            # Fallback to reasonable values if data fetch fails
+        print(f"Fetching climate data for coordinates: {lat}, {lon}")
+        # Get historical temperature data - with better error handling
+        try:
+            baseline_temps = nasa_data.get_temperature_trends(lat, lon, baseline_start, baseline_end)
+            
+            # Extract basic metrics
+            if isinstance(baseline_temps, tuple) and len(baseline_temps) > 0:
+                baseline_temps_df = baseline_temps[0]
+                baseline_temp = baseline_temps_df['Temperature (°C)'].mean() if 'Temperature (°C)' in baseline_temps_df else 15.0
+                baseline_temp_max = baseline_temps_df['Max Temperature (°C)'].mean() if 'Max Temperature (°C)' in baseline_temps_df else baseline_temp + 5.0
+                baseline_temp_min = baseline_temps_df['Min Temperature (°C)'].mean() if 'Min Temperature (°C)' in baseline_temps_df else baseline_temp - 5.0
+                print(f"Successfully obtained temperature data: baseline={baseline_temp:.1f}°C")
+            else:
+                # Fallback to reasonable values if data fetch fails
+                print("Temperature data not in expected format, using estimated values")
+                baseline_temp = 15.0
+                baseline_temp_max = 20.0
+                baseline_temp_min = 10.0
+        except Exception as e:
+            print(f"Error fetching temperature data: {str(e)}")
             baseline_temp = 15.0
             baseline_temp_max = 20.0
             baseline_temp_min = 10.0
@@ -411,8 +420,15 @@ def get_climate_projections(lat, lon, target_year=2050, scenario="moderate"):
             prev_year_end = datetime.now().strftime("%Y-%m-%d")
             current_precip, prev_precip = nasa_data.get_rainfall_comparison(
                 lat, lon, baseline_start, baseline_end, prev_year_start, prev_year_end)
-            baseline_precip = current_precip['Precipitation (mm)'].mean() if 'Precipitation (mm)' in current_precip else 50.0
-        except Exception:
+            
+            if 'Precipitation (mm)' in current_precip:
+                baseline_precip = current_precip['Precipitation (mm)'].mean()
+                print(f"Successfully obtained precipitation data: baseline={baseline_precip:.1f}mm")
+            else:
+                print("Precipitation data not in expected format, using estimated values")
+                baseline_precip = 50.0
+        except Exception as e:
+            print(f"Error fetching precipitation data: {str(e)}")
             baseline_precip = 50.0  # Fallback value
         
         # Get scenario parameters
