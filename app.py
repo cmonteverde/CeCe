@@ -85,6 +85,59 @@ css = """
         background-clip: text;
         color: transparent;
     }
+    .industry-buttons-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+    .industry-button {
+        width: 120px;
+        height: 120px;
+        background-color: rgba(30, 30, 30, 0.6);
+        border: 1px solid rgba(147, 112, 219, 0.3);
+        border-radius: 12px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    .industry-button:hover {
+        border-color: rgba(147, 112, 219, 0.8);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    }
+    .industry-button img {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+        object-fit: cover;
+    }
+    .industry-button-text {
+        font-weight: bold;
+        font-size: 14px;
+        text-align: center;
+        z-index: 2;
+    }
+    .industry-button-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.3;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+    .industry-button:hover .industry-button-bg {
+        opacity: 0.5;
+    }
     .buttons-container {
         display: flex;
         justify-content: space-between;
@@ -284,6 +337,94 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Define industry-specific regions and default points of interest
+industry_regions = {
+    "aerospace": {
+        "name": "Aerospace",
+        "center": [33.9416, -118.4085],  # Los Angeles Airport area
+        "zoom": 9,
+        "description": "Aerospace industry climate impact analysis showing wind patterns, turbulence risk areas, and visibility forecasts around major airports and flight paths.",
+        "risks": ["High wind areas", "Turbulence zones", "Storm paths", "Visibility issues", "Icing conditions"],
+        "parameters": ["wind_speed", "temperature", "humidity"],
+        "mitigation": [
+            "Optimize flight paths to avoid high-turbulence regions",
+            "Schedule maintenance during favorable weather windows",
+            "Implement real-time climate monitoring systems",
+            "Develop climate-resilient infrastructure"
+        ]
+    },
+    "agriculture": {
+        "name": "Agriculture",
+        "center": [41.8781, -93.0977],  # Iowa - Major agricultural region
+        "zoom": 7,
+        "description": "Agricultural climate impact analysis showing growing degree days, frost risk zones, and precipitation patterns across major farming regions.",
+        "risks": ["Drought zones", "Flood-prone areas", "Frost risk regions", "Heat stress areas", "Pest pressure zones"],
+        "parameters": ["precipitation", "temperature", "growing_degree_days"],
+        "mitigation": [
+            "Implement drought-resistant crop varieties in high-risk areas",
+            "Develop water conservation systems in precipitation-deficit zones",
+            "Adjust planting schedules based on changing frost patterns",
+            "Install efficient irrigation systems in drought-prone regions"
+        ]
+    },
+    "energy": {
+        "name": "Energy",
+        "center": [32.7767, -96.7970],  # Texas - Energy production hub
+        "zoom": 6,
+        "description": "Energy infrastructure climate impact analysis showing temperature extremes, storm paths, and flooding risks to power generation and distribution systems.",
+        "risks": ["Extreme heat zones", "Flood-prone infrastructure", "High wind regions", "Storm surge areas", "Wildfire risk zones"],
+        "parameters": ["temperature", "precipitation", "wind_speed"],
+        "mitigation": [
+            "Prioritize grid hardening in extreme weather corridors",
+            "Develop distributed energy resources in vulnerable regions",
+            "Implement cooling systems for infrastructure in heat zones",
+            "Elevate critical equipment in flood-prone areas"
+        ]
+    },
+    "insurance": {
+        "name": "Insurance",
+        "center": [25.7617, -80.1918],  # Miami - High climate risk area
+        "zoom": 8,
+        "description": "Insurance risk analysis showing flood zones, storm surge areas, and property damage probability based on climate data and extreme weather patterns.",
+        "risks": ["Flood zones", "Hurricane paths", "Storm surge areas", "Wildfire corridors", "Hail damage regions"],
+        "parameters": ["precipitation", "wind_speed", "temperature"],
+        "mitigation": [
+            "Implement risk-based premium adjustments for high-exposure zones",
+            "Develop climate-resilient building standards for vulnerable areas",
+            "Create incentive programs for property hardening measures",
+            "Establish early warning systems for catastrophic events"
+        ]
+    },
+    "forestry": {
+        "name": "Forestry",
+        "center": [45.5051, -122.6750],  # Oregon - Major forestry region
+        "zoom": 7,
+        "description": "Forestry climate impact analysis showing wildfire risk areas, drought stress zones, and pest outbreak probabilities across major forest regions.",
+        "risks": ["Wildfire corridors", "Drought stress areas", "Pest outbreak zones", "Wind damage regions", "Flash flood areas"],
+        "parameters": ["temperature", "precipitation", "humidity"],
+        "mitigation": [
+            "Implement forest thinning in high fire risk zones",
+            "Develop diverse species planting strategies in pest-prone areas",
+            "Create fire breaks in critical wildfire corridors",
+            "Establish monitoring systems for early pest detection"
+        ]
+    },
+    "catastrophes": {
+        "name": "Catastrophes",
+        "center": [29.7604, -95.3698],  # Houston - Hurricane/flooding prone
+        "zoom": 8,
+        "description": "Catastrophe risk analysis showing hurricane paths, flood zones, wildfire corridors, and severe weather outbreak regions with probability assessments.",
+        "risks": ["Hurricane paths", "Tornado corridors", "Flood zones", "Wildfire regions", "Earthquake fault lines"],
+        "parameters": ["precipitation", "wind_speed", "temperature"],
+        "mitigation": [
+            "Develop evacuation plans for highest-risk corridors",
+            "Implement building code enhancements in vulnerable zones",
+            "Create early warning systems for at-risk communities",
+            "Establish emergency response hubs in strategic locations"
+        ]
+    }
+}
+
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = [
@@ -297,6 +438,8 @@ if 'visualization' not in st.session_state:
     st.session_state.visualization = None
 if 'active_function' not in st.session_state:
     st.session_state.active_function = None
+if 'industry_type' not in st.session_state:
+    st.session_state.industry_type = None
 if 'user_location' not in st.session_state:
     st.session_state.user_location = {"lat": 37.7749, "lon": -122.4194}  # Default to San Francisco
 if 'auth_status' not in st.session_state:
@@ -343,6 +486,137 @@ st.markdown(f"""
 
 st.markdown("""
 </div>
+""", unsafe_allow_html=True)
+
+# Industry-specific buttons
+st.markdown("""
+<div style="margin-bottom: 15px; text-align: center;">
+    <h3 style="color: white; font-size: 18px; margin-bottom: 15px;">
+        <span style="color: #1E90FF;">Industry</span>-Specific Climate Risk Analysis
+    </h3>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="industry-buttons-container">', unsafe_allow_html=True)
+
+# Generate SVG icons for each industry
+industry_icons = {
+    "aerospace": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad1)" d="M61,32.1l-5.8-1.6c-2.4-0.7-4.5-2.1-6.2-4l-8.8-10.2c-0.4-0.5-1-0.8-1.6-0.8H29.1c-0.7,0-1.3,0.3-1.7,0.9
+            l-8.5,13.3c-0.8,1.3-2.3,1.9-3.8,1.9H3c-0.8,0-1.4,0.6-1.4,1.4v1.9c0,0.8,0.6,1.4,1.4,1.4h12.1c1.4,0,2.9,0.7,3.8,1.9l8.5,13.3
+            c0.4,0.6,1,0.9,1.7,0.9h9.5c0.6,0,1.2-0.3,1.6-0.8l8.8-10.2c1.6-1.9,3.8-3.3,6.2-4l5.8-1.6c0.7-0.2,1.2-0.8,1.2-1.6v-0.7
+            C62.2,33,61.7,32.3,61,32.1z M25.5,32c0-1.9,1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5s-1.6,3.5-3.5,3.5S25.5,33.9,25.5,32z"/>
+    </svg>""",
+    
+    "agriculture": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad2)" d="M54,10c-4,0-10,2-14,6c-0.1,0.1-0.2,0.2-0.3,0.3C39.5,16.1,39.3,16,39,16c-3,0-13,2-19,8c-0.1,0.1-0.2,0.2-0.3,0.3
+        C19.5,24.1,19.3,24,19,24c-3,0-13,2-19,8v6c0,0,12-6,18-6c3,0,6,1,8,4h8c0,0,4-8,12-8c3,0,6,1,8,4h8c0,0,4-8,12-8V10z"/>
+        <path fill="url(#grad2)" d="M29.4,46l2.3-4.9c0.4-0.8,1.3-1.1,2.1-0.8l5.8,2.1c0.8,0.3,1.2,1.2,0.9,2L37,53.3l-7.6-7.3z"/>
+        <path fill="url(#grad2)" d="M26,50c0,0-2,6-2,9c0,2.2,1.8,4,4,4s4-1.8,4-4c0-3-2-9-2-9H26z"/>
+    </svg>""",
+    
+    "energy": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad3)" d="M36,3c0,0-17,24-17,35c0,3.3,2.7,6,6,6s6-2.7,6-6c0-11,17-35,17-35H36z"/>
+        <path fill="url(#grad3)" d="M19,39L9,59h16l-6,9h2l19-22H29l6-13L19,39z"/>
+    </svg>""",
+    
+    "insurance": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad4)" d="M32,3L12,14v15c0,10.7,8.5,21.7,20,25c11.5-3.3,20-14.3,20-25V14L32,3z M32,48c-8.3,0-15-6.7-15-15
+        s6.7-15,15-15s15,6.7,15,15S40.3,48,32,48z"/>
+        <path fill="url(#grad4)" d="M32,24c-5,0-9,4-9,9s4,9,9,9s9-4,9-9S37,24,32,24z M32,36c-1.7,0-3-1.3-3-3s1.3-3,3-3s3,1.3,3,3
+        S33.7,36,32,36z"/>
+    </svg>""",
+    
+    "forestry": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad5)" d="M30,38h-5.3C22.5,38,20,40.2,20,43v16c0,1.1,0.9,2,2,2h4V38z"/>
+        <path fill="url(#grad5)" d="M44,43c0-2.8-2.5-5-5.7-5H34v23h4c1.1,0,2-0.9,2-2V43z"/>
+        <path fill="url(#grad5)" d="M32,38c2,0,14-19.1,14-24.5C46,8.4,40.6,3,34,3h-4c-6.6,0-12,5.4-12,10.5C18,18.9,30,38,32,38z"/>
+    </svg>""",
+    
+    "catastrophes": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
+        </linearGradient>
+        <path fill="url(#grad6)" d="M48.7,35.6l-8.1-12.1c-0.4-0.6-1-1-1.7-1h-13c-0.7,0-1.3,0.4-1.7,1l-8.1,12.1c-0.4,0.5-0.4,1.3,0,1.8
+        l8.1,12.1c0.4,0.6,1,1,1.7,1h13c0.7,0,1.3-0.4,1.7-1l8.1-12.1C49,37,49,36.2,48.7,35.6z M32,40c-1.7,0-3-1.3-3-3s1.3-3,3-3
+        s3,1.3,3,3S33.7,40,32,40z M35,26l-2,6h-2l-2-6H35z"/>
+        <path fill="url(#grad6)" d="M59.7,18.6l-3.1-4.6c-0.4-0.6-1-1-1.7-1h-5c-0.7,0-1.3,0.4-1.7,1l-3.1,4.6c-0.4,0.5-0.4,1.3,0,1.8
+        l3.1,4.6c0.4,0.6,1,1,1.7,1h5c0.7,0,1.3-0.4,1.7-1l3.1-4.6C60,19.9,60,19.2,59.7,18.6z"/>
+        <path fill="url(#grad6)" d="M19.7,18.6l-3.1-4.6c-0.4-0.6-1-1-1.7-1h-5c-0.7,0-1.3,0.4-1.7,1l-3.1,4.6c-0.4,0.5-0.4,1.3,0,1.8
+        l3.1,4.6c0.4,0.6,1,1,1.7,1h5c0.7,0,1.3-0.4,1.7-1l3.1-4.6C20,19.9,20,19.2,19.7,18.6z"/>
+    </svg>"""
+}
+
+# Create JavaScript for industry button clicks
+button_js = """
+<script>
+function selectIndustry(industry) {
+    // Send the industry selection to Streamlit
+    window.parent.postMessage({type: 'streamlit:setComponentValue', value: industry}, '*');
+}
+</script>
+"""
+st.markdown(button_js, unsafe_allow_html=True)
+
+# Generate industry buttons with SVG icons
+industry_buttons_html = ""
+for industry_id, icon in industry_icons.items():
+    industry_data = industry_regions[industry_id]
+    industry_buttons_html += f"""
+    <div class="industry-button" onclick="selectIndustry('{industry_id}')" 
+        style="cursor: pointer; border: 1px solid rgba(147, 112, 219, 0.3);">
+        <div class="industry-button-bg"></div>
+        <div style="width: 60px; height: 60px; margin-bottom: 8px;">
+            {icon}
+        </div>
+        <div class="industry-button-text">{industry_data["name"]}</div>
+    </div>
+    """
+
+# Add all buttons to the container
+st.markdown(industry_buttons_html, unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Create a streamlit component to capture the click
+industry_component = st.empty()
+industry_selection = industry_component.text_input("", key="industry_input", label_visibility="collapsed")
+
+# Handle the industry selection
+if industry_selection:
+    if industry_selection in industry_regions.keys():
+        st.session_state.industry_selected = industry_selection
+        st.session_state.active_function = "industry_map"
+        st.rerun()
+    else:
+        st.session_state.industry_selection = ""  # Reset on invalid input
+        
+# CSS to hide the industry input box
+st.markdown("""
+<style>
+    /* Hide the industry input component but keep it functional */
+    [data-testid="stText"] {height: 0 !important; width: 0 !important; position: absolute; top: -9999px;}
+</style>
 """, unsafe_allow_html=True)
 
 # Button cards
@@ -821,6 +1095,499 @@ if st.session_state.active_function == "precipitation_map":
                 
                 # Add note about the simulated data
                 st.warning("This is simulated data for demonstration purposes only. It does not represent real precipitation patterns.")
+
+elif st.session_state.active_function == "industry_map":
+    st.subheader("Industry-Specific Climate Risk Analysis")
+    
+    # Display a select box to choose the industry
+    industry_options = list(industry_regions.keys())
+    industry_names = [industry_regions[i]["name"] for i in industry_options]
+    
+    industry_index = 0  # Default to aerospace
+    if "industry_selected" in st.session_state:
+        if st.session_state.industry_selected in industry_options:
+            industry_index = industry_options.index(st.session_state.industry_selected)
+    
+    selected_industry_name = st.selectbox(
+        "Select Industry Sector:",
+        industry_names,
+        index=industry_index
+    )
+    
+    # Get the industry ID from the name
+    selected_industry = industry_options[industry_names.index(selected_industry_name)]
+    st.session_state.industry_selected = selected_industry
+    
+    # Get industry data
+    industry_data = industry_regions[selected_industry]
+    
+    # Display industry description
+    st.markdown(f"""
+    <div style='background-color: rgba(30, 30, 30, 0.6); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #1E90FF;'>
+        <h4 style='color: #FFFFFF; margin-top: 0;'>{industry_data['name']} Sector Climate Risk Analysis</h4>
+        <p style='color: #FFFFFF;'>{industry_data['description']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # Create a map centered on the industry's default location
+        m = folium.Map(
+            location=industry_data["center"], 
+            zoom_start=industry_data["zoom"],
+            tiles="cartodb dark_matter"
+        )
+        
+        # Add climate risk zones based on industry type
+        if selected_industry == "aerospace":
+            # Add wind pattern areas
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.2, industry_data["center"][1] - 0.3],
+                radius=8000,
+                color='#9370DB',
+                fill=True,
+                fill_opacity=0.4,
+                popup="High Wind Zone - Average wind speed >25 mph"
+            ).add_to(m)
+            
+            # Add turbulence risk zone
+            folium.Circle(
+                location=[industry_data["center"][0] - 0.1, industry_data["center"][1] + 0.2],
+                radius=6000,
+                color='#FF6347',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Turbulence Risk Zone - 65% probability of moderate or severe turbulence"
+            ).add_to(m)
+            
+            # Add visibility issues zone
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.3, industry_data["center"][1] + 0.1],
+                radius=4000,
+                color='#FFD700',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Low Visibility Zone - Historical fog patterns"
+            ).add_to(m)
+            
+            # Add flight paths with climate risk indicators
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0], industry_data["center"][1]],
+                    [industry_data["center"][0] + 0.5, industry_data["center"][1] + 0.5]
+                ],
+                color='#1E90FF',
+                weight=3,
+                opacity=0.7,
+                popup="Primary Flight Path - Low climate risk"
+            ).add_to(m)
+            
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0], industry_data["center"][1]],
+                    [industry_data["center"][0] - 0.3, industry_data["center"][1] + 0.4]
+                ],
+                color='#FF4500',
+                weight=3,
+                opacity=0.7,
+                popup="Secondary Flight Path - High climate risk (wind shear)"
+            ).add_to(m)
+            
+        elif selected_industry == "agriculture":
+            # Add drought risk zones
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.3, industry_data["center"][1] - 0.3],
+                radius=30000,
+                color='#FF8C00',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Drought Risk Zone - 40% precipitation deficit"
+            ).add_to(m)
+            
+            # Add frost risk zone
+            folium.Circle(
+                location=[industry_data["center"][0] - 0.5, industry_data["center"][1] + 0.2],
+                radius=25000,
+                color='#00BFFF',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Frost Risk Zone - Early frost probability 35%"
+            ).add_to(m)
+            
+            # Add heat stress zone
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.3, industry_data["center"][1] + 0.4],
+                radius=35000,
+                color='#FF6347',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Heat Stress Zone - 12 days >90°F per month"
+            ).add_to(m)
+            
+            # Add growing degree day contours
+            folium.GeoJson(
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"name": "High GDD Zone"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [[
+                                    [industry_data["center"][1] - 0.7, industry_data["center"][0] - 0.7],
+                                    [industry_data["center"][1] + 0.7, industry_data["center"][0] - 0.7],
+                                    [industry_data["center"][1] + 0.7, industry_data["center"][0] + 0.7],
+                                    [industry_data["center"][1] - 0.7, industry_data["center"][0] + 0.7],
+                                    [industry_data["center"][1] - 0.7, industry_data["center"][0] - 0.7]
+                                ]]
+                            }
+                        }
+                    ]
+                },
+                style_function=lambda x: {
+                    'fillColor': '#32CD32',
+                    'color': '#32CD32',
+                    'weight': 1,
+                    'fillOpacity': 0.2
+                },
+                popup=folium.GeoJsonPopup(fields=["name"])
+            ).add_to(m)
+            
+        elif selected_industry == "energy":
+            # Add extreme heat risk to infrastructure
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.2, industry_data["center"][1] - 0.3],
+                radius=30000,
+                color='#FF4500',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Extreme Heat Risk - Grid stress 30% above normal"
+            ).add_to(m)
+            
+            # Add flood risk to substations
+            folium.Circle(
+                location=[industry_data["center"][0] - 0.3, industry_data["center"][1] + 0.2],
+                radius=25000,
+                color='#1E90FF',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Flood Risk Zone - 15% of substations vulnerable"
+            ).add_to(m)
+            
+            # Add transmission lines with risk indicators
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0] - 0.6, industry_data["center"][1] - 0.6],
+                    [industry_data["center"][0] + 0.6, industry_data["center"][1] + 0.6]
+                ],
+                color='#FFD700',
+                weight=3,
+                opacity=0.7,
+                popup="Main Transmission Corridor - Medium climate risk"
+            ).add_to(m)
+            
+            # Add wind risk to transmission
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.5, industry_data["center"][1] - 0.1],
+                radius=20000,
+                color='#9370DB',
+                fill=True,
+                fill_opacity=0.3,
+                popup="High Wind Risk - 25% increased line damage probability"
+            ).add_to(m)
+            
+        elif selected_industry == "insurance":
+            # Add flood risk zones
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.1, industry_data["center"][1] - 0.1],
+                radius=15000,
+                color='#1E90FF',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Flood Zone A - High risk, 26% annual premium increase"
+            ).add_to(m)
+            
+            # Add hurricane path with risk contours
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0] - 0.5, industry_data["center"][1] - 0.5],
+                    [industry_data["center"][0] - 0.3, industry_data["center"][1] - 0.3],
+                    [industry_data["center"][0] - 0.1, industry_data["center"][1] - 0.1],
+                    [industry_data["center"][0] + 0.2, industry_data["center"][1] + 0.2]
+                ],
+                color='#FF6347',
+                weight=4,
+                opacity=0.7,
+                popup="Historical Hurricane Path - Category 3-4"
+            ).add_to(m)
+            
+            # Add storm surge risk
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.05, industry_data["center"][1] - 0.05],
+                radius=12000,
+                color='#9370DB',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Storm Surge Zone - 9-12 ft surge potential"
+            ).add_to(m)
+            
+            # Add property value risk gradient
+            folium.GeoJson(
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"risk": "Extreme Risk Zone - 300% premium multiplier"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [[
+                                    [industry_data["center"][1] - 0.2, industry_data["center"][0] - 0.2],
+                                    [industry_data["center"][1] + 0.2, industry_data["center"][0] - 0.2],
+                                    [industry_data["center"][1] + 0.2, industry_data["center"][0] + 0.2],
+                                    [industry_data["center"][1] - 0.2, industry_data["center"][0] + 0.2],
+                                    [industry_data["center"][1] - 0.2, industry_data["center"][0] - 0.2]
+                                ]]
+                            }
+                        }
+                    ]
+                },
+                style_function=lambda x: {
+                    'fillColor': '#FF4500',
+                    'color': '#FF4500',
+                    'weight': 1,
+                    'fillOpacity': 0.2
+                },
+                popup=folium.GeoJsonPopup(fields=["risk"])
+            ).add_to(m)
+            
+        elif selected_industry == "forestry":
+            # Add wildfire risk zones
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.2, industry_data["center"][1] - 0.3],
+                radius=20000,
+                color='#FF4500',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Extreme Wildfire Risk - 72% probability within 5 years"
+            ).add_to(m)
+            
+            # Add drought stress zone
+            folium.Circle(
+                location=[industry_data["center"][0] - 0.1, industry_data["center"][1] + 0.2],
+                radius=15000,
+                color='#FFA500',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Drought Stress Zone - 45% canopy loss risk"
+            ).add_to(m)
+            
+            # Add pest outbreak risk
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.3, industry_data["center"][1] + 0.1],
+                radius=18000,
+                color='#9ACD32',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Pest Outbreak Risk - Bark beetle probability 60%"
+            ).add_to(m)
+            
+            # Add forest management zones
+            folium.GeoJson(
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"name": "Priority Management Zone"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [[
+                                    [industry_data["center"][1] - 0.5, industry_data["center"][0] - 0.5],
+                                    [industry_data["center"][1] + 0.5, industry_data["center"][0] - 0.5],
+                                    [industry_data["center"][1] + 0.5, industry_data["center"][0] + 0.5],
+                                    [industry_data["center"][1] - 0.5, industry_data["center"][0] + 0.5],
+                                    [industry_data["center"][1] - 0.5, industry_data["center"][0] - 0.5]
+                                ]]
+                            }
+                        }
+                    ]
+                },
+                style_function=lambda x: {
+                    'fillColor': '#6B8E23',
+                    'color': '#6B8E23',
+                    'weight': 1,
+                    'fillOpacity': 0.2
+                },
+                popup=folium.GeoJsonPopup(fields=["name"])
+            ).add_to(m)
+            
+        elif selected_industry == "catastrophes":
+            # Add hurricane risk zones
+            folium.Circle(
+                location=[industry_data["center"][0] + 0.1, industry_data["center"][1] - 0.1],
+                radius=18000,
+                color='#FF4500',
+                fill=True,
+                fill_opacity=0.4,
+                popup="Hurricane Impact Zone - Category 4-5 risk"
+            ).add_to(m)
+            
+            # Add flood zones
+            folium.Circle(
+                location=[industry_data["center"][0] - 0.1, industry_data["center"][1] + 0.1],
+                radius=15000,
+                color='#1E90FF',
+                fill=True,
+                fill_opacity=0.3,
+                popup="Severe Flood Zone - 25-year flood risk"
+            ).add_to(m)
+            
+            # Add evacuation routes with risk assessment
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0], industry_data["center"][1]],
+                    [industry_data["center"][0] + 0.5, industry_data["center"][1] + 0.5]
+                ],
+                color='#32CD32',
+                weight=3,
+                opacity=0.7,
+                popup="Primary Evacuation Route - Low flood risk"
+            ).add_to(m)
+            
+            folium.PolyLine(
+                locations=[
+                    [industry_data["center"][0], industry_data["center"][1]],
+                    [industry_data["center"][0] - 0.4, industry_data["center"][1] + 0.2]
+                ],
+                color='#FF8C00',
+                weight=3,
+                opacity=0.7,
+                popup="Secondary Evacuation Route - Medium flood risk"
+            ).add_to(m)
+            
+            # Add storm surge risk contour
+            folium.GeoJson(
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"name": "Storm Surge Zone"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [[
+                                    [industry_data["center"][1] - 0.3, industry_data["center"][0] - 0.1],
+                                    [industry_data["center"][1] + 0.3, industry_data["center"][0] - 0.1],
+                                    [industry_data["center"][1] + 0.3, industry_data["center"][0] + 0.1],
+                                    [industry_data["center"][1] - 0.3, industry_data["center"][0] + 0.1],
+                                    [industry_data["center"][1] - 0.3, industry_data["center"][0] - 0.1]
+                                ]]
+                            }
+                        }
+                    ]
+                },
+                style_function=lambda x: {
+                    'fillColor': '#9370DB',
+                    'color': '#9370DB',
+                    'weight': 1,
+                    'fillOpacity': 0.2
+                },
+                popup=folium.GeoJsonPopup(fields=["name"])
+            ).add_to(m)
+        
+        # Add a marker for the primary location
+        folium.Marker(
+            industry_data["center"],
+            popup=f"{industry_data['name']} Industry Hub",
+            icon=folium.Icon(color="green", icon="info-sign"),
+        ).add_to(m)
+        
+        # Add a title to the map
+        title_html = f"""
+        <h3 style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999; 
+            background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 5px; font-family: Arial, sans-serif;">
+            {industry_data["name"]} Climate Risk Map
+        </h3>
+        """
+        m.get_root().html.add_child(folium.Element(title_html))
+        
+        # Add a legend for the climate risks
+        legend_html = """
+        <div style="position: fixed; bottom: 50px; right: 50px; background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px; padding: 10px; color: white; font-family: Arial, sans-serif; z-index: 9999;">
+            <p><strong>Climate Risk Legend</strong></p>
+        """
+        
+        risk_colors = {
+            "#FF4500": "Extreme Risk",
+            "#FF8C00": "High Risk",
+            "#FFD700": "Medium Risk",
+            "#32CD32": "Low Risk",
+            "#1E90FF": "Flood/Water Risk",
+            "#9370DB": "Wind/Storm Risk"
+        }
+        
+        for color, label in risk_colors.items():
+            legend_html += f"""
+            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                <div style="background: {color}; width: 20px; height: 20px; margin-right: 5px;"></div>
+                <span>{label}</span>
+            </div>
+            """
+        
+        legend_html += "</div>"
+        m.get_root().html.add_child(folium.Element(legend_html))
+        
+        # Display the map
+        folium_static(m)
+    
+    with col2:
+        # Display industry climate risks
+        st.markdown(f"""
+        <div style='background-color: rgba(255, 69, 0, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #FF4500;'>
+            <h4 style='color: #FFFFFF; margin-top: 0;'>Climate Risks</h4>
+            <ul style='color: #FFFFFF; padding-left: 20px;'>
+        """, unsafe_allow_html=True)
+        
+        for risk in industry_data["risks"]:
+            st.markdown(f"<li>{risk}</li>", unsafe_allow_html=True)
+        
+        st.markdown("</ul></div>", unsafe_allow_html=True)
+        
+        # Display climate parameters being monitored
+        st.markdown(f"""
+        <div style='background-color: rgba(30, 144, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #1E90FF;'>
+            <h4 style='color: #FFFFFF; margin-top: 0;'>Key Climate Parameters</h4>
+            <ul style='color: #FFFFFF; padding-left: 20px;'>
+        """, unsafe_allow_html=True)
+        
+        for param in industry_data["parameters"]:
+            st.markdown(f"<li>{param.replace('_', ' ').title()}</li>", unsafe_allow_html=True)
+        
+        st.markdown("</ul></div>", unsafe_allow_html=True)
+        
+        # Display risk mitigation strategies
+        st.markdown(f"""
+        <div style='background-color: rgba(50, 205, 50, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid #32CD32;'>
+            <h4 style='color: #FFFFFF; margin-top: 0;'>Climate Risk Mitigation Strategies</h4>
+            <ul style='color: #FFFFFF; padding-left: 20px;'>
+        """, unsafe_allow_html=True)
+        
+        for strategy in industry_data["mitigation"]:
+            st.markdown(f"<li>{strategy}</li>", unsafe_allow_html=True)
+        
+        st.markdown("</ul></div>", unsafe_allow_html=True)
+        
+        # Add a "Create custom analysis" button
+        if st.button("Create Custom Climate Risk Analysis", key="custom_analysis"):
+            st.session_state.active_function = "precipitation_map"
+            st.rerun()
+    
+    # Add context about the data
+    st.info(f"This visualization represents climate risk analysis for the {industry_data['name']} sector based on historical climate data and projected patterns. The data is derived from NASA POWER API and climate models. Use this visualization to understand regional climate risks and develop targeted mitigation strategies.")
 
 elif st.session_state.active_function == "climate_story":
     st.subheader("Interactive Climate Story Generator")
