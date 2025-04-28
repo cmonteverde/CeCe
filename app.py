@@ -489,23 +489,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Create centered container with avatar image and text
-st.markdown(f"""
-<div style="display: flex; justify-content: center; align-items: center; margin: 0 auto; width: 100%;">
-    <div style="display: flex; align-items: center; justify-content: center;">
-        <img src="data:image/png;base64,{avatar_base64}" width="150" 
-            style="border-radius: 50%; margin-right: 20px;">
-        <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">
-            CECE: YOUR CLIMATE & WEATHER AGENT
-        </span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-</div>
-""", unsafe_allow_html=True)
-
 # Display the chat history to show welcome message first
 st.markdown('<div class="chat-container" style="margin-bottom: 20px;">', unsafe_allow_html=True)
 
@@ -1744,10 +1727,13 @@ elif st.session_state.active_function == "climate_resilience":
         icon=folium.Icon(color="blue", icon="info-sign")
     ).add_to(m)
     
+    # Get the report from session state if available
+    report = st.session_state.resilience_report if 'resilience_report' in st.session_state and st.session_state.resilience_report else None
+    
     # Generate different map visualizations based on selection
     if selected_map_view == "Temperature Change":
         # Create a circle around the location showing temperature change
-        if generate_report:  # Only show if report was generated
+        if report:  # Only show if report is available
             try:
                 # Use the temperature change data from the report
                 temp_change = report['climate_projections']['temperature']['change']
@@ -1790,7 +1776,7 @@ elif st.session_state.active_function == "climate_resilience":
     
     elif selected_map_view == "Precipitation Change":
         # Create a visualization for precipitation change
-        if generate_report:  # Only show if report was generated
+        if report:  # Only show if report is available
             try:
                 # Use the precipitation change data from the report
                 precip_change = report['climate_projections']['precipitation']['change_percent']
@@ -1833,7 +1819,7 @@ elif st.session_state.active_function == "climate_resilience":
     
     elif selected_map_view == "Sea Level Rise Impact":
         # Create a visualization for sea level rise impact
-        if generate_report:  # Only show if report was generated
+        if report:  # Only show if report is available
             try:
                 # Use the sea level rise data from the report
                 slr = report['climate_projections']['sea_level_rise']
@@ -1879,7 +1865,7 @@ elif st.session_state.active_function == "climate_resilience":
     
     elif selected_map_view == "Extreme Heat Days":
         # Create a visualization for extreme heat days
-        if generate_report:  # Only show if report was generated
+        if report:  # Only show if report is available
             try:
                 # Use the extreme heat data from the report
                 heat_multiplier = report['climate_projections']['extreme_weather']['heat_days_multiplier']
@@ -1928,7 +1914,7 @@ elif st.session_state.active_function == "climate_resilience":
     
     elif selected_map_view == "Industry Risk Zones":
         # Create a visualization specific to the selected industry
-        if generate_report and 'selected_industry' in locals():  # Only show if report was generated
+        if report and 'selected_industry' in locals():  # Only show if report is available
             try:
                 # Use the impact assessment from the report
                 impact_severity = report['impact_assessment']['adjusted_severity']
@@ -2032,6 +2018,10 @@ elif st.session_state.active_function == "climate_resilience":
     # Add the map to the Streamlit app
     st_data = folium_static(m)
     
+    # Initialize report in session state if not present to ensure proper scope
+    if 'resilience_report' not in st.session_state:
+        st.session_state.resilience_report = None
+        
     # Generate and display the resilience report when the button is clicked
     if generate_report:
         with st.spinner(f"Generating climate resilience report for {industry_names[selected_industry]} industry in {target_year}..."):
@@ -2043,13 +2033,17 @@ elif st.session_state.active_function == "climate_resilience":
                 # Log key parameters for debugging
                 st.write(f"Fetching climate data for: {latitude}, {longitude}")
                 
-                report = climate_resilience.generate_resilience_report(
+                # Store the report in session state for global access
+                st.session_state.resilience_report = climate_resilience.generate_resilience_report(
                     lat=latitude,
                     lon=longitude,
                     industry=selected_industry,
                     target_year=target_year,
                     scenario=selected_scenario
                 )
+                
+                # Create a local reference to the report for convenience
+                report = st.session_state.resilience_report
                 
                 # Display the report in an organized fashion
                 st.subheader(f"Climate Resilience Report: {industry_names[selected_industry]} Industry")
