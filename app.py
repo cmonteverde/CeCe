@@ -806,6 +806,155 @@ if st.session_state.active_function == "precipitation_map":
             except Exception as e:
                 st.error(f"Error generating precipitation map: {str(e)}")
 
+elif st.session_state.active_function == "climate_story":
+    st.subheader("Interactive Climate Story Generator")
+    
+    # Location input method selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="story_location_method")
+    
+    if location_method == "City Name":
+        city = st.text_input("Enter city name (e.g., 'New York', 'London, UK')", 
+                           value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city,
+                           key="story_city_input")
+        
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling or try using coordinates directly.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"], 
+                                      min_value=-90.0, max_value=90.0, key="story_lat")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"], 
+                                       min_value=-180.0, max_value=180.0, key="story_lon")
+    
+    # Date range
+    st.write("Select time period for your climate story:")
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input("Start Date", datetime.now() - timedelta(days=365), key="story_start")
+    with col2:
+        end_date = st.date_input("End Date", datetime.now(), key="story_end")
+    
+    # Story type selection
+    story_type = st.radio("Select story type:", 
+                        ["Personal Experience", "Educational", "Historical Context"], 
+                        horizontal=True, key="story_type")
+    
+    # Map story type to the format expected by the generator function
+    story_type_map = {
+        "Personal Experience": "personal",
+        "Educational": "educational",
+        "Historical Context": "historical"
+    }
+    
+    # Generate button
+    if st.button("Generate Climate Story"):
+        try:
+            with st.spinner("Fetching climate data and crafting your story..."):
+                # Convert dates to string format
+                start_date_str = start_date.strftime('%Y-%m-%d')
+                end_date_str = end_date.strftime('%Y-%m-%d')
+                
+                # Status message
+                st.text(f"Fetching climate data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
+                
+                # Fetch NASA POWER data
+                from nasa_data import fetch_nasa_power_data
+                climate_data = fetch_nasa_power_data(
+                    latitude, 
+                    longitude, 
+                    start_date_str, 
+                    end_date_str, 
+                    parameters=["T2M", "PRECTOTCORR", "RH2M", "WS2M"]
+                )
+                
+                if climate_data is None or len(climate_data) == 0:
+                    st.error("Could not fetch climate data for the specified location and time period.")
+                    st.stop()
+                
+                # Prepare location and timeframe data for the story generator
+                location_data = {
+                    "city": city if location_method == "City Name" else None,
+                    "lat": latitude,
+                    "lon": longitude
+                }
+                
+                timeframe_data = {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+                
+                # Generate the climate story
+                from climate_story_generator import generate_climate_story
+                
+                # Check if we have the OpenAI API key
+                if not os.getenv("OPENAI_API_KEY"):
+                    st.warning("OpenAI API key not found. Please provide your API key in the settings to use this feature.")
+                    # Provide option to add the API key
+                    api_key = st.text_input("Enter your OpenAI API key:", type="password")
+                    if api_key:
+                        os.environ["OPENAI_API_KEY"] = api_key
+                        st.success("API key set! Click the button again to generate your story.")
+                        st.rerun()
+                    st.stop()
+                
+                # Generate the story
+                story = generate_climate_story(
+                    climate_data, 
+                    location_data, 
+                    timeframe_data, 
+                    story_type=story_type_map[story_type]
+                )
+                
+                # Display the story
+                if "text" in story and "title" in story:
+                    st.title(story["title"])
+                    st.markdown(story["text"])
+                    
+                    # Display insights
+                    if "insights" in story and story["insights"]:
+                        st.subheader("Key Climate Insights")
+                        for insight in story["insights"]:
+                            st.markdown(f"- {insight}")
+                    
+                    # Display visualization suggestions
+                    if "visualization_suggestions" in story and story["visualization_suggestions"]:
+                        st.subheader("Suggested Visualizations")
+                        for suggestion in story["visualization_suggestions"]:
+                            st.markdown(f"- {suggestion}")
+                    
+                    # Option to download the story
+                    story_text = f"# {story['title']}\n\n{story['text']}\n\n## Key Climate Insights\n"
+                    for insight in story.get("insights", []):
+                        story_text += f"- {insight}\n"
+                    story_text += f"\n## Suggested Visualizations\n"
+                    for suggestion in story.get("visualization_suggestions", []):
+                        story_text += f"- {suggestion}\n"
+                    
+                    st.download_button(
+                        label="Download Story as Text",
+                        data=story_text,
+                        file_name=f"climate_story_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
+                else:
+                    st.error(f"Error generating story: {story.get('text', 'Unknown error')}")
+        
+        except Exception as e:
+            st.error(f"Error generating climate story: {str(e)}")
+            st.info("This feature requires an OpenAI API key. Please check your settings and try again.")
+
 elif st.session_state.active_function == "export_anomalies":
     st.subheader("Export Climate Anomalies as a Table")
     
