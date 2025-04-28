@@ -605,49 +605,28 @@ if st.session_state.active_function == "precipitation_map":
         end_date = st.date_input("End Date", datetime.now())
     
     if st.button("Generate Precipitation Map"):
-        with st.spinner("Fetching ERA5 reanalysis precipitation data..."):
+        with st.spinner("Fetching precipitation data from NASA POWER API..."):
             try:
-                # Get real precipitation data from ERA5
-                from era5_data import fetch_era5_precipitation_map
+                # Get real precipitation data from NASA POWER API
+                from nasa_data import fetch_precipitation_map_data
                 
                 # Convert dates to string format for API
                 start_date_str = start_date.strftime('%Y-%m-%d')
                 end_date_str = end_date.strftime('%Y-%m-%d')
                 
                 # Status message
-                st.text(f"Fetching ERA5 reanalysis data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
+                st.text(f"Fetching precipitation data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
                 
-                # Try to fetch ERA5 data
-                precip_ds = fetch_era5_precipitation_map(latitude, longitude, start_date_str, end_date_str, radius_degrees=1.0)
-                
-                # Check if we have the right variable in the dataset
-                if 'total_precipitation_mm' in precip_ds:
-                    precip_var = 'total_precipitation_mm'
-                else:
-                    # Look for other possible names
-                    for var in ['tp_mm', 'tp', 'total_precipitation']:
-                        if var in precip_ds:
-                            precip_var = var
-                            break
-                    else:
-                        raise ValueError("Precipitation variable not found in ERA5 data")
-                
-                # Extract data for creating the heatmap
-                lats = precip_ds.latitude.values
-                lons = precip_ds.longitude.values
-                precip_values = precip_ds[precip_var].values
-                
-                # Verify we have valid data
-                if np.isnan(precip_values).all():
-                    raise ValueError("All ERA5 precipitation values are NaN")
+                # Fetch NASA POWER precipitation data for a region
+                precip_df = fetch_precipitation_map_data(latitude, longitude, start_date_str, end_date_str, radius_degrees=1.0)
                 
                 # Create a list of [lat, lon, precip] for each grid point
                 heat_data = []
-                for i in range(len(lats)):
-                    for j in range(len(lons)):
-                        precip = float(precip_values[i, j])
-                        if not np.isnan(precip):
-                            heat_data.append([float(lats[i]), float(lons[j]), precip])
+                for _, row in precip_df.iterrows():
+                    lat = row['latitude']
+                    lon = row['longitude']
+                    precip = row['precipitation']
+                    heat_data.append([lat, lon, precip])
                 
                 # Get the max value for scaling the heatmap
                 max_precip = max([x[2] for x in heat_data]) if heat_data else 100
@@ -734,24 +713,24 @@ if st.session_state.active_function == "precipitation_map":
                 m.get_root().html.add_child(folium.Element(title_html))
                 
                 # Display the map
-                st.subheader(f"ERA5 Precipitation Map ({start_date_str} to {end_date_str})")
+                st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
                 folium_static(m)
                 
                 # Add context about the data
-                st.info(f"This map shows real ERA5 reanalysis precipitation data around your selected location for the date range {start_date_str} to {end_date_str}. Data source: Copernicus Climate Data Store (CDS).")
+                st.info(f"This map shows real precipitation data from NASA POWER API around your selected location for the date range {start_date_str} to {end_date_str}. Data source: NASA POWER (Prediction of Worldwide Energy Resources).")
                 
-                # Add "What is ERA5" explanation
-                with st.expander("What is ERA5 reanalysis data?"):
+                # Add "What is NASA POWER" explanation
+                with st.expander("What is NASA POWER data?"):
                     st.markdown("""
-                    **ERA5** is the fifth generation ECMWF (European Centre for Medium-Range Weather Forecasts) atmospheric reanalysis of the global climate. 
+                    **NASA POWER** (Prediction of Worldwide Energy Resources) is a project from NASA that provides solar and meteorological data sets from NASA research for support of renewable energy, building energy efficiency and agricultural needs.
                     
-                    Reanalysis combines model data with observations from across the world into a globally complete and consistent dataset. ERA5 provides hourly estimates of a large number of atmospheric, land and oceanic climate variables, offering a comprehensive picture of Earth's weather and climate.
+                    The data is derived from satellite observations and NASA's GMAO (Global Modeling and Assimilation Office) products, which combine various observational data sources with advanced modeling.
                     
-                    Key features of ERA5 data:
-                    - **High resolution**: ~31 km grid spacing globally
-                    - **Frequent updates**: Hourly data availability
-                    - **Long time range**: Data available from 1940 to present
-                    - **Reliability**: Produced by one of the world's leading weather forecasting centers
+                    Key features of NASA POWER data:
+                    - **Global coverage**: Data available for any point on Earth
+                    - **Long-term dataset**: Data available from 1981 to present
+                    - **Free access**: No registration required for basic access
+                    - **Variety of parameters**: Temperature, precipitation, solar radiation, and more
                     
                     The precipitation data shown on this map represents the total accumulated precipitation (rain, snow, etc.) over the selected time period, measured in millimeters.
                     """)
@@ -765,23 +744,21 @@ if st.session_state.active_function == "precipitation_map":
                 )
                 
             except Exception as e:
-                # If ERA5 data fetching fails, display error and fallback to simulated data
-                st.error(f"Error fetching ERA5 data: {str(e)}")
-                st.warning("Falling back to simulated precipitation data for demonstration. To use real ERA5 data, you need to set up CDS API credentials.")
+                # If NASA POWER API data fetching fails, display error and fallback to simulated data
+                st.error(f"Error fetching NASA POWER data: {str(e)}")
+                st.warning("Falling back to simulated precipitation data for demonstration purposes.")
                 
-                # Link to CDS API registration
+                # Note about NASA POWER API
                 st.markdown("""
-                ### How to set up CDS API access:
-                1. Register for a free account on the [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/user/register)
-                2. Once registered, go to your [user profile](https://cds.climate.copernicus.eu/user)
-                3. Copy your API key and create a file named `.cdsapirc` in your home directory with:
+                ### About NASA POWER API:
+                The NASA POWER API provides free access to climate data without requiring registration or API keys.
                 
-                ```
-                url: https://cds.climate.copernicus.eu/api/v2
-                key: your-api-key
-                ```
+                If you're seeing this error, it might be due to:
+                1. Temporary API service disruption
+                2. Network connectivity issues
+                3. Invalid date range or location parameters
                 
-                Replace `your-api-key` with the key from your profile.
+                Please try again later or try with different parameters.
                 """)
                 
                 # Create a fallback map
@@ -942,29 +919,29 @@ elif st.session_state.active_function == "export_anomalies":
         if st.button("Fetch Data and Calculate Anomalies"):
             with st.spinner("Fetching data from NASA POWER API..."):
                 try:
-                    # In a real implementation, this would fetch data from the NASA POWER API
-                    # For now, generate sample data for demonstration
+                    # Fetch real temperature data from NASA POWER API
+                    from nasa_data import fetch_nasa_power_data
                     
-                    # Create a date range from start_date to end_date
-                    date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+                    # Convert dates to string format for API
+                    start_date_str = start_date.strftime('%Y-%m-%d')
+                    end_date_str = end_date.strftime('%Y-%m-%d')
                     
-                    # Generate sample temperature data
-                    import random
+                    # Status message
+                    st.text(f"Fetching temperature data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
                     
-                    # Create seasonal temperature pattern with noise
-                    def seasonal_temp(date, base_temp=15.0, amplitude=10.0, noise_level=3.0):
-                        day_of_year = date.dayofyear
-                        seasonal_component = amplitude * np.sin(2 * np.pi * (day_of_year - 172) / 365.0)  # 172 shifts peak to summer
-                        noise = np.random.normal(0, noise_level)
-                        return base_temp + seasonal_component + noise
+                    # Fetch NASA POWER temperature data
+                    nasa_df = fetch_nasa_power_data(
+                        latitude, 
+                        longitude, 
+                        start_date_str, 
+                        end_date_str, 
+                        parameters=["T2M"]  # Temperature at 2 Meters
+                    )
                     
-                    # Generate temperatures for each date
-                    temperatures = [seasonal_temp(date) for date in date_range]
-                    
-                    # Create a dataframe
+                    # Create a dataframe with the temperature data
                     data = pd.DataFrame({
-                        'Date': date_range,
-                        'Temperature': temperatures
+                        'Date': nasa_df['Date'],
+                        'Temperature': nasa_df['T2M']  # Temperature in Celsius
                     })
                     
                     # Calculate monthly climatology (long-term averages)
@@ -1132,37 +1109,18 @@ if st.session_state.active_function == "temperature_trends":
     if st.button("Generate Temperature Trends"):
         with st.spinner("Generating temperature trends for the past 5 years..."):
             try:
-                # This would normally fetch real data from NASA POWER API
-                # For now, create a sample visualization
+                # Fetch real temperature data from NASA POWER API
+                from nasa_data import get_temperature_trends
                 
-                # Generate sample data: monthly temperatures over 5 years
-                import random
-                import numpy as np
+                # Convert dates to string format for API
+                start_date_str = start_date.strftime('%Y-%m-%d')
+                end_date_str = end_date.strftime('%Y-%m-%d')
                 
-                # Generate dates for 5 years of monthly data
-                dates = pd.date_range(start=start_date, end=end_date, freq='M')
+                # Status message
+                st.text(f"Fetching temperature trends data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} from {start_date_str} to {end_date_str}...")
                 
-                # Function to generate seasonal temperature data with random variation
-                def seasonal_temp(date, base_temp=15.0, amplitude=10.0, noise_level=3.0):
-                    # Simulate seasons: warmest in July-August, coldest in January-February
-                    day_of_year = date.dayofyear
-                    seasonal_component = amplitude * np.cos(2 * np.pi * (day_of_year - 205) / 365.0)
-                    # Add some random noise
-                    noise = (random.random() - 0.5) * noise_level
-                    # Add a slight warming trend over time (climate change)
-                    years_elapsed = (date.year - start_date.year) + (date.month - start_date.month)/12
-                    warming_trend = 0.2 * years_elapsed  # 0.2°C per year warming trend
-                    
-                    return base_temp + seasonal_component + noise + warming_trend
-                
-                # Generate temperature data
-                temps = [seasonal_temp(date) for date in dates]
-                
-                # Create dataframe
-                df = pd.DataFrame({
-                    'Date': dates,
-                    'Temperature (°C)': temps
-                })
+                # Get temperature trends from NASA POWER API
+                df, trend_per_decade = get_temperature_trends(latitude, longitude, start_date_str, end_date_str)
                 
                 # Calculate a 12-month moving average
                 df['12-Month Moving Avg'] = df['Temperature (°C)'].rolling(window=12).mean()
@@ -1272,91 +1230,38 @@ if st.session_state.active_function == "extreme_heat":
     if st.button("Identify Extreme Heat Days"):
         with st.spinner("Analyzing temperature data to identify extreme heat days..."):
             try:
-                # Generate sample data for demonstration
-                import random
-                import numpy as np
+                # Fetch real temperature and heat data from NASA POWER API
+                from nasa_data import get_extreme_heat_days
                 
-                # Generate daily temperatures for the selected year
-                start_date = datetime(year, 1, 1)
-                end_date = datetime(year, 12, 31)
-                dates = pd.date_range(start=start_date, end=end_date, freq='D')
+                # Convert year to date format
+                start_date_str = f"{year}-01-01"
+                end_date_str = f"{year}-12-31"
                 
-                # Function to generate realistic temperatures
-                def generate_temp(date, base_temp=25.0, amplitude=15.0, noise_level=5.0):
-                    # Higher temperatures in summer, lower in winter
-                    day_of_year = date.dayofyear
-                    seasonal_component = amplitude * np.cos(2 * np.pi * (day_of_year - 205) / 365.0)
-                    # Add some random noise
-                    noise = (random.random() - 0.5) * noise_level
-                    # Location-based adjustments (e.g., higher temps for lower latitudes)
-                    latitude_factor = -0.2 * abs(latitude) + 10  # Higher temps closer to equator
-                    
-                    return max(0, base_temp - seasonal_component + noise + latitude_factor)
+                # Status message
+                st.text(f"Fetching temperature data for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'} for year {year}...")
                 
-                # Generate humidity levels
-                def generate_humidity(date, temp):
-                    # Higher humidity in summer, somewhat correlated with temp
-                    base_humidity = 50
-                    # Add seasonal variation
-                    day_of_year = date.dayofyear
-                    seasonal_component = 20 * np.sin(2 * np.pi * (day_of_year - 100) / 365.0)
-                    # Add random variation
-                    noise = (random.random() - 0.5) * 15
-                    # Slight inverse correlation with very high temperatures (hot days are often drier)
-                    temp_factor = -0.2 * max(0, temp - 30) 
-                    
-                    return min(100, max(10, base_humidity + seasonal_component + noise + temp_factor))
+                # Get extreme heat days from NASA POWER API
+                df, temp_threshold, hi_threshold = get_extreme_heat_days(latitude, longitude, year, percentile)
                 
-                # Generate the data
-                temps = [generate_temp(date) for date in dates]
-                humidity = [generate_humidity(date, temp) for date, temp in zip(dates, temps)]
-                
-                # Calculate heat index if that's the selected option
+                # Select which value to analyze based on user selection
                 if analysis_type == "By Heat Index (Temperature + Humidity)":
-                    # Simple heat index calculation
-                    def heat_index(temp_c, rh):
-                        # Convert C to F for the standard heat index formula
-                        temp_f = (temp_c * 9/5) + 32
-                        
-                        # Simple heat index formula (simplified version)
-                        hi_f = 0.5 * (temp_f + 61.0 + ((temp_f - 68.0) * 1.2) + (rh * 0.094))
-                        
-                        # More precise calculation for high temperatures
-                        if temp_f >= 80:
-                            hi_f = -42.379 + 2.04901523 * temp_f + 10.14333127 * rh - 0.22475541 * temp_f * rh - 0.00683783 * temp_f * temp_f - 0.05481717 * rh * rh + 0.00122874 * temp_f * temp_f * rh + 0.00085282 * temp_f * rh * rh - 0.00000199 * temp_f * temp_f * rh * rh
-                        
-                        # Convert back to Celsius
-                        hi_c = (hi_f - 32) * 5/9
-                        return hi_c
-                    
-                    heat_indices = [heat_index(t, h) for t, h in zip(temps, humidity)]
-                    df = pd.DataFrame({
-                        'Date': dates,
-                        'Temperature (°C)': temps,
-                        'Relative Humidity (%)': humidity,
-                        'Heat Index (°C)': heat_indices
-                    })
-                    
                     # Determine extreme heat days based on heat index
-                    threshold = np.percentile(df['Heat Index (°C)'], percentile)
-                    df['Is Extreme Heat'] = df['Heat Index (°C)'] > threshold
+                    df['Is Extreme Heat'] = df['Heat Index (°C)'] > hi_threshold
                     
                     # Value to analyze
                     analysis_value = 'Heat Index (°C)'
+                    threshold = hi_threshold
                     
                 else:  # By Maximum Temperature
-                    df = pd.DataFrame({
-                        'Date': dates,
-                        'Temperature (°C)': temps,
-                        'Relative Humidity (%)': humidity
-                    })
-                    
                     # Determine extreme heat days based on temperature
-                    threshold = np.percentile(df['Temperature (°C)'], percentile)
-                    df['Is Extreme Heat'] = df['Temperature (°C)'] > threshold
+                    df['Is Extreme Heat'] = df['T2M_MAX'] > temp_threshold
                     
                     # Value to analyze
-                    analysis_value = 'Temperature (°C)'
+                    analysis_value = 'T2M_MAX'
+                    threshold = temp_threshold
+                    
+                # Rename temperature column for display
+                df = df.rename(columns={'T2M_MAX': 'Temperature (°C)'})
                 
                 # Filter to extreme heat days
                 extreme_days = df[df['Is Extreme Heat']].copy()
