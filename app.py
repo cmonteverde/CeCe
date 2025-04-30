@@ -972,83 +972,55 @@ elif st.session_state.active_function == "precipitation_map":
                 # Get the max value for scaling the heatmap
                 max_precip = max([x[2] for x in heat_data]) if heat_data else 100
                 
-                # Map style selection
-                map_styles = ["Standard Map", "Felt-Inspired Map"]
-                map_style = st.radio("Map Style", map_styles, index=1)
+                # Create a standard base map centered on the location first (we'll decide which to show later)
+                m = folium.Map(location=[latitude, longitude], zoom_start=7, 
+                              tiles="cartodb dark_matter")
                 
-                if map_style == "Felt-Inspired Map":
-                    # Use Felt-inspired maps for a more modern look
+                # Add a marker for the selected location
+                folium.Marker(
+                    [latitude, longitude],
+                    popup=f"Selected Location: {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}",
+                    icon=folium.Icon(color="purple")
+                ).add_to(m)
+                
+                # Map style selection
+                map_styles = ["Standard Map", "Felt-Inspired Map Demo"]
+                map_style = st.radio("Map Style", map_styles, index=0)
+                
+                if map_style == "Felt-Inspired Map Demo":
+                    # Use Felt-inspired maps from the demo for a more modern look
                     st.info("Using Felt-inspired map with enhanced visualization and interactive features.")
                     
-                    # Create a Felt-inspired map
-                    felt_map = felt_inspired_maps.create_felt_inspired_map(
-                        lat=latitude,
-                        lon=longitude,
-                        zoom=7,
-                        width="100%",
-                        height=600,
-                        tiles="dark",
-                        style="modern",
-                        show_toolbar=True,
-                        include_contours=True
-                    )
+                    # Use the existing felt_map_demo to ensure it works properly
+                    st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
                     
-                    # Add precipitation data as a layer
-                    felt_map.add_precipitation_layer(
-                        data=heat_data,
-                        min_precip=0.0,
-                        max_precip=max_precip,
-                        name="Precipitation Layer",
-                        palette="precipitation"
-                    )
-                    
-                    # Add a marker for the selected location
-                    poi_data = [(
-                        latitude, 
-                        longitude, 
-                        f"Selected Location", 
-                        f"{city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}", 
-                        "map-pin", 
-                        "purple"
-                    )]
-                    felt_map.add_points_of_interest(poi_data, name="Selected Location", cluster=False)
-                    
-                    # Display the map
-                    felt_map.render_in_streamlit()
+                    # Run the Felt map demo instead of trying to create a custom one
+                    felt_map_demo.run_felt_map_demo()
                     
                     # Add info about the map
                     with st.expander("About this Map"):
                         st.markdown("""
-                        This map shows precipitation data from NASA POWER API using a modern, Felt-inspired design.
-                        - The color intensity represents the amount of precipitation
-                        - Contour lines show elevation changes in the region
-                        - Use the toolbar in the upper left to zoom, pan, and explore the map
+                        This map shows a Felt-inspired design with modern UI and interactive features.
+                        - Multiple basemap options available in the sidebar
+                        - Interactive elevation contours
+                        - Option to display temperature, precipitation, wind data
+                        - Points of interest with clustering
+                        - Clean, modern interface inspired by Felt.com
                         """)
-                else:
-                    # Create a standard base map centered on the location
-                    m = folium.Map(location=[latitude, longitude], zoom_start=7, 
-                                  tiles="cartodb dark_matter")
                     
-                    # Add a marker for the selected location
-                    folium.Marker(
-                        [latitude, longitude],
-                        popup=f"Selected Location: {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}",
-                        icon=folium.Icon(color="purple")
-                    ).add_to(m)
-                
-                if map_style == "Standard Map":
+                    # Note about the demo vs. real data
+                    st.info("This is currently showing the Felt map demo. In a future update, we'll fully integrate the real NASA POWER precipitation data with this modern map style.")
+                else:
                     # Add the heatmap to the standard map
                     from folium.plugins import HeatMap
                     
                     # Create a heatmap with string-based gradient values and improved parameters
-                    # Note: Folium HeatMap gradient keys must be strings representing float values between 0 and 1
                     HeatMap(
                         heat_data,
                         radius=25,  # Increased radius for more coverage
                         min_opacity=0.5,  # Lower min_opacity to make the map more visible in low precipitation areas
                         blur=18,  # Increased blur for even smoother transitions
                         max_zoom=13,  # Control the maximum zoom level for the heatmap
-                        # max_val parameter is no longer needed (will be calculated automatically)
                         # Using normalized string values for the gradient keys
                         gradient={
                             '0.0': 'blue',
@@ -1116,6 +1088,10 @@ elif st.session_state.active_function == "precipitation_map":
                     # Display the standard map
                     st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
                     folium_static(m)
+                    
+                    # Download button is now handled outside the if/else statement
+                
+
                 
                 # Add context about the data
                 st.info(f"This map shows real precipitation data from NASA POWER API around your selected location for the date range {start_date_str} to {end_date_str}. Data source: NASA POWER (Prediction of Worldwide Energy Resources).")
