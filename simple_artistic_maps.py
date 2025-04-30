@@ -144,40 +144,10 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
         control=True,
     ).add_to(m)
     
-    # Add some artistic elements based on the palette
+    # Store the palette information for reference, but don't add artistic elements
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
-        colors = palette["colors"]
-        
-        # Create a feature group for artistic elements so they can be toggled on/off
-        artistic_elements = folium.FeatureGroup(name="Artistic Elements", control=True)
-        
-        # Add artistic elements - circles with palette colors
-        for i in range(10):
-            # Create random offsets within view
-            lat_offset = (random.random() - 0.5) * 0.05
-            lon_offset = (random.random() - 0.5) * 0.05
-            
-            # Get random color from palette
-            color = colors[i % len(colors)]
-            
-            # Random radius and opacity for variety
-            radius = random.randint(500, 2000)
-            opacity = random.uniform(0.2, 0.5)
-            
-            # Add circle to the feature group
-            folium.Circle(
-                location=[lat + lat_offset, lon + lon_offset],
-                radius=radius,
-                color=color,
-                fill=True,
-                fill_color=color,
-                fill_opacity=opacity,
-                opacity=opacity * 0.8
-            ).add_to(artistic_elements)
-        
-        # Add the feature group to the map
-        m.add_child(artistic_elements)
+        # We'll just use this for attribution/display purposes but not add decorative elements
     
     # Add a minimap for context
     minimap = MiniMap(toggle_display=True, position='bottomright')
@@ -284,43 +254,10 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         control=True,
     ).add_to(m)
     
-    # Add artistic elements based on the palette
+    # Store the palette information for reference, but don't add artistic elements
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
-        colors = palette["colors"]
-        
-        # Create a feature group for artistic elements
-        artistic_overlay = folium.FeatureGroup(name="Artistic Overlay", control=True)
-        
-        # Create semi-transparent gradient overlay for artistic effect
-        gradient = {}
-        for i, color in enumerate(colors):
-            # Create normalized gradient stops
-            position = f"{i / (len(colors) - 1):.1f}"
-            gradient[position] = color
-        
-        # Generate some random points around the center to create a gradient
-        points = []
-        for i in range(20):
-            lat_offset = (random.random() - 0.5) * 0.1
-            lon_offset = (random.random() - 0.5) * 0.1
-            # Weight increases toward center for a focal point
-            weight = 1.0 - (abs(lat_offset) + abs(lon_offset)) * 5
-            points.append([lat + lat_offset, lon + lon_offset, weight])
-        
-        # Add the heatmap as an artistic overlay
-        HeatMap(
-            points,
-            radius=25,
-            gradient=gradient,
-            min_opacity=0.3,
-            blur=20,
-            max_zoom=zoom+2,
-            name="Artistic Gradient"
-        ).add_to(artistic_overlay)
-        
-        # Add the feature group to the map
-        m.add_child(artistic_overlay)
+        # Just use for attribution/display
     
     # Add a minimap for context
     minimap = MiniMap(toggle_display=True, position='bottomright')

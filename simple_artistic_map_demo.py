@@ -21,18 +21,21 @@ def run_artistic_map_demo():
     """
     Run the artistic map demonstration
     """
-    st.markdown("<h2 style='text-align: center; color: #1E90FF;'>Artistic Climate Maps</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #1E90FF;'>Advanced Interactive Climate Maps</h2>", unsafe_allow_html=True)
     
     st.markdown("""
     <div style="background-color: rgba(30, 30, 30, 0.6); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
         <p style="color: white;">
-            Explore unique artistic map visualizations that combine climate science with visual artistry. 
-            These maps use high-resolution topography, land use data, and satellite imagery to create
-            distinctive visualizations that make climate data more engaging and memorable.
+            Explore Climate Copilot's advanced interactive maps with multiple basemap options 
+            and specialized overlays in a single interface. Our maps integrate high-resolution 
+            topography, satellite imagery, and detailed place labels to provide a comprehensive 
+            view of any location.
         </p>
         <p style="color: #add8e6; margin-top: 10px;">
-            <strong>Interactive Features:</strong> Once generated, you can toggle between different basemaps, 
-            turn topography lines on/off, and customize your view using the layer control panel in the top-right corner!
+            <strong>Interactive Features:</strong> Once generated, use the layer control panel 
+            in the top-right corner to toggle between different basemaps (dark, light, street, 
+            satellite, topographic) and overlays (topography lines, place labels). This unique 
+            combination gives you complete control over your map visualization.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -79,7 +82,7 @@ def run_artistic_map_demo():
     st.markdown("<h3 style='color: #1E90FF;'>Map Style</h3>", unsafe_allow_html=True)
     
     map_style = st.selectbox(
-        "Select artistic style:",
+        "Select color theme:",
         ["ethereal", "dramatic", "moody", "surreal", "vibrant", "neon", "artistic"],
         index=0,
         format_func=lambda x: x.capitalize()
@@ -120,11 +123,11 @@ def run_artistic_map_demo():
     
     # Generate map button
     st.markdown("<div style='text-align: center; margin: 20px 0;'>", unsafe_allow_html=True)
-    generate_map = st.button("Generate Artistic Map", type="primary")
+    generate_map = st.button("Generate Interactive Map", type="primary")
     st.markdown("</div>", unsafe_allow_html=True)
     
     if generate_map:
-        with st.spinner(f"Creating artistic {map_style} map for {location_method.lower()} {city if location_method == 'City Name' else f'({latitude:.4f}, {longitude:.4f})'}..."):
+        with st.spinner(f"Creating advanced interactive map for {location_method.lower()} {city if location_method == 'City Name' else f'({latitude:.4f}, {longitude:.4f})'}..."):
             # Create the artistic climate map
             m = simple_artistic_maps.create_artistic_climate_map(
                 lat=latitude,
@@ -196,7 +199,6 @@ def run_artistic_map_demo():
         <ul style="color: white;">
             <li><strong>Topography Lines:</strong> Contour lines that show elevation changes</li>
             <li><strong>Place Labels:</strong> City, town and street names that can be toggled on satellite view</li>
-            <li><strong>Artistic Elements:</strong> Stylized overlay using the selected color palette</li>
         </ul>
         
         <h4 style="color: #1E90FF; margin-top: 15px;">Data Sources</h4>
@@ -207,15 +209,16 @@ def run_artistic_map_demo():
             <li><strong>Contour Lines:</strong> SRTM30 dataset provides global elevation contours</li>
         </ul>
         
-        <h4 style="color: #1E90FF; margin-top: 15px;">Artistic Processing</h4>
+        <h4 style="color: #1E90FF; margin-top: 15px;">Map Features</h4>
         <p style="color: white;">
-            The unique visual styles are created through a combination of:
+            What makes these maps unique:
         </p>
         <ul style="color: white;">
-            <li>Custom-designed color palettes inspired by artistic movements and natural phenomena</li>
-            <li>Interactive layers and stylized overlays that enhance geographic data</li>
-            <li>Artistic gradients and custom CSS styling for a unique visual experience</li>
-            <li>Cartographic styling techniques that balance visual appeal with scientific accuracy</li>
+            <li>Sophisticated layer control system with multiple basemap options in one interface</li>
+            <li>Specialized overlays like "Place Labels" that can be combined with any basemap</li>
+            <li>Custom CSS styling for a professional, polished user experience</li>
+            <li>High-quality data from multiple providers combined in a seamless experience</li>
+            <li>Carefully selected map sources that provide exceptional detail and clarity</li>
         </ul>
         
         <div style="margin-top: 15px; padding: 10px; border-radius: 5px; background-color: rgba(30, 144, 255, 0.2); color: white;">
