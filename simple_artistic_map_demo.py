@@ -198,7 +198,7 @@ def run_artistic_map_demo():
         <h4 style="color: #1E90FF; margin-top: 15px;">Toggleable Overlays</h4>
         <ul style="color: white;">
             <li><strong>Topography Lines:</strong> Contour lines that show elevation changes</li>
-            <li><strong>Place Labels:</strong> City, town and street names that can be toggled on satellite view</li>
+            <li><strong>Place Labels:</strong> City, town and street names (automatically shown on satellite view)</li>
         </ul>
         
         <h4 style="color: #1E90FF; margin-top: 15px;">Data Sources</h4>

@@ -171,7 +171,7 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
     
     return m
 
-def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, style="climate_ethereal"):
+def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, style="climate_ethereal", data_type="satellite"):
     """
     Create an artistic map based on satellite imagery
     
@@ -182,6 +182,7 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         width: Image width in pixels
         height: Image height in pixels
         style: Style name from ARTISTIC_PALETTES
+        data_type: Type of map (used to determine if this is a satellite view)
     
     Returns:
         Folium map with artistic satellite imagery
@@ -244,15 +245,39 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         control=True,
     ).add_to(m)
     
-    # Add a labels overlay for satellite view - especially important for this map type
-    folium.TileLayer(
-        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-        attr='&copy; CartoDB',
-        name='Place Labels',
-        overlay=True,  # This makes it an overlay that can be toggled
-        opacity=0.9,
-        control=True,
-    ).add_to(m)
+    # For satellite view, we'll combine the satellite imagery with place labels directly
+    if data_type == "satellite":
+        # Always add labels overlay for satellite view without toggle option
+        folium.TileLayer(
+            tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+            attr='&copy; CartoDB',
+            name='_PlaceLabelsHidden',  # Underscore prefix to hide from layer control
+            overlay=True,
+            opacity=0.9,
+            control=False,  # No control, always on for satellite
+            show=True,      # Always visible
+        ).add_to(m)
+        
+        # Add coastlines and borders overlay
+        folium.TileLayer(
+            tiles='https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
+            attr='&copy; Esri',
+            name='_CoastlinesBordersHidden',  # Underscore prefix to hide from layer control
+            overlay=True,
+            opacity=0.8,
+            control=False,  # No control, always on for satellite
+            show=True,      # Always visible
+        ).add_to(m)
+    else:
+        # For non-satellite map types, place labels are toggleable
+        folium.TileLayer(
+            tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+            attr='&copy; CartoDB',
+            name='Place Labels',
+            overlay=True,  # This makes it an overlay that can be toggled
+            opacity=0.9,
+            control=True,
+        ).add_to(m)
     
     # Store the palette information for reference, but don't add artistic elements
     if style in ARTISTIC_PALETTES:
@@ -318,7 +343,7 @@ def create_artistic_climate_map(lat, lon, data_type="topography",
         )
     elif data_type == "satellite":
         return create_artistic_satellite_map(
-            lat, lon, zoom=zoom, width=width, height=height, style=palette
+            lat, lon, zoom=zoom, width=width, height=height, style=palette, data_type=data_type
         )
     else:
         # Default to topography
