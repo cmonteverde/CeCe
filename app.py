@@ -887,12 +887,13 @@ def get_city_coordinates(city_name):
         return None, None
 
 # Import artistic map modules
-import artistic_maps
-from artistic_map_demo import run_artistic_map_demo
+# Using simplified versions for better reliability
+import simple_artistic_maps
+from simple_artistic_map_demo import run_artistic_map_demo
 
 # Function handling section
 if st.session_state.active_function == "artistic_maps":
-    # Run the artistic map demo
+    # Run the simplified artistic map demo
     run_artistic_map_demo()
     
 elif st.session_state.active_function == "precipitation_map":
