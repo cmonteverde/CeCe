@@ -610,7 +610,7 @@ for i, (industry_id, icon) in enumerate(industry_icons.items()):
             st.session_state.active_function = "industry_map"
             st.rerun()
 
-# Button cards
+# Button cards - First Row
 st.markdown('<div class="buttons-container">', unsafe_allow_html=True)
 col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -643,6 +643,33 @@ with col6:
     if st.button("📝 Generate interactive climate story"):
         st.session_state.active_function = "climate_story"
         st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Second row for additional features
+st.markdown('<div class="buttons-container" style="margin-top: 10px;">', unsafe_allow_html=True)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
+
+with col1:
+    if st.button("🎨 Artistic high-resolution maps"):
+        st.session_state.active_function = "artistic_maps"
+        st.rerun()
+        
+# Placeholder for future buttons
+with col2:
+    pass
+    
+with col3:
+    pass
+    
+with col4:
+    pass
+    
+with col5:
+    pass
+    
+with col6:
+    pass
 
 st.markdown('</div>', unsafe_allow_html=True)
 
