@@ -9,7 +9,17 @@ topography, land use data, and stylized satellite imagery.
 import streamlit as st
 import folium
 from folium.plugins import HeatMap, MarkerCluster
-from streamlit_folium import folium_static
+try:
+    from streamlit_folium import folium_static
+except ImportError:
+    # Fallback for streamlit_folium import error
+    st.error("streamlit_folium package is not available. Please install it using: pip install streamlit-folium")
+    
+    # Define a simple function to handle the fallback case
+    def folium_static(folium_map, width=None, height=None):
+        """Fallback function if streamlit_folium is not available"""
+        html = folium_map._repr_html_()
+        st.components.v1.html(html, width=width, height=height)
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
