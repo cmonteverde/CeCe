@@ -988,28 +988,35 @@ elif st.session_state.active_function == "precipitation_map":
                 map_style = st.radio("Map Style", map_styles, index=0)
                 
                 if map_style == "Felt-Inspired Map Demo":
-                    # Use Felt-inspired maps from the demo for a more modern look
+                    # Use Felt-inspired maps for a more modern look
                     st.info("Using Felt-inspired map with enhanced visualization and interactive features.")
                     
-                    # Use the existing felt_map_demo to ensure it works properly
+                    # Display the title
                     st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
                     
-                    # Run the Felt map demo instead of trying to create a custom one
-                    felt_map_demo.run_felt_map_demo()
+                    # Import our new embedded map module
+                    import embedded_felt_map
+                    
+                    # Create an embedded Felt-inspired map with the current location
+                    location_name = city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'
+                    embedded_felt_map.create_embedded_felt_map(
+                        lat=latitude,
+                        lon=longitude,
+                        location_name=location_name
+                    )
                     
                     # Add info about the map
                     with st.expander("About this Map"):
                         st.markdown("""
                         This map shows a Felt-inspired design with modern UI and interactive features.
-                        - Multiple basemap options available in the sidebar
                         - Interactive elevation contours
-                        - Option to display temperature, precipitation, wind data
-                        - Points of interest with clustering
+                        - Precipitation data visualization with smooth gradients
+                        - Points of interest
                         - Clean, modern interface inspired by Felt.com
                         """)
                     
-                    # Note about the demo vs. real data
-                    st.info("This is currently showing the Felt map demo. In a future update, we'll fully integrate the real NASA POWER precipitation data with this modern map style.")
+                    # Note about the real data integration
+                    st.info("This is showing a sample visualization of precipitation data. In the next update, we'll integrate the real NASA POWER precipitation data with this modern map style.")
                 else:
                     # Add the heatmap to the standard map
                     from folium.plugins import HeatMap
