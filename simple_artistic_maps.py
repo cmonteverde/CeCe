@@ -11,10 +11,16 @@ import numpy as np
 import random
 import requests
 import io
+import os
+import tempfile
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import LightSource
+import elevation
+import rasterio
+import rasterio.features
+from rasterio.warp import transform_bounds
 
 # Define custom color palettes for artistic rendering
 ARTISTIC_PALETTES = {
@@ -435,7 +441,7 @@ def generate_map_watermark(text="Climate CoPilot"):
 
 def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
     """
-    Fetch elevation data from Open-Elevation API for the given coordinates
+    Fetch elevation data from SRTM dataset for the given coordinates
     
     Args:
         lat: Center latitude
@@ -447,74 +453,98 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
     Returns:
         Numpy array of elevation data, bounds tuple (min_lon, min_lat, max_lon, max_lat)
     """
-    # Calculate bounding box based on zoom level
-    # Higher zoom = smaller area
-    scale_factor = 10.0 / (2**zoom)
-    
-    # Calculate the bounds
-    lon_range = scale_factor
-    lat_range = scale_factor
-    
-    min_lon = lon - lon_range/2
-    max_lon = lon + lon_range/2
-    min_lat = lat - lat_range/2
-    max_lat = lat + lat_range/2
-    
-    # Simply generate synthetic data for now, as we're having issues with the API
-    return generate_synthetic_elevation(width, height), (min_lon, min_lat, max_lon, max_lat)
-    
-    # The API-based code is commented out due to issues with the API
-    # Generate grid points
-    lons = np.linspace(min_lon, max_lon, width)
-    lats = np.linspace(min_lat, max_lat, height)
-    
-    # Create meshgrid for the points
-    lon_grid, lat_grid = np.meshgrid(lons, lats)
-    
-    # Flatten the grids for the API request
-    points = []
-    for i in range(width):
-        for j in range(height):
-            points.append({
-                "latitude": lat_grid[j, i],
-                "longitude": lon_grid[i, j]
-            })
-    
-    # Open-Elevation API uses POST for batch requests
-    api_url = "https://api.open-elevation.com/api/v1/lookup"
-    payload = {"locations": points}
-    
     try:
-        response = requests.post(api_url, json=payload)
-        data = response.json()
+        # Calculate bounding box based on zoom level
+        # Higher zoom = smaller area
+        scale_factor = 10.0 / (2**zoom)
         
-        # Reshape the elevation data back to a grid
-        elevation_grid = np.zeros((height, width))
+        # Calculate the bounds, ensuring we stay within SRTM data limits (-60° to 60° latitude)
+        lon_range = scale_factor
+        lat_range = scale_factor
         
-        if "results" in data:
-            for i, point in enumerate(data["results"]):
-                row = i // width
-                col = i % width
-                elevation_grid[row, col] = point["elevation"]
+        min_lon = lon - lon_range/2
+        max_lon = lon + lon_range/2
+        min_lat = max(-60, lat - lat_range/2)  # SRTM data only available from -60° to 60° latitude
+        max_lat = min(60, lat + lat_range/2)
+        
+        # Create a temporary directory for the SRTM data
+        temp_dir = tempfile.mkdtemp()
+        dem_path = os.path.join(temp_dir, 'srtm_data.tif')
+        
+        # Use elevation package to download SRTM data
+        # Add small buffer to ensure we get enough data
+        buffer = 0.05  # degrees
+        bounds = (min_lon-buffer, min_lat-buffer, max_lon+buffer, max_lat+buffer)
+        
+        try:
+            # Clean up any old files
+            if os.path.exists(dem_path):
+                os.remove(dem_path)
+                
+            # Download the SRTM data for the specified bounds
+            elevation.clip(bounds=bounds, output=dem_path, product='SRTM1')
             
-            return elevation_grid, (min_lon, min_lat, max_lon, max_lat)
-        else:
-            # Fallback to synthetic data if API fails
-            print("Elevation API error, generating synthetic data")
-            return generate_synthetic_elevation(width, height), (min_lon, min_lat, max_lon, max_lat)
-    
+            # Open the DEM file
+            with rasterio.open(dem_path) as dem_file:
+                # Get the bounds in the DEM's CRS
+                dem_bounds = dem_file.bounds
+                
+                # Create regular grid points
+                x = np.linspace(min_lon, max_lon, width)
+                y = np.linspace(min_lat, max_lat, height)
+                X, Y = np.meshgrid(x, y)
+                
+                # Sample the DEM at each grid point
+                elevation_data = np.zeros((height, width))
+                
+                # Read the entire raster
+                dem_data = dem_file.read(1)
+                
+                # Sample values for each grid point
+                rows, cols = rasterio.transform.rowcol(dem_file.transform, X.flatten(), Y.flatten())
+                rows = np.clip(rows, 0, dem_data.shape[0]-1)
+                cols = np.clip(cols, 0, dem_data.shape[1]-1)
+                
+                # Get elevation values and reshape
+                elevations = dem_data[rows, cols]
+                elevation_data = elevations.reshape(height, width)
+                
+                # Clean up temporary files
+                if os.path.exists(dem_path):
+                    os.remove(dem_path)
+                
+                return elevation_data, (min_lon, min_lat, max_lon, max_lat)
+                
+        except Exception as e:
+            print(f"Error processing SRTM data: {e}")
+            raise
     except Exception as e:
-        print(f"Error fetching elevation data: {e}")
-        # Return synthetic data if API fails
-        return generate_synthetic_elevation(width, height), (min_lon, min_lat, max_lon, max_lat)
+        # Calculate bounds here since they might not be defined in the case of an early exception
+        # Higher zoom = smaller area
+        scale_factor = 10.0 / (2**zoom)
+        
+        # Calculate the bounds
+        lon_range = scale_factor
+        lat_range = scale_factor
+        
+        min_lon = lon - lon_range/2
+        max_lon = lon + lon_range/2
+        min_lat = lat - lat_range/2
+        max_lat = lat + lat_range/2
+        
+        print(f"Failed to fetch SRTM elevation data: {e}")
+        print("Falling back to synthetic elevation data")
+        # If SRTM data fetch fails, fall back to synthetic data with bounds
+        return generate_synthetic_elevation(width, height, (min_lon, min_lat, max_lon, max_lat)), (min_lon, min_lat, max_lon, max_lat)
 
-def generate_synthetic_elevation(width, height):
+def generate_synthetic_elevation(width, height, bounds=None):
     """
-    Generate synthetic elevation data for testing or when API is unavailable
+    Generate synthetic elevation data for testing or when SRTM data is unavailable
     
     Args:
         width: Grid width
         height: Grid height
+        bounds: Optional bounds (min_lon, min_lat, max_lon, max_lat)
     
     Returns:
         Numpy array with synthetic elevation data
@@ -534,6 +564,14 @@ def generate_synthetic_elevation(width, height):
     
     # Add some noise for realism
     elevation += np.random.normal(0, 50, (height, width))
+    
+    # Calculate bounds if not provided
+    if bounds is None:
+        # Use a default area (around San Francisco for demonstration)
+        bounds = (-122.5, 37.7, -122.4, 37.8)
+    
+    # Log that we're using synthetic data
+    print(f"Using synthetic elevation data for area: {bounds}")
     
     return elevation
 
@@ -619,6 +657,7 @@ def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_colo
         
         return m
     except Exception as e:
-        print(f"Failed to add contour lines ({unit}): {e}")
+        unit_label = "ft" if use_feet else "m"
+        print(f"Failed to add contour lines ({unit_label}): {e}")
         # Continue without contours if there's an error
         return m
