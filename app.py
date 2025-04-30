@@ -25,6 +25,11 @@ import climate_algorithms
 import load_docs
 import climate_resilience
 
+# Import map modules
+import simple_artistic_maps
+import felt_inspired_maps
+import felt_map_demo
+
 # Load environment variables
 load_dotenv()
 
