@@ -124,20 +124,25 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
         pass
 
     # Add Topography Lines overlay (can be toggled on/off)
-    try:
-        folium.WmsTileLayer(
-            url="http://ows.mundialis.de/services/service?",
-            layers="SRTM30-Contour",
-            name="Topography Lines",
-            fmt="image/png",
-            transparent=True,
-            overlay=True,
-            control=True,
-            opacity=0.7,
-        ).add_to(m)
-    except:
-        # Alternative topography lines if the WMS service is unavailable
-        pass
+    # Using OpenTopoMap contour lines which are more reliable
+    folium.TileLayer(
+        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attr='Map data: &copy; OpenStreetMap contributors, SRTM | Style: &copy; OpenTopoMap',
+        name='Topography Lines',
+        overlay=True,  # Important: make it an overlay, not a base layer
+        opacity=0.6,
+        control=True,
+    ).add_to(m)
+    
+    # Add a labels overlay for satellite view
+    folium.TileLayer(
+        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        attr='&copy; CartoDB',
+        name='Place Labels',
+        overlay=True,  # This makes it an overlay that can be toggled
+        opacity=0.9,
+        control=True,
+    ).add_to(m)
     
     # Add some artistic elements based on the palette
     if style in ARTISTIC_PALETTES:
@@ -259,20 +264,25 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
     ).add_to(m)
     
     # Add Topography Lines overlay (can be toggled on/off)
-    try:
-        folium.WmsTileLayer(
-            url="http://ows.mundialis.de/services/service?",
-            layers="SRTM30-Contour",
-            name="Topography Lines",
-            fmt="image/png",
-            transparent=True,
-            overlay=True,
-            control=True,
-            opacity=0.7,
-        ).add_to(m)
-    except:
-        # Fallback if the WMS service is unavailable
-        pass
+    # Using OpenTopoMap contour lines which are more reliable
+    folium.TileLayer(
+        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attr='Map data: &copy; OpenStreetMap contributors, SRTM | Style: &copy; OpenTopoMap',
+        name='Topography Lines',
+        overlay=True,  # Important: make it an overlay, not a base layer
+        opacity=0.6,
+        control=True,
+    ).add_to(m)
+    
+    # Add a labels overlay for satellite view - especially important for this map type
+    folium.TileLayer(
+        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        attr='&copy; CartoDB',
+        name='Place Labels',
+        overlay=True,  # This makes it an overlay that can be toggled
+        opacity=0.9,
+        control=True,
+    ).add_to(m)
     
     # Add artistic elements based on the palette
     if style in ARTISTIC_PALETTES:
