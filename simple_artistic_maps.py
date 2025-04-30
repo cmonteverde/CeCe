@@ -17,10 +17,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import LightSource
-import elevation
-import rasterio
-import rasterio.features
-from rasterio.warp import transform_bounds
+import srtm_elevation
 
 # Define custom color palettes for artistic rendering
 ARTISTIC_PALETTES = {
@@ -441,7 +438,7 @@ def generate_map_watermark(text="Climate CoPilot"):
 
 def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
     """
-    Fetch elevation data from SRTM dataset for the given coordinates
+    Fetch elevation data from NASA SRTM dataset for the given coordinates
     
     Args:
         lat: Center latitude
@@ -454,73 +451,38 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
         Numpy array of elevation data, bounds tuple (min_lon, min_lat, max_lon, max_lat)
     """
     try:
-        # Calculate bounding box based on zoom level
+        # Calculate bounding box radius based on zoom level
         # Higher zoom = smaller area
+        # Scale factor converts zoom level to an appropriate radius in degrees
+        # This formula gives reasonable areas at different zoom levels
         scale_factor = 10.0 / (2**zoom)
+        radius = scale_factor / 2
         
-        # Calculate the bounds, ensuring we stay within SRTM data limits (-60° to 60° latitude)
-        lon_range = scale_factor
-        lat_range = scale_factor
+        print(f"Fetching SRTM elevation data for {lat}, {lon} with radius {radius} degrees")
         
-        min_lon = lon - lon_range/2
-        max_lon = lon + lon_range/2
-        min_lat = max(-60, lat - lat_range/2)  # SRTM data only available from -60° to 60° latitude
-        max_lat = min(60, lat + lat_range/2)
+        # Use our new direct SRTM module to fetch elevation data
+        elevation_data, bounds = srtm_elevation.fetch_elevation_array(
+            lat=lat, 
+            lon=lon, 
+            width=width, 
+            height=height,
+            radius=radius
+        )
         
-        # Create a temporary directory for the SRTM data
-        temp_dir = tempfile.mkdtemp()
-        dem_path = os.path.join(temp_dir, 'srtm_data.tif')
+        # If we got data, return it
+        if elevation_data is not None:
+            print(f"Successfully fetched SRTM elevation data with shape {elevation_data.shape}")
+            # Replace NaN values with median to avoid contour problems
+            if np.isnan(elevation_data).any():
+                median = np.nanmedian(elevation_data)
+                elevation_data = np.nan_to_num(elevation_data, nan=median)
+            return elevation_data, bounds
         
-        # Use elevation package to download SRTM data
-        # Add small buffer to ensure we get enough data
-        buffer = 0.05  # degrees
-        bounds = (min_lon-buffer, min_lat-buffer, max_lon+buffer, max_lat+buffer)
+        # If we didn't get data, use synthetic data
+        raise Exception("No SRTM elevation data returned")
         
-        try:
-            # Clean up any old files
-            if os.path.exists(dem_path):
-                os.remove(dem_path)
-                
-            # Download the SRTM data for the specified bounds
-            elevation.clip(bounds=bounds, output=dem_path, product='SRTM1')
-            
-            # Open the DEM file
-            with rasterio.open(dem_path) as dem_file:
-                # Get the bounds in the DEM's CRS
-                dem_bounds = dem_file.bounds
-                
-                # Create regular grid points
-                x = np.linspace(min_lon, max_lon, width)
-                y = np.linspace(min_lat, max_lat, height)
-                X, Y = np.meshgrid(x, y)
-                
-                # Sample the DEM at each grid point
-                elevation_data = np.zeros((height, width))
-                
-                # Read the entire raster
-                dem_data = dem_file.read(1)
-                
-                # Sample values for each grid point
-                rows, cols = rasterio.transform.rowcol(dem_file.transform, X.flatten(), Y.flatten())
-                rows = np.clip(rows, 0, dem_data.shape[0]-1)
-                cols = np.clip(cols, 0, dem_data.shape[1]-1)
-                
-                # Get elevation values and reshape
-                elevations = dem_data[rows, cols]
-                elevation_data = elevations.reshape(height, width)
-                
-                # Clean up temporary files
-                if os.path.exists(dem_path):
-                    os.remove(dem_path)
-                
-                return elevation_data, (min_lon, min_lat, max_lon, max_lat)
-                
-        except Exception as e:
-            print(f"Error processing SRTM data: {e}")
-            raise
     except Exception as e:
-        # Calculate bounds here since they might not be defined in the case of an early exception
-        # Higher zoom = smaller area
+        # Calculate bounds for the synthetic data
         scale_factor = 10.0 / (2**zoom)
         
         # Calculate the bounds
@@ -532,48 +494,15 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
         min_lat = lat - lat_range/2
         max_lat = lat + lat_range/2
         
+        bounds = (min_lon, min_lat, max_lon, max_lat)
+        
         print(f"Failed to fetch SRTM elevation data: {e}")
         print("Falling back to synthetic elevation data")
+        
         # If SRTM data fetch fails, fall back to synthetic data with bounds
-        return generate_synthetic_elevation(width, height, (min_lon, min_lat, max_lon, max_lat)), (min_lon, min_lat, max_lon, max_lat)
+        return srtm_elevation.generate_synthetic_elevation(width, height, bounds), bounds
 
-def generate_synthetic_elevation(width, height, bounds=None):
-    """
-    Generate synthetic elevation data for testing or when SRTM data is unavailable
-    
-    Args:
-        width: Grid width
-        height: Grid height
-        bounds: Optional bounds (min_lon, min_lat, max_lon, max_lat)
-    
-    Returns:
-        Numpy array with synthetic elevation data
-    """
-    # Create base elevation
-    x = np.linspace(0, 1, width)
-    y = np.linspace(0, 1, height)
-    X, Y = np.meshgrid(x, y)
-    
-    # Create a mountain with multiple peaks
-    elevation = (
-        500 * np.exp(-((X - 0.3)**2 + (Y - 0.3)**2) / 0.1) + 
-        800 * np.exp(-((X - 0.7)**2 + (Y - 0.7)**2) / 0.1) +
-        300 * np.exp(-((X - 0.5)**2 + (Y - 0.1)**2) / 0.1) +
-        200 * np.sin(X * 10) * np.cos(Y * 8)
-    )
-    
-    # Add some noise for realism
-    elevation += np.random.normal(0, 50, (height, width))
-    
-    # Calculate bounds if not provided
-    if bounds is None:
-        # Use a default area (around San Francisco for demonstration)
-        bounds = (-122.5, 37.7, -122.4, 37.8)
-    
-    # Log that we're using synthetic data
-    print(f"Using synthetic elevation data for area: {bounds}")
-    
-    return elevation
+
 
 def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_color='#6644aa', 
                            num_contours=15, width=100, height=100, use_feet=False):
