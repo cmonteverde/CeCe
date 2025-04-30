@@ -196,28 +196,83 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         height=height
     )
     
-    # Add multiple basemap options that users can toggle between
-    # 1. Satellite imagery with labels (default for this map type)
-    # First add the base satellite layer
-    satellite_with_labels = folium.FeatureGroup(name='Satellite Imagery')
-    
-    # Add the satellite imagery base
+    # Create a new integrated satellite layer with boundaries and labels
+    # This is a special combination that uses Esri's satellite imagery with boundaries and labels 
     folium.TileLayer(
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri',
-        control=False,  # This will be controlled through the feature group
-    ).add_to(satellite_with_labels)
+        name='Satellite Imagery',
+        tiles='https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri World Imagery',
+        opacity=1.0,
+    ).add_to(m)
     
-    # Add labels directly on top of the satellite imagery
+    # Now add the reference overlay with boundaries - this is always on for satellite view
+    # Create a group especially for satellite that will not show in layer control
+    sat_overlay_group = folium.FeatureGroup(name="_SatelliteOverlaysHidden", show=True, control=False)
+    
+    # Add boundaries and places (names of cities, countries, etc.)
     folium.TileLayer(
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri',
+        tiles='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places_Alternate/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri World Reference',
+        opacity=1.0,
+    ).add_to(sat_overlay_group)
+    
+    # Add roads and transportation lines
+    folium.TileLayer(
+        tiles='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri World Transportation',
+        opacity=0.8,
+    ).add_to(sat_overlay_group)
+    
+    # Add hydrography (coastlines, rivers, lakes)
+    folium.TileLayer(
+        tiles='https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri Ocean',
         opacity=0.9,
-        control=False,  # This will be controlled through the feature group
-    ).add_to(satellite_with_labels)
+    ).add_to(sat_overlay_group)
     
-    # Add the combined feature group to the map
-    satellite_with_labels.add_to(m)
+    # Add the feature group to the map but hide it from controls
+    sat_overlay_group.add_to(m)
+    
+    # Instead of trying to use JavaScript (which is unreliable), use control=False for all
+    # the overlays to keep them from showing in the layer control
+    # Make sure satellite is the first/default layer
+    
+    # Set the default satellite view with its overlays to be active by default
+    if data_type == "satellite":
+        # Move satellite to first position for default selection
+        m.get_root().html.add_child(folium.Element('''
+        <script>
+        // We don't need complex layer syncing - instead just ensure the overlays start visible
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make the satellite ref overlays initially visible
+            setTimeout(function() {
+                // First set the satellite layer as active
+                var satelliteRadio = document.querySelector('input[type="radio"][name^="leaflet"][value="Satellite Imagery"]');
+                if (satelliteRadio) {
+                    satelliteRadio.checked = true;
+                    // Trigger a change event
+                    var event = new Event('change');
+                    satelliteRadio.dispatchEvent(event);
+                }
+            }, 500);
+        });
+        </script>
+        '''))
+    
+    # Style the overlay group to ensure it doesn't appear in layer control
+    m.get_root().html.add_child(folium.Element('''
+    <style>
+    /* Hide the satellite overlay group from the layer control */
+    .leaflet-control-layers-overlays label:has(span:contains('_SatelliteOverlaysHidden')) {
+        display: none !important;
+    }
+    
+    /* Make the satellite base layer selected by default */
+    .leaflet-control-layers-base label:first-child input {
+        checked: true;
+    }
+    </style>
+    '''))
     
     # 2. Dark minimal basemap
     folium.TileLayer(
