@@ -540,7 +540,7 @@ def generate_synthetic_elevation(width, height):
 def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_color='#6644aa', 
                            num_contours=15, width=100, height=100, use_feet=False):
     """
-    Add elevation contour lines to a Folium map as a toggleable layer
+    Add elevation contour lines directly to Folium map
     
     Args:
         m: Folium map object
@@ -561,9 +561,6 @@ def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_colo
         # Fetch elevation data
         elevation_data, bounds = fetch_elevation_data(lat, lon, width, height, zoom)
         
-        # Create a matplotlib figure for the contour plot
-        fig, ax = plt.subplots(figsize=(10, 10))
-        
         # Generate contour lines
         min_elevation = np.min(elevation_data)
         max_elevation = np.max(elevation_data)
@@ -574,9 +571,9 @@ def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_colo
             elevation_data = elevation_data * 3.28084
             min_elevation = min_elevation * 3.28084
             max_elevation = max_elevation * 3.28084
-            fmt = '%1.0f ft'
+            unit = "ft"
         else:
-            fmt = '%1.0f m'
+            unit = "m"
         
         # Create levels for contour lines
         levels = np.linspace(min_elevation, max_elevation, num_contours)
@@ -586,43 +583,42 @@ def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_colo
         y = np.linspace(bounds[1], bounds[3], height)
         X, Y = np.meshgrid(x, y)
         
-        # Plot contour lines
-        contour = ax.contour(X, Y, elevation_data, levels=levels, colors=contour_color, 
-                           linewidths=contour_width, alpha=0.7)
+        # We'll use folium's features to add contour lines directly
+        # Create a feature group for the contours
+        contour_group = folium.FeatureGroup(name=f"Elevation Contours ({unit})", overlay=True, control=True)
         
-        # Add elevation labels to some of the contour lines
-        ax.clabel(contour, inline=True, fontsize=8, fmt=fmt, colors='black')
+        # Generate contours
+        for level in levels:
+            # Add elevation contour lines directly using GeoJson
+            # For each level, create a simplified contour polygon
+            # This is a simple algorithm to create linear contour lines
+            contour_points = []
+            for i in range(width-1):
+                for j in range(height-1):
+                    # Check if contour passes through this cell (simplified approach)
+                    if ((elevation_data[j, i] <= level and elevation_data[j+1, i] >= level) or
+                        (elevation_data[j, i] >= level and elevation_data[j+1, i] <= level) or
+                        (elevation_data[j, i] <= level and elevation_data[j, i+1] >= level) or
+                        (elevation_data[j, i] >= level and elevation_data[j, i+1] <= level)):
+                        
+                        contour_points.append([Y[j, i], X[j, i]])
+            
+            # If we have points for this contour, add it to the map
+            if contour_points:
+                # Create a line string for the contour
+                folium.PolyLine(
+                    locations=contour_points,
+                    color=contour_color,
+                    weight=contour_width,
+                    opacity=0.7,
+                    tooltip=f"Elevation: {int(level)} {unit}",
+                ).add_to(contour_group)
         
-        # Remove axes and set extent
-        ax.axis('off')
-        ax.set_xlim(bounds[0], bounds[2])
-        ax.set_ylim(bounds[1], bounds[3])
-        
-        # Create an image overlay from the matplotlib figure
-        img_data = io.BytesIO()
-        plt.savefig(img_data, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
-        img_data.seek(0)
-        img_bytes = img_data.read()
-        
-        # Create name based on unit
-        layer_name = "Elevation Contours (ft)" if use_feet else "Elevation Contours (m)"
-        
-        # Add the contour overlay to the map as an ImageOverlay
-        contour_layer = folium.raster_layers.ImageOverlay(
-            image=img_bytes,
-            bounds=[[bounds[1], bounds[0]], [bounds[3], bounds[2]]],
-            opacity=0.8,
-            name=layer_name,
-            overlay=True,
-            control=True,
-            zindex=10,
-        )
-        
-        contour_layer.add_to(m)
-        plt.close()
+        # Add the contour group to the map
+        contour_group.add_to(m)
         
         return m
     except Exception as e:
-        print(f"Failed to add contour lines: {e}")
+        print(f"Failed to add contour lines ({unit}): {e}")
         # Continue without contours if there's an error
         return m
