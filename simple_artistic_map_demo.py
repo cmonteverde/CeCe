@@ -30,6 +30,10 @@ def run_artistic_map_demo():
             These maps use high-resolution topography, land use data, and satellite imagery to create
             distinctive visualizations that make climate data more engaging and memorable.
         </p>
+        <p style="color: #add8e6; margin-top: 10px;">
+            <strong>Interactive Features:</strong> Once generated, you can toggle between different basemaps, 
+            turn topography lines on/off, and customize your view using the layer control panel in the top-right corner!
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -178,14 +182,31 @@ def run_artistic_map_demo():
     
     st.markdown("""
     <div style="background-color: rgba(30, 30, 30, 0.6); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-        <h4 style="color: #1E90FF; margin-top: 0;">Data Sources</h4>
+        <h4 style="color: #1E90FF; margin-top: 0;">Available Basemaps</h4>
         <ul style="color: white;">
-            <li><strong>Topographic Data:</strong> OpenTopoMap provides topographic information based on OpenStreetMap and SRTM data.</li>
-            <li><strong>Satellite Imagery:</strong> Esri World Imagery provides satellite and aerial imagery.</li>
-            <li><strong>Base Maps:</strong> OpenStreetMap and CartoDB provide the underlying mapping infrastructure.</li>
+            <li><strong>Dark Minimal:</strong> Clean, minimalist dark-themed basemap good for data visualization</li>
+            <li><strong>Light Minimal:</strong> Bright, clean basemap with subtle features</li>
+            <li><strong>Street Map:</strong> OpenStreetMap with detailed roads and infrastructure</li>
+            <li><strong>Satellite:</strong> Esri World Imagery with high-resolution aerial photography</li>
+            <li><strong>Topographic Map:</strong> OpenTopoMap with detailed terrain and elevation data</li>
+            <li><strong>Terrain Relief:</strong> Stamen terrain map emphasizing natural features and landforms</li>
         </ul>
         
-        <h4 style="color: #1E90FF;">Artistic Processing</h4>
+        <h4 style="color: #1E90FF; margin-top: 15px;">Toggleable Overlays</h4>
+        <ul style="color: white;">
+            <li><strong>Topography Lines:</strong> Contour lines that show elevation changes</li>
+            <li><strong>Artistic Elements:</strong> Stylized overlay using the selected color palette</li>
+        </ul>
+        
+        <h4 style="color: #1E90FF; margin-top: 15px;">Data Sources</h4>
+        <ul style="color: white;">
+            <li><strong>Topographic Data:</strong> OpenTopoMap provides topographic information based on OpenStreetMap and SRTM data</li>
+            <li><strong>Satellite Imagery:</strong> Esri World Imagery provides satellite and aerial imagery</li>
+            <li><strong>Base Maps:</strong> OpenStreetMap and CartoDB provide the underlying mapping infrastructure</li>
+            <li><strong>Contour Lines:</strong> SRTM30 dataset provides global elevation contours</li>
+        </ul>
+        
+        <h4 style="color: #1E90FF; margin-top: 15px;">Artistic Processing</h4>
         <p style="color: white;">
             The unique visual styles are created through a combination of:
         </p>
@@ -195,6 +216,10 @@ def run_artistic_map_demo():
             <li>Artistic gradients and custom CSS styling for a unique visual experience</li>
             <li>Cartographic styling techniques that balance visual appeal with scientific accuracy</li>
         </ul>
+        
+        <div style="margin-top: 15px; padding: 10px; border-radius: 5px; background-color: rgba(30, 144, 255, 0.2); color: white;">
+            <p><strong>Tip:</strong> Use the layer control panel in the top-right corner of the map to toggle between different basemaps and overlays!</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 

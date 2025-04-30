@@ -64,19 +64,88 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
     Returns:
         Folium map with artistic styling
     """
-    # Create base map
+    # Create base map with a dark theme as default
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
-        tiles="cartodbdark_matter",
+        tiles=None,  # Start with no base tiles to allow selection
         width=width,
         height=height
     )
+    
+    # Add multiple basemap options that users can toggle between
+    # 1. Dark minimal basemap (default)
+    folium.TileLayer(
+        tiles="cartodbdark_matter",
+        name="Dark Minimal",
+        control=True,
+    ).add_to(m)
+    
+    # 2. Light minimal basemap
+    folium.TileLayer(
+        tiles="cartodbpositron",
+        name="Light Minimal",
+        control=True,
+    ).add_to(m)
+    
+    # 3. Standard OpenStreetMap
+    folium.TileLayer(
+        tiles="OpenStreetMap",
+        name="Street Map",
+        control=True,
+    ).add_to(m)
+    
+    # 4. Satellite imagery
+    folium.TileLayer(
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri',
+        name='Satellite',
+        control=True,
+    ).add_to(m)
+    
+    # 5. Topographic full map
+    folium.TileLayer(
+        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attr='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+        name='Topographic Map',
+        control=True,
+    ).add_to(m)
+    
+    # 6. Relief map from Stamen
+    try:
+        folium.TileLayer(
+            tiles='https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png',
+            attr='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>',
+            name='Terrain Relief',
+            control=True,
+        ).add_to(m)
+    except:
+        # If Stamen tiles fail, use another tile source
+        pass
+
+    # Add Topography Lines overlay (can be toggled on/off)
+    try:
+        folium.WmsTileLayer(
+            url="http://ows.mundialis.de/services/service?",
+            layers="SRTM30-Contour",
+            name="Topography Lines",
+            fmt="image/png",
+            transparent=True,
+            overlay=True,
+            control=True,
+            opacity=0.7,
+        ).add_to(m)
+    except:
+        # Alternative topography lines if the WMS service is unavailable
+        pass
     
     # Add some artistic elements based on the palette
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
         colors = palette["colors"]
+        
+        # Create a feature group for artistic elements so they can be toggled on/off
+        artistic_elements = folium.FeatureGroup(name="Artistic Elements", control=True)
         
         # Add artistic elements - circles with palette colors
         for i in range(10):
@@ -91,7 +160,7 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
             radius = random.randint(500, 2000)
             opacity = random.uniform(0.2, 0.5)
             
-            # Add circle
+            # Add circle to the feature group
             folium.Circle(
                 location=[lat + lat_offset, lon + lon_offset],
                 radius=radius,
@@ -100,16 +169,10 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
                 fill_color=color,
                 fill_opacity=opacity,
                 opacity=opacity * 0.8
-            ).add_to(m)
-    
-    # Add a topographic overlay for terrain effect
-    folium.TileLayer(
-        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attr='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-        name='Topography',
-        overlay=True,
-        opacity=0.7
-    ).add_to(m)
+            ).add_to(artistic_elements)
+        
+        # Add the feature group to the map
+        m.add_child(artistic_elements)
     
     # Add a minimap for context
     minimap = MiniMap(toggle_display=True, position='bottomright')
@@ -118,8 +181,8 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
     # Add fullscreen control
     Fullscreen(position='topleft').add_to(m)
     
-    # Add layer control
-    folium.LayerControl().add_to(m)
+    # Add layer control - positioned top right for easy access
+    folium.LayerControl(position='topright', collapsed=False).add_to(m)
     
     # Add custom attribution
     attribution = f'Climate Copilot Artistic Topography | Style: {ARTISTIC_PALETTES[style]["name"] if style in ARTISTIC_PALETTES else "Custom"}'
@@ -148,27 +211,76 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
     Returns:
         Folium map with artistic satellite imagery
     """
-    # Create base map with satellite imagery
+    # Create base map with satellite imagery as default
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
-        tiles="cartodbdark_matter",
+        tiles=None,  # Start with no tiles to allow selection
         width=width,
         height=height
     )
     
-    # Add satellite base layer
+    # Add multiple basemap options that users can toggle between
+    # 1. Satellite imagery (default for this map type)
     folium.TileLayer(
         tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         attr='Esri',
         name='Satellite Imagery',
-        overlay=False
+        control=True,
     ).add_to(m)
+    
+    # 2. Dark minimal basemap
+    folium.TileLayer(
+        tiles="cartodbdark_matter",
+        name="Dark Minimal",
+        control=True,
+    ).add_to(m)
+    
+    # 3. Light minimal basemap
+    folium.TileLayer(
+        tiles="cartodbpositron",
+        name="Light Minimal",
+        control=True,
+    ).add_to(m)
+    
+    # 4. Standard OpenStreetMap
+    folium.TileLayer(
+        tiles="OpenStreetMap",
+        name="Street Map",
+        control=True,
+    ).add_to(m)
+    
+    # 5. Topographic full map
+    folium.TileLayer(
+        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attr='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+        name='Topographic Map',
+        control=True,
+    ).add_to(m)
+    
+    # Add Topography Lines overlay (can be toggled on/off)
+    try:
+        folium.WmsTileLayer(
+            url="http://ows.mundialis.de/services/service?",
+            layers="SRTM30-Contour",
+            name="Topography Lines",
+            fmt="image/png",
+            transparent=True,
+            overlay=True,
+            control=True,
+            opacity=0.7,
+        ).add_to(m)
+    except:
+        # Fallback if the WMS service is unavailable
+        pass
     
     # Add artistic elements based on the palette
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
         colors = palette["colors"]
+        
+        # Create a feature group for artistic elements
+        artistic_overlay = folium.FeatureGroup(name="Artistic Overlay", control=True)
         
         # Create semi-transparent gradient overlay for artistic effect
         gradient = {}
@@ -177,8 +289,6 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
             position = f"{i / (len(colors) - 1):.1f}"
             gradient[position] = color
         
-        # Add a heatmap with very low intensity but using our palette colors for a gradient effect
-        # This creates a colored overlay effect without real data
         # Generate some random points around the center to create a gradient
         points = []
         for i in range(20):
@@ -196,18 +306,21 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
             min_opacity=0.3,
             blur=20,
             max_zoom=zoom+2,
-            name="Artistic Overlay"
-        ).add_to(m)
+            name="Artistic Gradient"
+        ).add_to(artistic_overlay)
+        
+        # Add the feature group to the map
+        m.add_child(artistic_overlay)
     
-    # Add a minimap
+    # Add a minimap for context
     minimap = MiniMap(toggle_display=True, position='bottomright')
     m.add_child(minimap)
     
     # Add fullscreen control
     Fullscreen(position='topleft').add_to(m)
     
-    # Add layer control
-    folium.LayerControl().add_to(m)
+    # Add layer control - positioned top right for easy access
+    folium.LayerControl(position='topright', collapsed=False).add_to(m)
     
     # Add custom attribution
     attribution = f'Climate Copilot Artistic Satellite View | Style: {ARTISTIC_PALETTES[style]["name"] if style in ARTISTIC_PALETTES else "Custom"}'
