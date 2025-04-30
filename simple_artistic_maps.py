@@ -64,83 +64,54 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
     Returns:
         Folium map with artistic styling
     """
-    # Create base map with a dark theme as default
+    # Create the base map with no tiles initially
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
-        tiles=None,  # Start with no base tiles to allow selection
+        tiles=None,
         width=width,
         height=height
     )
     
-    # Add multiple basemap options that users can toggle between
-    # 1. Dark minimal basemap (default)
+    # Use Google's terrain view (p = terrain with labels)
     folium.TileLayer(
-        tiles="cartodbdark_matter",
-        name="Dark Minimal",
-        control=True,
+        name='Terrain with Labels',
+        tiles='https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+        attr='Google Maps',
     ).add_to(m)
     
-    # 2. Light minimal basemap
+    # Use Google's satellite imagery with labels (y = hybrid with labels)
     folium.TileLayer(
-        tiles="cartodbpositron",
-        name="Light Minimal",
-        control=True,
+        name='Satellite with Labels',
+        tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        attr='Google Maps',
     ).add_to(m)
     
-    # 3. Standard OpenStreetMap
+    # Use Google's satellite imagery without labels (s = satellite only)
+    folium.TileLayer(
+        name='Satellite',
+        tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        attr='Google Maps',
+    ).add_to(m)
+    
+    # Standard OpenStreetMap
     folium.TileLayer(
         tiles="OpenStreetMap",
         name="Street Map",
         control=True,
     ).add_to(m)
     
-    # 4. Satellite imagery
+    # Dark minimal basemap
     folium.TileLayer(
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri',
-        name='Satellite',
+        tiles="cartodbdark_matter",
+        name="Dark Mode",
         control=True,
     ).add_to(m)
     
-    # 5. Topographic full map
+    # Light minimal basemap
     folium.TileLayer(
-        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attr='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-        name='Topographic Map',
-        control=True,
-    ).add_to(m)
-    
-    # 6. Relief map from Stamen
-    try:
-        folium.TileLayer(
-            tiles='https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png',
-            attr='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>',
-            name='Terrain Relief',
-            control=True,
-        ).add_to(m)
-    except:
-        # If Stamen tiles fail, use another tile source
-        pass
-
-    # Add Topography Lines overlay (can be toggled on/off)
-    # Using OpenTopoMap contour lines which are more reliable
-    folium.TileLayer(
-        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attr='Map data: &copy; OpenStreetMap contributors, SRTM | Style: &copy; OpenTopoMap',
-        name='Topography Lines',
-        overlay=True,  # Important: make it an overlay, not a base layer
-        opacity=0.6,
-        control=True,
-    ).add_to(m)
-    
-    # Add a labels overlay for satellite view
-    folium.TileLayer(
-        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-        attr='&copy; CartoDB',
-        name='Place Labels',
-        overlay=True,  # This makes it an overlay that can be toggled
-        opacity=0.9,
+        tiles="cartodbpositron",
+        name="Light Mode",
         control=True,
     ).add_to(m)
     
@@ -196,71 +167,38 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         height=height
     )
     
-    # Use Google's satellite imagery with labels directly
-    # This is the simplest solution as Google Maps already combines satellite with labels
+    # Use Google's satellite imagery with labels directly (y = hybrid with labels)
     folium.TileLayer(
-        name='Google Satellite with Labels',
+        name='Satellite with Labels',
         tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
         attr='Google Maps',
     ).add_to(m)
     
-    # 2. Dark minimal basemap
+    # Use Google's satellite imagery without labels (s = satellite only)
+    folium.TileLayer(
+        name='Satellite',
+        tiles='https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        attr='Google Maps',
+    ).add_to(m)
+    
+    # Dark minimal basemap
     folium.TileLayer(
         tiles="cartodbdark_matter",
-        name="Dark Minimal",
+        name="Dark Mode",
         control=True,
     ).add_to(m)
     
-    # 3. Light minimal basemap
+    # Light minimal basemap
     folium.TileLayer(
         tiles="cartodbpositron",
-        name="Light Minimal",
+        name="Light Mode",
         control=True,
     ).add_to(m)
     
-    # 4. Standard OpenStreetMap
+    # Standard OpenStreetMap
     folium.TileLayer(
         tiles="OpenStreetMap",
         name="Street Map",
-        control=True,
-    ).add_to(m)
-    
-    # 5. Topographic full map
-    folium.TileLayer(
-        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attr='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-        name='Topographic Map',
-        control=True,
-    ).add_to(m)
-    
-    # Add Topography Lines overlay (can be toggled on/off)
-    # Using OpenTopoMap contour lines which are more reliable
-    folium.TileLayer(
-        tiles='https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-        attr='Map data: &copy; OpenStreetMap contributors, SRTM | Style: &copy; OpenTopoMap',
-        name='Topography Lines',
-        overlay=True,  # Important: make it an overlay, not a base layer
-        opacity=0.6,
-        control=True,
-    ).add_to(m)
-    
-    # Add place labels as a toggleable overlay for non-satellite base maps
-    folium.TileLayer(
-        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-        attr='&copy; CartoDB',
-        name='Place Labels',
-        overlay=True,  # This makes it an overlay that can be toggled
-        opacity=0.9,
-        control=True,
-    ).add_to(m)
-    
-    # Add coastlines as a toggleable overlay for all map types
-    folium.TileLayer(
-        tiles='https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
-        attr='&copy; Esri',
-        name='Coastlines & Borders',
-        overlay=True,
-        opacity=0.8,
         control=True,
     ).add_to(m)
     
