@@ -158,16 +158,34 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600,
     # Add stylized topographic basemap using contextily
     if artistic_effects:
         # Use terrain tiles with customized styling
-        cx.add_basemap(
-            ax, source=cx.providers.Stamen.TerrainBackground, 
-            crs=point.crs.to_string()
-        )
+        # Note: Stamen providers are no longer available in newer versions
+        # Use OpenStreetMap or other available providers
+        try:
+            # First try CartoDB basemap which is usually available
+            cx.add_basemap(
+                ax, source=cx.providers.CartoDB.Positron, 
+                crs=point.crs.to_string()
+            )
+        except Exception as e:
+            try:
+                # Fallback to OpenStreetMap
+                cx.add_basemap(
+                    ax, source=cx.providers.OpenStreetMap.Mapnik, 
+                    crs=point.crs.to_string()
+                )
+            except Exception as e:
+                # If all else fails, use the default basemap
+                cx.add_basemap(ax, crs=point.crs.to_string())
     else:
-        # Use standard terrain tiles
-        cx.add_basemap(
-            ax, source=cx.providers.Stamen.Terrain, 
-            crs=point.crs.to_string()
-        )
+        # Use standard tiles - with fallbacks
+        try:
+            cx.add_basemap(
+                ax, source=cx.providers.OpenStreetMap.Mapnik, 
+                crs=point.crs.to_string()
+            )
+        except Exception as e:
+            # Default basemap as last resort
+            cx.add_basemap(ax, crs=point.crs.to_string())
     
     # Remove axis to create a cleaner map
     ax.set_axis_off()
@@ -228,10 +246,24 @@ def create_mixed_satellite_map(lat, lon, zoom=10, width=800, height=600,
     ax.set_ylim(miny, maxy)
     
     # Add satellite imagery base layer
-    cx.add_basemap(
-        ax, source=cx.providers.Esri.WorldImagery,
-        crs=point.crs.to_string()
-    )
+    try:
+        # Try to use Esri WorldImagery
+        cx.add_basemap(
+            ax, source=cx.providers.Esri.WorldImagery,
+            crs=point.crs.to_string()
+        )
+    except Exception as e:
+        try:
+            # Fallback to another provider
+            cx.add_basemap(
+                ax, source=cx.providers.OpenStreetMap.Mapnik,
+                crs=point.crs.to_string()
+            )
+        except Exception as e:
+            # Last resort: use default basemap
+            cx.add_basemap(
+                ax, crs=point.crs.to_string()
+            )
     
     # Apply semi-transparent topographic overlay with custom styling for an artistic effect
     # Here we're simulating a styled topographic overlay
