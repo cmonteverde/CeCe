@@ -187,7 +187,7 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
     Returns:
         Folium map with artistic satellite imagery
     """
-    # Create base map with tiles=None to manually add our own layers
+    # Create the base map with no tiles initially
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
@@ -196,27 +196,12 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         height=height
     )
     
-    # Create a custom satellite layer group with two elements:
-    # 1. Base satellite imagery
-    # 2. Place labels overlay
-    # Both are in the same layer group so they can't be toggled separately
-    
-    # First create the basic satellite imagery base layer
+    # Use Google's satellite imagery with labels directly
+    # This is the simplest solution as Google Maps already combines satellite with labels
     folium.TileLayer(
-        name='Satellite with Labels',
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri World Imagery',
-    ).add_to(m)
-    
-    # Then immediately add the reference layer with place labels, boundaries
-    # This will appear as a permanent overlay when in satellite mode
-    folium.TileLayer(
-        tiles='https://server.arcgisonline.com/arcgis/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}',
-        attr='&copy; Esri',
-        name='_SatelliteLabelsAlwaysOn',  # Won't show in layer control
-        overlay=True,
-        opacity=1.0,
-        control=False,  # Don't show in layer control so it can't be toggled
+        name='Google Satellite with Labels',
+        tiles='https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        attr='Google Maps',
     ).add_to(m)
     
     # 2. Dark minimal basemap
