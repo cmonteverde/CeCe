@@ -972,96 +972,150 @@ elif st.session_state.active_function == "precipitation_map":
                 # Get the max value for scaling the heatmap
                 max_precip = max([x[2] for x in heat_data]) if heat_data else 100
                 
-                # Create a base map centered on the location
-                m = folium.Map(location=[latitude, longitude], zoom_start=7, 
-                              tiles="cartodb dark_matter")
+                # Map style selection
+                map_styles = ["Standard Map", "Felt-Inspired Map"]
+                map_style = st.radio("Map Style", map_styles, index=1)
                 
-                # Add a marker for the selected location
-                folium.Marker(
-                    [latitude, longitude],
-                    popup=f"Selected Location: {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}",
-                    icon=folium.Icon(color="purple")
-                ).add_to(m)
+                if map_style == "Felt-Inspired Map":
+                    # Use Felt-inspired maps for a more modern look
+                    st.info("Using Felt-inspired map with enhanced visualization and interactive features.")
+                    
+                    # Create a Felt-inspired map
+                    felt_map = felt_inspired_maps.create_felt_inspired_map(
+                        lat=latitude,
+                        lon=longitude,
+                        zoom=7,
+                        width="100%",
+                        height=600,
+                        tiles="dark",
+                        style="modern",
+                        show_toolbar=True,
+                        include_contours=True
+                    )
+                    
+                    # Add precipitation data as a layer
+                    felt_map.add_precipitation_layer(
+                        data=heat_data,
+                        min_precip=0.0,
+                        max_precip=max_precip,
+                        name="Precipitation Layer",
+                        palette="precipitation"
+                    )
+                    
+                    # Add a marker for the selected location
+                    poi_data = [(
+                        latitude, 
+                        longitude, 
+                        f"Selected Location", 
+                        f"{city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}", 
+                        "map-pin", 
+                        "purple"
+                    )]
+                    felt_map.add_points_of_interest(poi_data, name="Selected Location", cluster=False)
+                    
+                    # Display the map
+                    felt_map.render_in_streamlit()
+                    
+                    # Add info about the map
+                    with st.expander("About this Map"):
+                        st.markdown("""
+                        This map shows precipitation data from NASA POWER API using a modern, Felt-inspired design.
+                        - The color intensity represents the amount of precipitation
+                        - Contour lines show elevation changes in the region
+                        - Use the toolbar in the upper left to zoom, pan, and explore the map
+                        """)
+                else:
+                    # Create a standard base map centered on the location
+                    m = folium.Map(location=[latitude, longitude], zoom_start=7, 
+                                  tiles="cartodb dark_matter")
+                    
+                    # Add a marker for the selected location
+                    folium.Marker(
+                        [latitude, longitude],
+                        popup=f"Selected Location: {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}",
+                        icon=folium.Icon(color="purple")
+                    ).add_to(m)
                 
-                # Add the heatmap to the map
-                from folium.plugins import HeatMap
-                
-                # Create a heatmap with string-based gradient values and improved parameters
-                # Note: Folium HeatMap gradient keys must be strings representing float values between 0 and 1
-                HeatMap(
-                    heat_data,
-                    radius=25,  # Increased radius for more coverage
-                    min_opacity=0.5,  # Lower min_opacity to make the map more visible in low precipitation areas
-                    blur=18,  # Increased blur for even smoother transitions
-                    max_zoom=13,  # Control the maximum zoom level for the heatmap
-                    # max_val parameter is no longer needed (will be calculated automatically)
-                    # Using normalized string values for the gradient keys
-                    gradient={
-                        '0.0': 'blue',
-                        '0.2': 'cyan',
-                        '0.4': 'lime',
-                        '0.6': 'yellow',
-                        '0.8': 'orange',
-                        '1.0': 'red'
-                    }
-                ).add_to(m)
-                
-                # Add a legend
-                legend_html = '''
-                <div style="position: fixed; 
-                            bottom: 50px; right: 50px; 
-                            background-color: rgba(0, 0, 0, 0.7);
-                            border-radius: 5px;
-                            padding: 10px;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            z-index: 9999;">
-                    <p><strong>Precipitation (mm)</strong></p>
-                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                        <div style="background: blue; width: 20px; height: 20px; margin-right: 5px;"></div>
-                        <span>Low (0-20%)</span>
+                if map_style == "Standard Map":
+                    # Add the heatmap to the standard map
+                    from folium.plugins import HeatMap
+                    
+                    # Create a heatmap with string-based gradient values and improved parameters
+                    # Note: Folium HeatMap gradient keys must be strings representing float values between 0 and 1
+                    HeatMap(
+                        heat_data,
+                        radius=25,  # Increased radius for more coverage
+                        min_opacity=0.5,  # Lower min_opacity to make the map more visible in low precipitation areas
+                        blur=18,  # Increased blur for even smoother transitions
+                        max_zoom=13,  # Control the maximum zoom level for the heatmap
+                        # max_val parameter is no longer needed (will be calculated automatically)
+                        # Using normalized string values for the gradient keys
+                        gradient={
+                            '0.0': 'blue',
+                            '0.2': 'cyan',
+                            '0.4': 'lime',
+                            '0.6': 'yellow',
+                            '0.8': 'orange',
+                            '1.0': 'red'
+                        }
+                    ).add_to(m)
+                    
+                    # Add a legend
+                    legend_html = '''
+                    <div style="position: fixed; 
+                                bottom: 50px; right: 50px; 
+                                background-color: rgba(0, 0, 0, 0.7);
+                                border-radius: 5px;
+                                padding: 10px;
+                                color: white;
+                                font-family: Arial, sans-serif;
+                                z-index: 9999;">
+                        <p><strong>Precipitation (mm)</strong></p>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <div style="background: blue; width: 20px; height: 20px; margin-right: 5px;"></div>
+                            <span>Low (0-20%)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <div style="background: cyan; width: 20px; height: 20px; margin-right: 5px;"></div>
+                            <span>Moderate (20-40%)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <div style="background: lime; width: 20px; height: 20px; margin-right: 5px;"></div>
+                            <span>Significant (40-60%)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <div style="background: yellow; width: 20px; height: 20px; margin-right: 5px;"></div>
+                            <span>Heavy (60-80%)</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div style="background: red; width: 20px; height: 20px; margin-right: 5px;"></div>
+                            <span>Extreme (80-100%)</span>
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                        <div style="background: cyan; width: 20px; height: 20px; margin-right: 5px;"></div>
-                        <span>Moderate (20-40%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                        <div style="background: lime; width: 20px; height: 20px; margin-right: 5px;"></div>
-                        <span>Significant (40-60%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                        <div style="background: yellow; width: 20px; height: 20px; margin-right: 5px;"></div>
-                        <span>Heavy (60-80%)</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: red; width: 20px; height: 20px; margin-right: 5px;"></div>
-                        <span>Extreme (80-100%)</span>
-                    </div>
-                </div>
-                '''
-                
-                m.get_root().html.add_child(folium.Element(legend_html))
-                
-                # Title for the map
-                title_html = f'''
-                <h3 style="position: absolute; 
-                            top: 10px; left: 50%; 
-                            transform: translateX(-50%);
-                            z-index: 9999; 
-                            background-color: rgba(0, 0, 0, 0.7);
-                            color: white; 
-                            padding: 10px; 
-                            border-radius: 5px; 
-                            font-family: Arial, sans-serif;">
-                    Precipitation Map for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}
-                </h3>
-                '''
-                
-                m.get_root().html.add_child(folium.Element(title_html))
-                
-                # Display the map
-                st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
-                folium_static(m)
+                    '''
+                    
+                    m.get_root().html.add_child(folium.Element(legend_html))
+                    
+                    # Title for the map
+                    title_html = f'''
+                    <h3 style="position: absolute; 
+                                top: 10px; left: 50%; 
+                                transform: translateX(-50%);
+                                z-index: 9999; 
+                                background-color: rgba(0, 0, 0, 0.7);
+                                color: white; 
+                                padding: 10px; 
+                                border-radius: 5px; 
+                                font-family: Arial, sans-serif;">
+                        Precipitation Map for {city if location_method == 'City Name' else f'({latitude:.2f}, {longitude:.2f})'}
+                    </h3>
+                    '''
+                    
+                    m.get_root().html.add_child(folium.Element(title_html))
+                    
+                    # Display the standard map
+                    st.subheader(f"NASA POWER Precipitation Map ({start_date_str} to {end_date_str})")
+                    folium_static(m)
                 
                 # Add context about the data
                 st.info(f"This map shows real precipitation data from NASA POWER API around your selected location for the date range {start_date_str} to {end_date_str}. Data source: NASA POWER (Prediction of Worldwide Energy Resources).")
@@ -1083,12 +1137,13 @@ elif st.session_state.active_function == "precipitation_map":
                     """)
                 
                 # Option to download the map
-                st.download_button(
-                    label="Download Map as HTML",
-                    data=m._repr_html_(),
-                    file_name="precipitation_map.html",
-                    mime="text/html"
-                )
+                if map_style == "Standard Map":
+                    st.download_button(
+                        label="Download Map as HTML",
+                        data=m._repr_html_(),
+                        file_name="precipitation_map.html",
+                        mime="text/html"
+                    )
                 
             except Exception as e:
                 # If NASA POWER API data fetching fails, display error and fallback to simulated data
