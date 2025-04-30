@@ -56,15 +56,27 @@ def run_artistic_map_demo():
     )
     
     if location_method == "City Name":
-        city = st.text_input("Enter city name:", "Paris")
+        city = st.text_input("Enter city name:", "Paris, France")
         try:
             # Use the existing function from the main app to get coordinates
             from app import get_city_coordinates
+            
+            # Try to get coordinates
             latitude, longitude = get_city_coordinates(city)
-            st.success(f"Coordinates: {latitude:.4f}, {longitude:.4f}")
+            
+            # Check if we got valid coordinates
+            if latitude is None or longitude is None:
+                st.error(f"Could not find coordinates for '{city}'. Please try another city name or format like 'City, Country'.")
+                # Set default coordinates for Paris to allow the demo to continue
+                latitude, longitude = 48.8566, 2.3522
+                st.warning(f"Using default coordinates for demonstration: {latitude:.4f}, {longitude:.4f}")
+            else:
+                st.success(f"Coordinates found: {latitude:.4f}, {longitude:.4f}")
         except Exception as e:
-            st.error(f"Could not find coordinates for '{city}'. Please try another city name.")
-            st.stop()
+            st.error(f"Error getting coordinates: {str(e)}")
+            # Set default coordinates to allow the demo to continue
+            latitude, longitude = 48.8566, 2.3522
+            st.warning(f"Using default coordinates for demonstration: {latitude:.4f}, {longitude:.4f}")
     else:
         col1, col2 = st.columns(2)
         with col1:

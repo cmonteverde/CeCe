@@ -852,12 +852,36 @@ from geopy.geocoders import Nominatim
 # Function to convert city name to coordinates
 def get_city_coordinates(city_name):
     try:
-        geolocator = Nominatim(user_agent="climate_copilot")
-        location = geolocator.geocode(city_name)
+        # Create a more robust user agent string
+        geolocator = Nominatim(user_agent="climate_copilot_application")
+        
+        # Try to geocode with the original city name
+        location = geolocator.geocode(city_name, timeout=10, exactly_one=True)
+        
+        # If successful, return the coordinates
         if location:
             return location.latitude, location.longitude
-        else:
-            return None, None
+            
+        # If not successful, try some alternative formats
+        # Try without commas
+        if "," in city_name:
+            clean_name = city_name.replace(",", " ")
+            location = geolocator.geocode(clean_name, timeout=10, exactly_one=True)
+            if location:
+                return location.latitude, location.longitude
+        
+        # Try adding explicit country if not present
+        if "," not in city_name and " " in city_name:
+            # This might be a city without a country specified
+            for country in ["USA", "France", "UK", "Germany", "Japan", "Canada", "Australia"]:
+                test_name = f"{city_name}, {country}"
+                location = geolocator.geocode(test_name, timeout=10, exactly_one=True)
+                if location:
+                    return location.latitude, location.longitude
+        
+        # If all attempts fail, return None
+        return None, None
+        
     except Exception as e:
         st.error(f"Error geocoding city: {str(e)}")
         return None, None
