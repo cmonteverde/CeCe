@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import LightSource
 import srtm_elevation
+import nasa_ee_elevation
 
 # Define custom color palettes for artistic rendering
 ARTISTIC_PALETTES = {
@@ -438,7 +439,7 @@ def generate_map_watermark(text="Climate CoPilot"):
 
 def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
     """
-    Fetch elevation data from NASA SRTM dataset for the given coordinates
+    Fetch elevation data from NASA Earth Explorer or SRTM dataset for the given coordinates
     
     Args:
         lat: Center latitude
@@ -453,14 +454,31 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
     try:
         # Calculate bounding box radius based on zoom level
         # Higher zoom = smaller area
-        # Scale factor converts zoom level to an appropriate radius in degrees
         # This formula gives reasonable areas at different zoom levels
         scale_factor = 10.0 / (2**zoom)
         radius = scale_factor / 2
         
-        print(f"Fetching SRTM elevation data for {lat}, {lon} with radius {radius} degrees")
+        # First try NASA Earth Explorer with authenticated access - highest quality
+        print(f"Fetching NASA Earth Explorer elevation data for {lat}, {lon} with radius {radius} degrees")
+        elevation_data, bounds = nasa_ee_elevation.fetch_elevation_data(
+            lat=lat, 
+            lon=lon, 
+            width=width, 
+            height=height,
+            radius=radius
+        )
         
-        # Use our new direct SRTM module to fetch elevation data
+        # If Earth Explorer data is available, use it
+        if elevation_data is not None:
+            print(f"Successfully fetched NASA Earth Explorer elevation data with shape {elevation_data.shape}")
+            # Replace NaN values with median to avoid contour problems
+            if np.isnan(elevation_data).any():
+                median = np.nanmedian(elevation_data)
+                elevation_data = np.nan_to_num(elevation_data, nan=median)
+            return elevation_data, bounds
+        
+        # If Earth Explorer fails, try our direct SRTM module (backup method)
+        print(f"Earth Explorer failed, falling back to SRTM. Fetching data for {lat}, {lon}")
         elevation_data, bounds = srtm_elevation.fetch_elevation_array(
             lat=lat, 
             lon=lon, 
@@ -469,7 +487,7 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
             radius=radius
         )
         
-        # If we got data, return it
+        # If SRTM data is available, use it
         if elevation_data is not None:
             print(f"Successfully fetched SRTM elevation data with shape {elevation_data.shape}")
             # Replace NaN values with median to avoid contour problems
@@ -478,8 +496,8 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
                 elevation_data = np.nan_to_num(elevation_data, nan=median)
             return elevation_data, bounds
         
-        # If we didn't get data, use synthetic data
-        raise Exception("No SRTM elevation data returned")
+        # If both methods failed, we have to use synthetic data
+        raise Exception("Both NASA Earth Explorer and SRTM data sources failed")
         
     except Exception as e:
         # Calculate bounds for the synthetic data
@@ -496,10 +514,10 @@ def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
         
         bounds = (min_lon, min_lat, max_lon, max_lat)
         
-        print(f"Failed to fetch SRTM elevation data: {e}")
+        print(f"Failed to fetch elevation data: {e}")
         print("Falling back to synthetic elevation data")
         
-        # If SRTM data fetch fails, fall back to synthetic data with bounds
+        # If both data sources fail, fall back to synthetic data with bounds
         return srtm_elevation.generate_synthetic_elevation(width, height, bounds), bounds
 
 
