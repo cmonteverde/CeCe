@@ -9,6 +9,12 @@ import folium
 from folium.plugins import HeatMap, MiniMap, Fullscreen, MarkerCluster
 import numpy as np
 import random
+import requests
+import io
+from PIL import Image
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import LightSource
 
 # Define custom color palettes for artistic rendering
 ARTISTIC_PALETTES = {
@@ -49,7 +55,8 @@ ARTISTIC_PALETTES = {
     }
 }
 
-def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, style="artistic_terrain"):
+def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, style="artistic_terrain", 
+                              include_contours=True):
     """
     Create an artistic topographic map centered at the given coordinates
     
@@ -60,6 +67,7 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
         width: Image width in pixels
         height: Image height in pixels
         style: Style name from ARTISTIC_PALETTES
+        include_contours: Whether to include elevation contour lines
     
     Returns:
         Folium map with artistic styling
@@ -115,6 +123,32 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
         control=True,
     ).add_to(m)
     
+    # Add elevation contour lines as a toggleable overlay
+    if include_contours:
+        # If we're at a higher zoom level (zoomed in more), we need more detailed contours
+        contour_width = 100 if zoom > 12 else 80
+        contour_height = 100 if zoom > 12 else 80
+        num_contours = 20 if zoom > 12 else 15
+        
+        # Choose contour color based on style or use a default purple
+        contour_color = '#6644aa'  # Default purple that works on most backgrounds
+        if style in ARTISTIC_PALETTES and len(ARTISTIC_PALETTES[style]["colors"]) > 0:
+            contour_color = ARTISTIC_PALETTES[style]["colors"][0]
+            
+        # Add the contour lines with elevation data
+        try:
+            m = add_contour_lines_to_map(
+                m, lat, lon, zoom=zoom, 
+                contour_width=2,
+                contour_color=contour_color,
+                num_contours=num_contours,
+                width=contour_width, 
+                height=contour_height
+            )
+        except Exception as e:
+            print(f"Failed to add contour lines: {e}")
+            # Continue without contours if there's an error
+    
     # Store the palette information for reference, but don't add artistic elements
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
@@ -142,7 +176,8 @@ def create_artistic_topography_map(lat, lon, zoom=10, width=800, height=600, sty
     
     return m
 
-def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, style="climate_ethereal", data_type="satellite"):
+def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, style="climate_ethereal", 
+                            data_type="satellite", include_contours=True):
     """
     Create an artistic map based on satellite imagery
     
@@ -154,6 +189,7 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         height: Image height in pixels
         style: Style name from ARTISTIC_PALETTES
         data_type: Type of map (used to determine if this is a satellite view)
+        include_contours: Whether to include elevation contour lines
     
     Returns:
         Folium map with artistic satellite imagery
@@ -202,6 +238,30 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
         control=True,
     ).add_to(m)
     
+    # Add elevation contour lines as a toggleable overlay
+    if include_contours:
+        # If we're at a higher zoom level (zoomed in more), we need more detailed contours
+        contour_width = 100 if zoom > 12 else 80
+        contour_height = 100 if zoom > 12 else 80
+        num_contours = 20 if zoom > 12 else 15
+        
+        # For satellite view, use white contours with black outline that will be visible
+        contour_color = '#ffffff'
+            
+        # Add the contour lines with elevation data
+        try:
+            m = add_contour_lines_to_map(
+                m, lat, lon, zoom=zoom, 
+                contour_width=2,
+                contour_color=contour_color,
+                num_contours=num_contours,
+                width=contour_width, 
+                height=contour_height
+            )
+        except Exception as e:
+            print(f"Failed to add contour lines: {e}")
+            # Continue without contours if there's an error
+    
     # Store the palette information for reference, but don't add artistic elements
     if style in ARTISTIC_PALETTES:
         palette = ARTISTIC_PALETTES[style]
@@ -230,7 +290,7 @@ def create_artistic_satellite_map(lat, lon, zoom=10, width=800, height=600, styl
     return m
 
 def create_artistic_climate_map(lat, lon, data_type="topography", 
-                               zoom=10, width=800, height=600, style="ethereal"):
+                               zoom=10, width=800, height=600, style="ethereal", include_contours=True):
     """
     Create an artistic climate map with the specified data overlay
     
@@ -242,6 +302,7 @@ def create_artistic_climate_map(lat, lon, data_type="topography",
         width: Map width in pixels
         height: Map height in pixels
         style: Artistic style
+        include_contours: Whether to include elevation contour lines
     
     Returns:
         Folium map
@@ -262,16 +323,19 @@ def create_artistic_climate_map(lat, lon, data_type="topography",
     # Create appropriate map based on data type
     if data_type == "topography":
         return create_artistic_topography_map(
-            lat, lon, zoom=zoom, width=width, height=height, style=palette
+            lat, lon, zoom=zoom, width=width, height=height, style=palette,
+            include_contours=include_contours
         )
     elif data_type == "satellite":
         return create_artistic_satellite_map(
-            lat, lon, zoom=zoom, width=width, height=height, style=palette, data_type=data_type
+            lat, lon, zoom=zoom, width=width, height=height, style=palette, 
+            data_type=data_type, include_contours=include_contours
         )
     else:
         # Default to topography
         return create_artistic_topography_map(
-            lat, lon, zoom=zoom, width=width, height=height, style=palette
+            lat, lon, zoom=zoom, width=width, height=height, style=palette,
+            include_contours=include_contours
         )
 
 def apply_style_to_map(m, style_name="modern"):
@@ -340,3 +404,173 @@ def generate_map_watermark(text="Climate CoPilot"):
         {text}
     </div>
     '''
+
+def fetch_elevation_data(lat, lon, width=100, height=100, zoom=10):
+    """
+    Fetch elevation data from Open-Elevation API for the given coordinates
+    
+    Args:
+        lat: Center latitude
+        lon: Center longitude
+        width: Number of points in x direction
+        height: Number of points in y direction
+        zoom: Zoom level (controls the area size)
+    
+    Returns:
+        Numpy array of elevation data, bounds tuple (min_lon, min_lat, max_lon, max_lat)
+    """
+    # Calculate bounding box based on zoom level
+    # Higher zoom = smaller area
+    scale_factor = 10.0 / (2**zoom)
+    
+    # Calculate the bounds
+    lon_range = scale_factor
+    lat_range = scale_factor
+    
+    min_lon = lon - lon_range/2
+    max_lon = lon + lon_range/2
+    min_lat = lat - lat_range/2
+    max_lat = lat + lat_range/2
+    
+    # Generate grid points
+    lons = np.linspace(min_lon, max_lon, width)
+    lats = np.linspace(min_lat, max_lat, height)
+    
+    # Create meshgrid for the points
+    lon_grid, lat_grid = np.meshgrid(lons, lats)
+    
+    # Flatten the grids for the API request
+    points = []
+    for i in range(width):
+        for j in range(height):
+            points.append({
+                "latitude": lat_grid[j, i],
+                "longitude": lon_grid[i, j]
+            })
+    
+    # Open-Elevation API uses POST for batch requests
+    api_url = "https://api.open-elevation.com/api/v1/lookup"
+    payload = {"locations": points}
+    
+    try:
+        response = requests.post(api_url, json=payload)
+        data = response.json()
+        
+        # Reshape the elevation data back to a grid
+        elevation_grid = np.zeros((height, width))
+        
+        if "results" in data:
+            for i, point in enumerate(data["results"]):
+                row = i // width
+                col = i % width
+                elevation_grid[row, col] = point["elevation"]
+            
+            return elevation_grid, (min_lon, min_lat, max_lon, max_lat)
+        else:
+            # Fallback to synthetic data if API fails
+            print("Elevation API error, generating synthetic data")
+            return generate_synthetic_elevation(width, height), (min_lon, min_lat, max_lon, max_lat)
+    
+    except Exception as e:
+        print(f"Error fetching elevation data: {e}")
+        # Return synthetic data if API fails
+        return generate_synthetic_elevation(width, height), (min_lon, min_lat, max_lon, max_lat)
+
+def generate_synthetic_elevation(width, height):
+    """
+    Generate synthetic elevation data for testing or when API is unavailable
+    
+    Args:
+        width: Grid width
+        height: Grid height
+    
+    Returns:
+        Numpy array with synthetic elevation data
+    """
+    # Create base elevation
+    x = np.linspace(0, 1, width)
+    y = np.linspace(0, 1, height)
+    X, Y = np.meshgrid(x, y)
+    
+    # Create a mountain with multiple peaks
+    elevation = (
+        500 * np.exp(-((X - 0.3)**2 + (Y - 0.3)**2) / 0.1) + 
+        800 * np.exp(-((X - 0.7)**2 + (Y - 0.7)**2) / 0.1) +
+        300 * np.exp(-((X - 0.5)**2 + (Y - 0.1)**2) / 0.1) +
+        200 * np.sin(X * 10) * np.cos(Y * 8)
+    )
+    
+    # Add some noise for realism
+    elevation += np.random.normal(0, 50, (height, width))
+    
+    return elevation
+
+def add_contour_lines_to_map(m, lat, lon, zoom=10, contour_width=2, contour_color='#6644aa', 
+                           num_contours=15, width=100, height=100):
+    """
+    Add elevation contour lines to a Folium map as a toggleable layer
+    
+    Args:
+        m: Folium map object
+        lat: Center latitude
+        lon: Center longitude
+        zoom: Zoom level
+        contour_width: Line width for contours
+        contour_color: Color of contour lines
+        num_contours: Number of contour lines to draw
+        width: Grid width for elevation data
+        height: Grid height for elevation data
+    
+    Returns:
+        Updated Folium map with contour overlay
+    """
+    # Fetch elevation data
+    elevation_data, bounds = fetch_elevation_data(lat, lon, width, height, zoom)
+    
+    # Create a matplotlib figure for the contour plot
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    # Generate contour lines
+    min_elevation = np.min(elevation_data)
+    max_elevation = np.max(elevation_data)
+    
+    # Create levels for contour lines
+    levels = np.linspace(min_elevation, max_elevation, num_contours)
+    
+    # Create a meshgrid for plotting
+    x = np.linspace(bounds[0], bounds[2], width)
+    y = np.linspace(bounds[1], bounds[3], height)
+    X, Y = np.meshgrid(x, y)
+    
+    # Plot contour lines
+    contour = ax.contour(X, Y, elevation_data, levels=levels, colors=contour_color, 
+                       linewidths=contour_width, alpha=0.7)
+    
+    # Add elevation labels to some of the contour lines
+    ax.clabel(contour, inline=True, fontsize=8, fmt='%1.0f m', colors='black')
+    
+    # Remove axes and set extent
+    ax.axis('off')
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
+    
+    # Create an image overlay from the matplotlib figure
+    img_data = io.BytesIO()
+    plt.savefig(img_data, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
+    img_data.seek(0)
+    
+    # Add the contour overlay to the map
+    contour_layer = folium.raster_layers.ImageOverlay(
+        image=img_data.read(),
+        bounds=[[bounds[1], bounds[0]], [bounds[3], bounds[2]]],
+        opacity=0.8,
+        name="Elevation Contours",
+        overlay=True,
+        control=True,
+        zindex=10,
+    )
+    
+    contour_layer.add_to(m)
+    plt.close()
+    
+    return m
