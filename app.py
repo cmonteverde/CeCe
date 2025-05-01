@@ -761,7 +761,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Fallback response function 
+# Import our OpenAI helper module
+import openai_helper
+
 def fallback_response(query):
+    """Provide a fallback response when OpenAI API is unavailable"""
     # A dictionary of predefined responses for common queries
     climate_responses = {
         "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
@@ -797,50 +801,31 @@ if user_input:
 # If we're in thinking mode, process the query and generate a response
 if st.session_state.thinking:
     try:
-        import os
-        openai_api_key = os.getenv("OPENAI_API_KEY")
+        # Extract user query from chat history
+        user_query = st.session_state.chat_history[-2]["content"] if len(st.session_state.chat_history) >= 2 else ""
         
-        # Direct OpenAI integration without using rag_query.py
-        if openai_api_key:
-            try:
-                import openai
-                
-                # Initialize OpenAI client
-                client = openai.OpenAI(api_key=openai_api_key)
-                
-                # System message for CeCe's identity
-                system_message = """
-                You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
-                You help users with climate data visualization, scientific calculations, and understanding weather patterns.
-                Your responses should be friendly, helpful, and focused on climate science.
-                Include specific details about what data sources you would check and what visualizations you could generate.
-                """
-                
-                # Make the API request with a timeout
-                response = client.chat.completions.create(
-                    model="gpt-4o",  # Using the latest model
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": st.session_state.chat_history[-2]["content"]}  # Get the latest user message
-                    ],
-                    temperature=0.7,
-                    max_tokens=500,
-                    timeout=10  # 10 second timeout
-                )
-                
-                # Get the response content
-                response_content = response.choices[0].message.content
-                
-            except Exception as e:
-                # If OpenAI fails, use a simple fallback response
-                response_content = fallback_response(st.session_state.chat_history[-2]["content"])
+        # Get chat history for context (excluding the most recent user message that we're about to process)
+        messages = [
+            {"role": msg["role"], "content": msg["content"]} 
+            for msg in st.session_state.chat_history[:-2]  # Exclude latest user message and assistant "thinking"
+        ]
+        
+        # Use our improved OpenAI helper to generate a response
+        response_content = openai_helper.generate_climate_response(user_query, messages)
+        
+        # Log success or failure
+        if response_content:
+            print("Successfully generated response using OpenAI API")
         else:
-            # No OpenAI API key, use a simple fallback response
-            response_content = fallback_response(st.session_state.chat_history[-2]["content"])
+            print("Failed to generate response with OpenAI API, using fallback")
+            # If our OpenAI helper returns None, use the fallback response
+            response_content = fallback_response(user_query)
             
     except Exception as e:
-        # Something went wrong, provide an error message
-        response_content = f"I'm sorry, but I encountered an error processing your request: {str(e)}. Please try again or use one of the preset functions above."
+        # Something went wrong, provide an error message with details
+        error_msg = str(e)
+        print(f"Error processing chat request: {error_msg}")
+        response_content = f"I'm sorry, but I encountered an error processing your request: {error_msg}. Please try again or use one of the preset functions above."
     
     # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response_content})
