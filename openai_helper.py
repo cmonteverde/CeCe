@@ -53,10 +53,17 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
     if system_message and not any(msg.get("role") == "system" for msg in messages):
         messages = [{"role": "system", "content": system_message}] + messages
     
+    # Direct API approach as a fallback option if we encounter issues with the client
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"
+    }
+    
     current_retry = 0
     while current_retry <= retries:
         try:
-            # Make the API request
+            # Make the API request using the client
             response = client.chat.completions.create(
                 model=model,  # The newest OpenAI model is "gpt-4o" which was released May 13, 2024
                 messages=messages,
@@ -71,19 +78,51 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
             time.sleep(delay)
         
         except APIConnectionError as e:
-            # Connection error - may be temporary
-            delay = BASE_DELAY * (2 ** current_retry)
-            print(f"Connection error: {str(e)}. Retrying in {delay} seconds...")
-            time.sleep(delay)
+            # Connection error - try direct API approach
+            print(f"Connection error with client: {str(e)}. Trying direct API approach...")
+            
+            try:
+                import requests
+                payload = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
+                
+                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                
+                if response.status_code == 200:
+                    response_json = response.json()
+                    return response_json["choices"][0]["message"]["content"]
+                elif response.status_code == 429 and "insufficient_quota" in response.text:
+                    print("OpenAI API quota exceeded. The API key has insufficient credits.")
+                    return "I'm sorry, but the OpenAI API quota has been exceeded. Please check your API key's billing status or try again later."
+                else:
+                    print(f"Direct API request failed with status code {response.status_code}: {response.text}")
+            except Exception as direct_api_error:
+                print(f"Direct API approach failed: {str(direct_api_error)}")
+            
+            # Continue with retry logic
+            if current_retry < retries:
+                delay = BASE_DELAY * (2 ** current_retry)
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
         
         except AuthenticationError as e:
             # Authentication error - no point in retrying
             print(f"Authentication error: {str(e)}. Check your API key.")
-            return None
+            return "I'm sorry, but there was an authentication error with the OpenAI API. Please check that your API key is valid."
             
         except APIError as e:
-            if e.status_code == 429:
-                # Rate limit - retry with backoff
+            if getattr(e, 'status_code', None) == 429:
+                # Try to check if it's a quota issue
+                error_message = str(e)
+                if "insufficient_quota" in error_message:
+                    print("OpenAI API quota exceeded.")
+                    return "I'm sorry, but the OpenAI API quota has been exceeded. Please check your API key's billing status or try again later."
+                
+                # Regular rate limit - retry with backoff
                 delay = BASE_DELAY * (2 ** current_retry)
                 print(f"Rate limit exceeded. Retrying in {delay} seconds...")
                 time.sleep(delay)
@@ -95,7 +134,7 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
                     print(f"Retrying in {delay} seconds...")
                     time.sleep(delay)
                 else:
-                    return None
+                    return "I'm sorry, but there was an error communicating with the OpenAI API. Please try again later."
                     
         except Exception as e:
             # Other unexpected error
@@ -105,13 +144,13 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
                 print(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
-                return None
+                return "I'm sorry, but there was an unexpected error when trying to generate a response. Please try again later."
                 
         current_retry += 1
     
     # If we've exhausted all retries
     print("Failed to get response after maximum retries.")
-    return None
+    return "I'm sorry, but I couldn't connect to the OpenAI API after multiple attempts. Please try again later."
 
 def generate_climate_response(query, chat_history=None):
     """
