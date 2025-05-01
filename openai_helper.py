@@ -163,6 +163,15 @@ def generate_climate_response(query, chat_history=None):
     Returns:
         Response text or fallback response if API fails
     """
+    # First check if we have an API key
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return (
+            "I notice that the OpenAI API key is not set up. To enable my AI-powered responses, "
+            "please add your OpenAI API key in the settings. In the meantime, I'll do my best to help "
+            "with climate data visualization and analysis using my built-in knowledge."
+        )
+    
     # System message for CeCe's identity
     system_message = """
     You are CeCe (Climate Copilot), an AI assistant specializing in climate and weather data analysis.
@@ -184,35 +193,40 @@ def generate_climate_response(query, chat_history=None):
     if not chat_history or chat_history[-1]["role"] != "user":
         messages.append({"role": "user", "content": query})
     
-    # Get response from OpenAI
-    response = chat_completion(
-        messages=messages,
-        system_message=system_message,
-        max_tokens=500,
-        temperature=0.7
-    )
+    try:
+        # Get response from OpenAI
+        response = chat_completion(
+            messages=messages,
+            system_message=system_message,
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        # Return the response if successful
+        if response:
+            return response
+    except Exception as e:
+        print(f"Error in generate_climate_response: {str(e)}")
+        # Continue to fallback logic below
     
-    # Return the response or a fallback
-    if response:
-        return response
-    else:
-        # Fallback logic - use predefined responses
-        climate_responses = {
-            "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
-            "precipitation": "Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps. Try the 'Generate a precipitation map' button above!",
-            "climate change": "Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.",
-            "weather": "Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.",
-            "forecast": "While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.",
-            "hello": "Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. How can I assist you today?",
-            "help": "I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data.",
-            "rain": "I can help you analyze precipitation patterns, but I don't have access to real-time weather forecasts. For the most accurate rain forecasts, I recommend checking a dedicated weather service. Would you like to explore historical precipitation data for your area instead?"
-        }
-        
-        # Check if the query contains any of our predefined topics
-        query_lower = query.lower()
-        for topic, response in climate_responses.items():
-            if topic in query_lower:
-                return response
-        
-        # Default fallback response
-        return "I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and perform scientific calculations. Try one of the preset buttons above, or ask me a specific question about climate or weather data!"
+    # Fallback logic - use predefined responses
+    print("Using fallback response system")
+    climate_responses = {
+        "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
+        "precipitation": "Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps. Try the 'Generate a precipitation map' button above!",
+        "climate change": "Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.",
+        "weather": "Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.",
+        "forecast": "While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.",
+        "hello": "Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. How can I assist you today?",
+        "help": "I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data.",
+        "rain": "I can help you analyze precipitation patterns, but I don't have access to real-time weather forecasts. For the most accurate rain forecasts, I recommend checking a dedicated weather service. Would you like to explore historical precipitation data for your area instead?"
+    }
+    
+    # Check if the query contains any of our predefined topics
+    query_lower = query.lower()
+    for topic, response in climate_responses.items():
+        if topic in query_lower:
+            return response
+    
+    # Default fallback response
+    return "I'm currently using fallback mode due to API limitations. I can still help you analyze climate data - try clicking one of the preset buttons above, or ask me about temperature trends, precipitation patterns, or climate change impacts!"

@@ -21,45 +21,47 @@ def check_openai_api_status(display_message=True):
     Returns:
         Tuple of (status_code, is_working)
     """
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        if display_message:
-            st.warning("⚠️ OpenAI API key not found. Please add your API key in Secrets.")
-        return (None, False)
-    
-    # Try a minimal API call to check status
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
-    payload = {
-        "model": "gpt-4o",
-        "messages": [
-            {"role": "user", "content": "test"}
-        ],
-        "max_tokens": 5
-    }
-    
     try:
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            if display_message:
+                st.warning("⚠️ Using Guided Responses", icon="⚠️")
+            return (None, False)
+        
+        # Try a minimal API call to check status
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        payload = {
+            "model": "gpt-4o",
+            "messages": [
+                {"role": "user", "content": "test"}
+            ],
+            "max_tokens": 5
+        }
+        
         response = requests.post(url, headers=headers, json=payload, timeout=5)
         
         # Check for quota issues
         if response.status_code == 429 and "insufficient_quota" in response.text:
             if display_message:
-                st.warning("⚠️ OpenAI API quota exceeded. Chat features will use fallback responses. The API key may need billing setup in the OpenAI dashboard.")
+                st.warning("⚠️ Using Guided Responses", icon="⚠️")
             return (429, False)
         elif response.status_code != 200:
             if display_message:
-                st.warning(f"⚠️ OpenAI API connection issue (Status: {response.status_code}). Chat features will use fallback responses.")
+                st.warning("⚠️ Using Guided Responses", icon="⚠️")
             return (response.status_code, False)
         else:
             if display_message:
-                st.success("✅ OpenAI API connected successfully - Chat features will use GPT-4o.")
+                st.success("✅ AI Enhanced Responses", icon="✅")
             return (200, True)
     except Exception as e:
+        # Catch all exceptions to prevent crashes
         if display_message:
-            st.warning(f"⚠️ Could not connect to OpenAI API: {str(e)}. Chat features will use fallback responses.")
+            st.warning("⚠️ Using Guided Responses", icon="⚠️")
+        print(f"API status check error: {str(e)}")
         return (None, False)
 
 if __name__ == "__main__":
