@@ -28,6 +28,11 @@ import climate_resilience
 # Import map modules
 import simple_artistic_maps
 import felt_inspired_maps
+import embedded_felt_map
+
+# Import our API status checker and helper
+import test_api_status
+import openai_helper
 import felt_map_demo
 
 # Load environment variables
@@ -448,6 +453,10 @@ if 'industry_type' not in st.session_state:
     st.session_state.industry_type = None
 if 'user_location' not in st.session_state:
     st.session_state.user_location = {"lat": 37.7749, "lon": -122.4194}  # Default to San Francisco
+if 'api_status_checked' not in st.session_state:
+    st.session_state.api_status_checked = False
+if 'thinking' not in st.session_state:
+    st.session_state.thinking = False
 if 'auth_status' not in st.session_state:
     st.session_state.auth_status = None
 if 'thinking' not in st.session_state:
@@ -678,8 +687,26 @@ with col6:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Run API status check if not done before
+if not st.session_state.api_status_checked:
+    # Display API status in a discreet manner
+    status_col1, status_col2 = st.columns([3, 1])
+    with status_col2:
+        # Check OpenAI API status
+        status_code, is_working = test_api_status.check_openai_api_status(display_message=False)
+        if is_working:
+            st.success("✅ OpenAI API Connected", icon="✅")
+        elif status_code == 429:
+            st.warning("⚠️ OpenAI API Quota Exceeded - Using Fallback Responses", icon="⚠️")
+        else:
+            st.warning("⚠️ Chat Using Fallback Responses", icon="⚠️")
+    
+    # Mark as checked
+    st.session_state.api_status_checked = True
+
 # Display the title question directly (without the chat-box container)
-st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
+with status_col1:
+    st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
 
 # Display the chat history in a more visually appealing way
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
