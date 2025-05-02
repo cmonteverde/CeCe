@@ -846,7 +846,7 @@ footer_html = """
     </div>
     <div style='width: 25%; margin-right: 30px; text-align: right;'>
         <a href='https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog' target='_blank' style='background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 10px 15px; border-radius: 50px; text-decoration: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); font-weight: 600; display: inline-flex; align-items: center; font-size: 14px; transition: all 0.3s ease;'>
-            <span style='margin-right: 6px;'>Feedback</span> Share feedback
+            Share Feedback
         </a>
     </div>
 </div>
