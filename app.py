@@ -784,9 +784,16 @@ st.markdown("""
     /* Style for the chat input container */
     div[data-testid="stTextInput"] {
         background-color: white !important;
-        border-radius: 15px !important;
-        padding: 2px 5px !important;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 30px !important;
+        padding: 0 !important;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(147, 112, 219, 0.2) !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* Style for the input field wrapper */
+    div[data-testid="stTextInput"] > div {
+        padding: 0 !important;
     }
     
     /* Style for the input field itself */
@@ -794,6 +801,12 @@ st.markdown("""
         color: #1E90FF !important;
         font-weight: 500 !important;
         font-size: 16px !important;
+        padding: 12px 20px !important;
+        height: 48px !important;
+        box-sizing: border-box !important;
+        border: none !important;
+        background: white !important;
+        border-radius: 30px !important;
     }
     
     /* Style for the placeholder text */
@@ -801,7 +814,21 @@ st.markdown("""
         background: linear-gradient(90deg, #1E90FF, #9370DB);
         -webkit-background-clip: text;
         color: transparent !important;
+        opacity: 0.8 !important;
         font-weight: 500 !important;
+    }
+    
+    /* Style for focus state */
+    div[data-testid="stTextInput"] > div > div > input:focus {
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+    }
+    
+    /* Additional wrapper styling to ensure alignment */
+    div[data-testid="stTextInput"] > div > div {
+        display: flex !important;
+        align-items: center !important;
     }
 </style>
 """, unsafe_allow_html=True)
