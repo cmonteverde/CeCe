@@ -781,36 +781,36 @@ st.markdown("<div class='chat-input-container' id='chat-input-anchor'></div>", u
 # Add custom CSS for the chat input
 st.markdown("""
 <style>
-    /* Style for the chat input container */
+    /* Reset styles for the entire input hierarchy */
+    div[data-testid="stTextInput"], 
+    div[data-testid="stTextInput"] > div, 
+    div[data-testid="stTextInput"] > div > div {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Main container styling */
     div[data-testid="stTextInput"] {
-        background-color: white !important;
-        border-radius: 22px !important;
-        padding: 0 !important;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid rgba(147, 112, 219, 0.2) !important;
-        margin: 5px 0 !important;
-        /* Set a max-width to make it more compact */
         max-width: 90% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
+        margin: 5px auto !important;
     }
     
-    /* Style for the input field wrapper */
-    div[data-testid="stTextInput"] > div {
-        padding: 0 !important;
-    }
-    
-    /* Style for the input field itself */
+    /* Style for the input field itself - this is the only visible element */
     div[data-testid="stTextInput"] > div > div > input {
+        width: 100% !important;
         color: #1E90FF !important;
         font-weight: 500 !important;
         font-size: 16px !important;
-        padding: 8px 16px !important;
-        height: 40px !important;
+        padding: 10px 20px !important;
+        height: 44px !important;
+        background-color: white !important;
+        border-radius: 25px !important;
+        border: 1px solid rgba(147, 112, 219, 0.2) !important;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
         box-sizing: border-box !important;
-        border: none !important;
-        background: white !important;
-        border-radius: 22px !important;
     }
     
     /* Style for the placeholder text */
@@ -824,15 +824,25 @@ st.markdown("""
     
     /* Style for focus state */
     div[data-testid="stTextInput"] > div > div > input:focus {
-        box-shadow: none !important;
-        border: none !important;
         outline: none !important;
+        box-shadow: 0px 4px 12px rgba(30, 144, 255, 0.3) !important;
+        border: 1px solid rgba(147, 112, 219, 0.4) !important;
     }
     
-    /* Additional wrapper styling to ensure alignment */
+    /* Vertical centering for the input wrapper */
     div[data-testid="stTextInput"] > div > div {
         display: flex !important;
         align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Fix the text alignment within the input */
+    div[data-testid="stTextInput"] > div > div > input {
+        display: flex !important;
+        align-items: center !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+        line-height: 24px !important;
     }
 </style>
 """, unsafe_allow_html=True)
