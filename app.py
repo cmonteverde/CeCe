@@ -784,11 +784,15 @@ st.markdown("""
     /* Style for the chat input container */
     div[data-testid="stTextInput"] {
         background-color: white !important;
-        border-radius: 30px !important;
+        border-radius: 22px !important;
         padding: 0 !important;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2) !important;
         border: 1px solid rgba(147, 112, 219, 0.2) !important;
-        margin: 10px 0 !important;
+        margin: 5px 0 !important;
+        /* Set a max-width to make it more compact */
+        max-width: 90% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     
     /* Style for the input field wrapper */
@@ -801,12 +805,12 @@ st.markdown("""
         color: #1E90FF !important;
         font-weight: 500 !important;
         font-size: 16px !important;
-        padding: 12px 20px !important;
-        height: 48px !important;
+        padding: 8px 16px !important;
+        height: 40px !important;
         box-sizing: border-box !important;
         border: none !important;
         background: white !important;
-        border-radius: 30px !important;
+        border-radius: 22px !important;
     }
     
     /* Style for the placeholder text */
