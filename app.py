@@ -912,12 +912,27 @@ if st.session_state.thinking and not st.session_state.query_processed:
     # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response_content})
     
-    # Extract follow-up suggestion from response if available
-    if "Would you like me to" in response_content:
-        follow_up_parts = response_content.split("Would you like me to")
-        if len(follow_up_parts) > 1:
-            suggestion = "Would you like me to" + follow_up_parts[1].split("\n\n")[0].strip()
-            st.session_state.suggested_follow_up = suggestion
+    # Extract follow-up suggestion from response if available - handle multiple patterns
+    # Common patterns for follow-up suggestions
+    follow_up_patterns = [
+        "Would you like me to",
+        "Do you want me to",
+        "Should I",
+        "I can also",
+        "Would you like to see"
+    ]
+    
+    # Check for each pattern
+    for pattern in follow_up_patterns:
+        if pattern in response_content:
+            parts = response_content.split(pattern)
+            if len(parts) > 1:
+                # Extract the sentence until we hit a period, question mark, or line break
+                suggestion_text = parts[1].split(".")[0].split("?")[0].split("\n")[0].strip()
+                # Format the suggestion
+                suggestion = f"{pattern} {suggestion_text}?"
+                st.session_state.suggested_follow_up = suggestion
+                break
     
     # Set thinking to False and mark query as processed
     st.session_state.thinking = False

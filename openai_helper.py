@@ -228,7 +228,12 @@ def generate_climate_response(query, chat_history=None):
     
     Format your responses with these elements:
     1. The main response addressing the user's question directly
-    2. One single follow-up suggestion at the end in a separate paragraph that starts with "Would you like me to..."
+    2. REQUIRED: One single follow-up suggestion at the end in a separate paragraph that starts with one of these phrases:
+       - "Would you like me to..."
+       - "Would you like to see..."
+       - "Should I..."
+       - "Do you want me to..."
+       Always include exactly one of these phrases followed by a concrete action I can take.
     3. End with a "Sources:" section that lists 2-3 relevant sources in a formatted way, such as:
        Sources:
        • [National Weather Service](https://weather.gov)
