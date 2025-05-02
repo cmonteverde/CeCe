@@ -745,7 +745,7 @@ if "thinking" in st.session_state and st.session_state.thinking:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input
-user_input = st.text_input("", key="chat_input", placeholder="What were the hottest days in my city last year?")
+user_input = st.text_input("", key="chat_input", placeholder="Create a chart of climate anomalies in 2023")
 
 # Add significant padding at the bottom to create more space between chat box and footer
 st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
