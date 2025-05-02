@@ -438,8 +438,9 @@ industry_regions = {
 
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
-    # Initialize with an empty chat history - don't show initial welcome message
-    st.session_state.chat_history = []
+    st.session_state.chat_history = [
+        {"role": "assistant", "content": "👋 Hi there! I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and understand weather patterns. Try one of the preset buttons above or ask me a question about climate data! For example, you could ask about temperature trends in your area, how to interpret climate anomalies, or what factors contribute to extreme weather events."}
+    ]
 if 'uploaded_data' not in st.session_state:
     st.session_state.uploaded_data = None
 if 'processed_data' not in st.session_state:
@@ -502,12 +503,22 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Remove the welcome message display section
-# We don't need to show a chat history preview here since we've already
-# removed the welcome message from the session state
+# Display the chat history to show welcome message first
+st.markdown('<div class="chat-container" style="margin-bottom: 20px;">', unsafe_allow_html=True)
 
-# Just add a small margin for spacing
-st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
+# Display welcome message only
+if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
+    welcome_message = st.session_state.chat_history[0]
+    st.markdown(f"""
+    <div class="chat-message assistant-message">
+        <div class="message-content">
+            <div class="message-sender">CeCe (Climate Copilot)</div>
+            <div class="message-text">{welcome_message["content"]}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Industry-specific buttons below the welcome message
 st.markdown("""
@@ -695,12 +706,9 @@ if not st.session_state.api_status_checked:
 # Display the chat history in a more visually appealing way
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-# Display only user-initiated conversation (skip the first welcome message)
+# Display existing chat messages
 if st.session_state.chat_history:
-    # Start from index 1 to skip the welcome message
-    chat_messages = st.session_state.chat_history[1:] if len(st.session_state.chat_history) > 1 else []
-    
-    for message in chat_messages:
+    for message in st.session_state.chat_history:
         if message["role"] == "user":
             st.markdown(f"""
             <div class="chat-message user-message">
