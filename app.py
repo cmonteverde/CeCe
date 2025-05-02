@@ -439,7 +439,7 @@ industry_regions = {
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "👋 Hi there! I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and understand weather patterns. Try one of the preset buttons above or ask me a question about climate data!"}
+        {"role": "assistant", "content": "👋 Hi there! I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and understand weather patterns. Try one of the preset buttons below or ask me a question about climate data!"}
     ]
 if 'uploaded_data' not in st.session_state:
     st.session_state.uploaded_data = None
@@ -706,9 +706,10 @@ if not st.session_state.api_status_checked:
 # Display the chat history in a more visually appealing way
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-# Display existing chat messages
+# Display existing chat messages (skip the first welcome message)
 if st.session_state.chat_history:
-    for message in st.session_state.chat_history:
+    # Skip the first welcome message by starting from index 1
+    for message in st.session_state.chat_history[1:]:
         if message["role"] == "user":
             st.markdown(f"""
             <div class="chat-message user-message">
