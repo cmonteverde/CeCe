@@ -459,8 +459,10 @@ if 'thinking' not in st.session_state:
     st.session_state.thinking = False
 if 'auth_status' not in st.session_state:
     st.session_state.auth_status = None
-if 'thinking' not in st.session_state:
-    st.session_state.thinking = False
+if 'current_query' not in st.session_state:
+    st.session_state.current_query = None  # Track the current query being processed
+if 'query_processed' not in st.session_state:
+    st.session_state.query_processed = True  # Flag to track if query has been processed
 
 # Logo in left corner (smaller)
 st.markdown("""
@@ -812,14 +814,18 @@ def fallback_response(query):
 
 # Process user input
 if user_input:
-    # Add user message to chat history
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    
-    # Set thinking status to true and display the "thinking" indicator
-    st.session_state.thinking = True
-    
-    # Rerun to show the thinking status immediately
-    st.rerun()
+    # Check if this is a new query to avoid adding duplicate messages
+    if st.session_state.query_processed or st.session_state.current_query != user_input:
+        # This is a new query - add to chat history
+        st.session_state.current_query = user_input
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        
+        # Set thinking status to true and display the "thinking" indicator
+        st.session_state.thinking = True
+        st.session_state.query_processed = False
+        
+        # Rerun to show the thinking status immediately
+        st.rerun()
 
 # If we're in thinking mode, process the query and generate a response
 if st.session_state.thinking:
@@ -894,8 +900,9 @@ if st.session_state.thinking:
     # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response_content})
     
-    # Set thinking to False
+    # Set thinking to False and mark query as processed
     st.session_state.thinking = False
+    st.session_state.query_processed = True
     
     # Clear the input field and refresh the page
     st.rerun()
