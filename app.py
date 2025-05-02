@@ -833,22 +833,63 @@ if st.session_state.thinking:
             for msg in st.session_state.chat_history[:-2]  # Exclude latest user message and assistant "thinking"
         ]
         
-        # Use our improved OpenAI helper to generate a response
-        response_content = openai_helper.generate_climate_response(user_query, messages)
+        # Import for timeout handling
+        import threading
+        import queue
         
-        # Log success or failure
-        if response_content:
-            print("Successfully generated response using OpenAI API")
-        else:
-            print("Failed to generate response with OpenAI API, using fallback")
-            # If our OpenAI helper returns None, use the fallback response
+        response_queue = queue.Queue()
+        
+        def get_response():
+            try:
+                # Use our improved OpenAI helper to generate a response
+                response = openai_helper.generate_climate_response(user_query, messages)
+                response_queue.put(response)
+            except Exception as e:
+                response_queue.put(e)
+        
+        # Create and start thread
+        response_thread = threading.Thread(target=get_response)
+        response_thread.daemon = True
+        response_thread.start()
+        
+        # Wait for the thread to complete or timeout
+        response_thread.join(40)  # 40 second total timeout
+        
+        if response_thread.is_alive():
+            print("Response generation timed out after 40 seconds")
             response_content = fallback_response(user_query)
+            # Add a note about the timeout
+            response_content = "I apologize for the delay. " + response_content
+        else:
+            # Get response from queue
+            try:
+                response_or_error = response_queue.get(block=False)
+                
+                # Check if we got an error
+                if isinstance(response_or_error, Exception):
+                    raise response_or_error
+                    
+                # Otherwise, we got a response
+                response_content = response_or_error
+                
+                # Log success or failure
+                if response_content:
+                    print("Successfully generated response using OpenAI API")
+                else:
+                    print("Failed to generate response with OpenAI API, using fallback")
+                    # If our OpenAI helper returns None, use the fallback response
+                    response_content = fallback_response(user_query)
+            except queue.Empty:
+                # This shouldn't happen, but just in case
+                print("Queue was empty - unexpected error")
+                response_content = fallback_response(user_query)
             
     except Exception as e:
         # Something went wrong, provide an error message with details
         error_msg = str(e)
         print(f"Error processing chat request: {error_msg}")
-        response_content = f"I'm sorry, but I encountered an error processing your request: {error_msg}. Please try again or use one of the preset functions above."
+        # Use a more user-friendly message without exposing technical details
+        response_content = fallback_response(user_query)
     
     # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response_content})

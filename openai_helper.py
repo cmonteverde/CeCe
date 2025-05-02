@@ -44,13 +44,17 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
     Returns:
         Response text string or None if failed
     """
+    print(f"DEBUG: chat_completion called with model={model}, max_tokens={max_tokens}")
     client = get_openai_client()
     if not client:
-        print("OpenAI API key not found. Cannot make API request.")
+        print("DEBUG: OpenAI API key not found in chat_completion. Cannot make API request.")
         return None
+    else:
+        print("DEBUG: OpenAI client initialized successfully")
     
     # Add system message if provided
     if system_message and not any(msg.get("role") == "system" for msg in messages):
+        print("DEBUG: Adding system message to messages array")
         messages = [{"role": "system", "content": system_message}] + messages
     
     # Direct API approach as a fallback option if we encounter issues with the client
@@ -62,24 +66,61 @@ def chat_completion(messages, model="gpt-4o", max_tokens=500, temperature=0.7,
     
     current_retry = 0
     while current_retry <= retries:
+        print(f"DEBUG: Attempt {current_retry + 1} of {retries + 1}")
         try:
             # Make the API request using the client
-            response = client.chat.completions.create(
-                model=model,  # The newest OpenAI model is "gpt-4o" which was released May 13, 2024
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+            print("DEBUG: About to call client.chat.completions.create")
+            # Import for timeout handling
+            import threading
+            import queue
+            
+            response_queue = queue.Queue()
+            
+            def api_call():
+                try:
+                    resp = client.chat.completions.create(
+                        model=model,  # The newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=15  # 15 second timeout
+                    )
+                    response_queue.put(resp)
+                except Exception as e:
+                    response_queue.put(e)
+            
+            # Create and start thread
+            thread = threading.Thread(target=api_call)
+            thread.daemon = True
+            thread.start()
+            
+            # Wait for the thread to complete or timeout
+            thread.join(30)  # 30 second total timeout
+            
+            if thread.is_alive():
+                print("DEBUG: API call timeout - taking too long")
+                raise Exception("OpenAI API call timed out after 30 seconds")
+            
+            # Get response from queue
+            response_or_error = response_queue.get(block=False)
+            
+            # Check if we got an error
+            if isinstance(response_or_error, Exception):
+                raise response_or_error
+                
+            # Otherwise, we got a response
+            response = response_or_error
+            print("DEBUG: Successfully got response from OpenAI API")
             return response.choices[0].message.content
             
         except RateLimitError as e:
             delay = BASE_DELAY * (2 ** current_retry)
-            print(f"Rate limit exceeded. Retrying in {delay} seconds...")
+            print(f"DEBUG: Rate limit exceeded. Retrying in {delay} seconds... Error: {str(e)}")
             time.sleep(delay)
         
         except APIConnectionError as e:
             # Connection error - try direct API approach
-            print(f"Connection error with client: {str(e)}. Trying direct API approach...")
+            print(f"DEBUG: Connection error with client: {str(e)}. Trying direct API approach...")
             
             try:
                 import requests
@@ -163,14 +204,20 @@ def generate_climate_response(query, chat_history=None):
     Returns:
         Response text or fallback response if API fails
     """
+    print(f"DEBUG: generate_climate_response called with query: {query}")
+    print(f"DEBUG: chat_history length: {len(chat_history) if chat_history else 0}")
+    
     # First check if we have an API key
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
+        print("DEBUG: OpenAI API key not found")
         return (
             "I notice that the OpenAI API key is not set up. To enable my AI-powered responses, "
             "please add your OpenAI API key in the settings. In the meantime, I'll do my best to help "
             "with climate data visualization and analysis using my built-in knowledge."
         )
+    else:
+        print(f"DEBUG: API key found (starts with: {api_key[:4]}...)")
     
     # System message for CeCe's identity
     system_message = """
@@ -193,7 +240,10 @@ def generate_climate_response(query, chat_history=None):
     if not chat_history or chat_history[-1]["role"] != "user":
         messages.append({"role": "user", "content": query})
     
+    print(f"DEBUG: Final messages array has {len(messages)} messages")
+    
     try:
+        print("DEBUG: About to call chat_completion")
         # Get response from OpenAI
         response = chat_completion(
             messages=messages,
@@ -204,9 +254,12 @@ def generate_climate_response(query, chat_history=None):
         
         # Return the response if successful
         if response:
+            print("DEBUG: Got successful response from chat_completion")
             return response
+        else:
+            print("DEBUG: chat_completion returned None")
     except Exception as e:
-        print(f"Error in generate_climate_response: {str(e)}")
+        print(f"DEBUG: Error in generate_climate_response: {str(e)}")
         # Continue to fallback logic below
     
     # Fallback logic - use predefined responses
