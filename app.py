@@ -187,15 +187,17 @@ css = """
     }
     
     .user-message {
-        background-color: rgba(30, 144, 255, 0.1);
+        background-color: white;
         border-left: 3px solid #1E90FF;
         margin-left: 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     }
     
     .assistant-message {
-        background-color: rgba(147, 112, 219, 0.1);
+        background-color: white;
         border-left: 3px solid #9370DB;
         margin-right: 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     }
     
     .message-avatar {
@@ -213,27 +215,34 @@ css = """
     .message-sender {
         font-weight: bold;
         margin-bottom: 4px;
-        color: #e0e0e0;
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .message-text {
-        color: #ffffff;
+        color: #333333;
         line-height: 1.5;
     }
     
     .thinking-status {
         display: flex;
         align-items: center;
-        font-style: italic;
+        background-color: white;
+        border-left: 3px solid #9370DB;
+        border-radius: 8px;
         color: #9370DB;
-        padding: 8px 12px;
+        padding: 12px 16px;
         margin-left: 40px;
         font-size: 14px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     }
     
     .processing-steps {
         font-size: 12px;
-        color: #1E90FF;
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         margin-top: 4px;
         font-style: italic;
     }
@@ -253,14 +262,17 @@ css = """
         margin-bottom: 20px;
         color: #FFFFFF;
     }
+    /* This will be overridden by our custom CSS later for the input field */
     .stTextInput input {
-        background-color: rgba(30, 30, 30, 0.6);
+        background-color: white;
         border: 1px solid rgba(30, 144, 255, 0.3);
-        border-radius: 8px;
-        color: white;
+        border-radius: 15px;
+        color: #1E90FF;
+        font-weight: 500;
     }
     .stTextInput input:focus {
         border: 1px solid rgba(147, 112, 219, 0.8);
+        box-shadow: 0 0 8px rgba(147, 112, 219, 0.4);
     }
 </style>
 """
@@ -735,22 +747,64 @@ if st.session_state.chat_history:
 if "thinking" in st.session_state and st.session_state.thinking:
     st.markdown("""
     <div class="thinking-status">
-        <div>CeCe is thinking...</div>
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 500; color: #9370DB; margin-right: 10px;">CeCe is thinking</div>
+            <div style="display: flex;">
+                <div style="height: 8px; width: 8px; border-radius: 50%; background: linear-gradient(90deg, #1E90FF, #9370DB); margin-right: 5px; animation: pulse 1.5s infinite ease-in-out; animation-delay: 0s;"></div>
+                <div style="height: 8px; width: 8px; border-radius: 50%; background: linear-gradient(90deg, #1E90FF, #9370DB); margin-right: 5px; animation: pulse 1.5s infinite ease-in-out; animation-delay: 0.2s;"></div>
+                <div style="height: 8px; width: 8px; border-radius: 50%; background: linear-gradient(90deg, #1E90FF, #9370DB); animation: pulse 1.5s infinite ease-in-out; animation-delay: 0.4s;"></div>
+            </div>
+        </div>
         <div class="processing-steps">
             • Analyzing your question<br>
             • Checking climate data sources<br>
             • Preparing a helpful response
         </div>
+        <style>
+            @keyframes pulse {
+                0% { opacity: 0.3; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.2); }
+                100% { opacity: 0.3; transform: scale(0.8); }
+            }
+        </style>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input - use follow-up suggestion from the response as the placeholder if available
-placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Create a chart of climate anomalies in 2023"
+placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Give me a breakdown of the weather in San Diego, CA for tomorrow. And suggest a few activities."
 
 # Add an HTML div with class for JavaScript targeting
 st.markdown("<div class='chat-input-container' id='chat-input-anchor'></div>", unsafe_allow_html=True)
+
+# Add custom CSS for the chat input
+st.markdown("""
+<style>
+    /* Style for the chat input container */
+    div[data-testid="stTextInput"] {
+        background-color: white !important;
+        border-radius: 15px !important;
+        padding: 2px 5px !important;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Style for the input field itself */
+    div[data-testid="stTextInput"] > div > div > input {
+        color: #1E90FF !important;
+        font-weight: 500 !important;
+        font-size: 16px !important;
+    }
+    
+    /* Style for the placeholder text */
+    div[data-testid="stTextInput"] > div > div > input::placeholder {
+        background: linear-gradient(90deg, #1E90FF, #9370DB);
+        -webkit-background-clip: text;
+        color: transparent !important;
+        font-weight: 500 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # The actual chat input
 user_input = st.text_input("", key="chat_input", placeholder=placeholder_text)
