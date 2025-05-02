@@ -762,13 +762,27 @@ with col2:
     # Create a container for the navigation buttons
     with st.container():
         # Top button in a stylish gradient
-        if st.button("⬆", help="Scroll to Top", key="scroll_top_btn", 
+        if st.button("⬆", help="Scroll to Very Top", key="scroll_top_btn", 
                     use_container_width=True):
-            # Use Streamlit's built-in JavaScript to scroll to top
+            # Use Streamlit's built-in JavaScript to scroll to absolute top (0,0)
             st.components.v1.html(
                 """
                 <script>
-                    window.scrollTo({top: 0, behavior: 'smooth'});
+                    // Scroll to the absolute top (0,0) with smooth animation
+                    window.scrollTo({
+                        top: 0, 
+                        left: 0,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Force another scroll after a short delay to ensure it reaches the top
+                    setTimeout(function() {
+                        window.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: 'auto'
+                        });
+                    }, 100);
                 </script>
                 """,
                 height=0
@@ -781,14 +795,32 @@ with col2:
             st.components.v1.html(
                 """
                 <script>
+                    // First try to find the chat input anchor element
                     const inputElement = document.querySelector('#chat-input-anchor');
+                    
                     if (inputElement) {
+                        // If found, scroll to it with smooth animation
                         inputElement.scrollIntoView({behavior: 'smooth'});
+                        
+                        // After slight delay, forcefully focus on the text input
+                        setTimeout(function() {
+                            const inputs = document.querySelectorAll('input[type="text"]');
+                            if (inputs.length > 0) {
+                                const lastInput = inputs[inputs.length - 1];
+                                lastInput.focus();
+                            }
+                        }, 500);
                     } else {
+                        // Fallback approach: find all text inputs and scroll to the last one
                         const inputs = document.querySelectorAll('input[type="text"]');
                         if (inputs.length > 0) {
                             const lastInput = inputs[inputs.length - 1];
                             lastInput.scrollIntoView({behavior: 'smooth'});
+                            
+                            // Focus the input after scrolling
+                            setTimeout(function() {
+                                lastInput.focus();
+                            }, 500);
                         }
                     }
                 </script>
