@@ -755,108 +755,46 @@ st.markdown("<div class='chat-input-container' id='chat-input-anchor'></div>", u
 # The actual chat input
 user_input = st.text_input("", key="chat_input", placeholder=placeholder_text)
 
-# Add navigation buttons for better UX
-navigation_buttons = """
-<div style='position: fixed; bottom: 350px; right: 30px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;'>
-    <button 
-        id='scroll-to-top-btn' 
-        onclick='scrollToTop()' 
-        style='
-            background: linear-gradient(90deg, #1E90FF, #9370DB);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            opacity: 0.8;
-            transition: all 0.3s ease;
-        '
-        onmouseover='this.style.opacity="1"; this.style.transform="translateY(-3px)"'
-        onmouseout='this.style.opacity="0.8"; this.style.transform="translateY(0)"'
-    >⬆</button>
-    
-    <button 
-        id='scroll-to-input-btn' 
-        onclick='scrollToInput()' 
-        style='
-            background: linear-gradient(90deg, #9370DB, #1E90FF);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            opacity: 0.8;
-            transition: all 0.3s ease;
-        '
-        onmouseover='this.style.opacity="1"; this.style.transform="translateY(-3px)"'
-        onmouseout='this.style.opacity="0.8"; this.style.transform="translateY(0)"'
-    >⬇</button>
-</div>
+# Add navigation buttons using Streamlit components instead of raw HTML/JS
+col1, col2 = st.columns([9, 1])
 
-<script>
-    function scrollToTop() {
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-    
-    function scrollToInput() {
-        // Scroll to the chat input field
-        const inputElement = document.querySelector('#chat-input-anchor');
-        if (inputElement) {
-            inputElement.scrollIntoView({behavior: 'smooth'});
-        } else {
-            // Fallback: try to find the last text input
-            const inputs = document.querySelectorAll('input[type="text"]');
-            if (inputs.length > 0) {
-                const lastInput = inputs[inputs.length - 1];
-                lastInput.scrollIntoView({behavior: 'smooth'});
-            }
-        }
-    }
-    
-    // Show/hide buttons based on scroll position
-    window.addEventListener('scroll', function() {
-        const scrollTopBtn = document.getElementById('scroll-to-top-btn');
-        const scrollInputBtn = document.getElementById('scroll-to-input-btn');
+with col2:
+    # Create a container for the navigation buttons
+    with st.container():
+        # Top button in a stylish gradient
+        if st.button("⬆", help="Scroll to Top", key="scroll_top_btn", 
+                    use_container_width=True):
+            # Use Streamlit's built-in JavaScript to scroll to top
+            st.components.v1.html(
+                """
+                <script>
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                </script>
+                """,
+                height=0
+            )
         
-        if (window.scrollY > 300) {
-            scrollTopBtn.style.display = 'flex';
-        } else {
-            scrollTopBtn.style.display = 'none';
-        }
-        
-        // Determine when to show the scroll to input button based on how far from the bottom
-        const scrollPosition = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.body.scrollHeight;
-        
-        // Show scroll to input button when we're not at the bottom
-        if (documentHeight - (scrollPosition + windowHeight) > 400) {
-            scrollInputBtn.style.display = 'flex';
-        } else {
-            scrollInputBtn.style.display = 'none';
-        }
-    });
-    
-    // Initially hide both buttons
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('scroll-to-top-btn').style.display = 'none';
-        document.getElementById('scroll-to-input-btn').style.display = 'none';
-    });
-</script>
-"""
-st.markdown(navigation_buttons, unsafe_allow_html=True)
+        # Bottom button in a complementary gradient
+        if st.button("⬇", help="Scroll to Chat Input", key="scroll_input_btn", 
+                    use_container_width=True):
+            # Use Streamlit's built-in JavaScript to scroll to the chat input
+            st.components.v1.html(
+                """
+                <script>
+                    const inputElement = document.querySelector('#chat-input-anchor');
+                    if (inputElement) {
+                        inputElement.scrollIntoView({behavior: 'smooth'});
+                    } else {
+                        const inputs = document.querySelectorAll('input[type="text"]');
+                        if (inputs.length > 0) {
+                            const lastInput = inputs[inputs.length - 1];
+                            lastInput.scrollIntoView({behavior: 'smooth'});
+                        }
+                    }
+                </script>
+                """,
+                height=0
+            )
 
 # Add significant padding at the bottom to create more space between chat box and footer
 st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
