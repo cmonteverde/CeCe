@@ -746,8 +746,9 @@ if "thinking" in st.session_state and st.session_state.thinking:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Chat input
-user_input = st.text_input("", key="chat_input", placeholder="Create a chart of climate anomalies in 2023")
+# Chat input - use follow-up suggestion from the response as the placeholder if available
+placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Create a chart of climate anomalies in 2023"
+user_input = st.text_input("", key="chat_input", placeholder=placeholder_text)
 
 # Add significant padding at the bottom to create more space between chat box and footer
 st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
@@ -812,11 +813,22 @@ def fallback_response(query):
     # Default response if no specific topic is matched
     return "I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and perform scientific calculations. Try one of the preset buttons above, or ask me a specific question about climate or weather data!"
 
+# Initialize a conversation lock if it doesn't exist
+if 'conversation_lock' not in st.session_state:
+    st.session_state.conversation_lock = False
+    
+# Initialize suggested_follow_up if it doesn't exist
+if 'suggested_follow_up' not in st.session_state:
+    st.session_state.suggested_follow_up = "Create a chart of climate anomalies in 2023"
+
 # Process user input
-if user_input:
+if user_input and not st.session_state.conversation_lock:
     # Check if this is a new query to avoid adding duplicate messages
-    if st.session_state.query_processed or st.session_state.current_query != user_input:
-        # This is a new query - add to chat history
+    if user_input != st.session_state.current_query:
+        # Lock the conversation to prevent multiple responses
+        st.session_state.conversation_lock = True
+        
+        # Add user message to chat history
         st.session_state.current_query = user_input
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
@@ -900,9 +912,19 @@ if st.session_state.thinking and not st.session_state.query_processed:
     # Add the response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response_content})
     
+    # Extract follow-up suggestion from response if available
+    if "Would you like me to" in response_content:
+        follow_up_parts = response_content.split("Would you like me to")
+        if len(follow_up_parts) > 1:
+            suggestion = "Would you like me to" + follow_up_parts[1].split("\n\n")[0].strip()
+            st.session_state.suggested_follow_up = suggestion
+    
     # Set thinking to False and mark query as processed
     st.session_state.thinking = False
     st.session_state.query_processed = True
+    
+    # Unlock the conversation for new queries
+    st.session_state.conversation_lock = False
     
     # Clear the input field and refresh the page
     st.rerun()
