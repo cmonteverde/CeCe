@@ -748,43 +748,140 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input - use follow-up suggestion from the response as the placeholder if available
 placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Create a chart of climate anomalies in 2023"
+
+# Add an HTML div with class for JavaScript targeting
+st.markdown("<div class='chat-input-container' id='chat-input-anchor'></div>", unsafe_allow_html=True)
+
+# The actual chat input
 user_input = st.text_input("", key="chat_input", placeholder=placeholder_text)
+
+# Add navigation buttons for better UX
+navigation_buttons = """
+<div style='position: fixed; bottom: 350px; right: 30px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;'>
+    <button 
+        id='scroll-to-top-btn' 
+        onclick='scrollToTop()' 
+        style='
+            background: linear-gradient(90deg, #1E90FF, #9370DB);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        '
+        onmouseover='this.style.opacity="1"; this.style.transform="translateY(-3px)"'
+        onmouseout='this.style.opacity="0.8"; this.style.transform="translateY(0)"'
+    >⬆</button>
+    
+    <button 
+        id='scroll-to-input-btn' 
+        onclick='scrollToInput()' 
+        style='
+            background: linear-gradient(90deg, #9370DB, #1E90FF);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        '
+        onmouseover='this.style.opacity="1"; this.style.transform="translateY(-3px)"'
+        onmouseout='this.style.opacity="0.8"; this.style.transform="translateY(0)"'
+    >⬇</button>
+</div>
+
+<script>
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    
+    function scrollToInput() {
+        // Scroll to the chat input field
+        const inputElement = document.querySelector('#chat-input-anchor');
+        if (inputElement) {
+            inputElement.scrollIntoView({behavior: 'smooth'});
+        } else {
+            // Fallback: try to find the last text input
+            const inputs = document.querySelectorAll('input[type="text"]');
+            if (inputs.length > 0) {
+                const lastInput = inputs[inputs.length - 1];
+                lastInput.scrollIntoView({behavior: 'smooth'});
+            }
+        }
+    }
+    
+    // Show/hide buttons based on scroll position
+    window.addEventListener('scroll', function() {
+        const scrollTopBtn = document.getElementById('scroll-to-top-btn');
+        const scrollInputBtn = document.getElementById('scroll-to-input-btn');
+        
+        if (window.scrollY > 300) {
+            scrollTopBtn.style.display = 'flex';
+        } else {
+            scrollTopBtn.style.display = 'none';
+        }
+        
+        // Determine when to show the scroll to input button based on how far from the bottom
+        const scrollPosition = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.body.scrollHeight;
+        
+        // Show scroll to input button when we're not at the bottom
+        if (documentHeight - (scrollPosition + windowHeight) > 400) {
+            scrollInputBtn.style.display = 'flex';
+        } else {
+            scrollInputBtn.style.display = 'none';
+        }
+    });
+    
+    // Initially hide both buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('scroll-to-top-btn').style.display = 'none';
+        document.getElementById('scroll-to-input-btn').style.display = 'none';
+    });
+</script>
+"""
+st.markdown(navigation_buttons, unsafe_allow_html=True)
 
 # Add significant padding at the bottom to create more space between chat box and footer
 st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
 
 # Footer bar at the bottom of the page with both elements
-st.markdown("""
-<div style="position: absolute; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; display: flex; justify-content: space-between; align-items: center;">
-    <div style="width: 25%; margin-left: 30px;">
+footer_html = """
+<div style='position: absolute; bottom: 0; left: 0; width: 100%; background-color: #000; padding: 20px 0; display: flex; justify-content: space-between; align-items: center;'>
+    <div style='width: 25%; margin-left: 30px;'>
         <!-- Empty left division for spacing -->
     </div>
-    <div style="flex-grow: 0; color: white; font-size: 14px; text-align: center;">
+    <div style='flex-grow: 0; color: white; font-size: 14px; text-align: center;'>
         Made with 
-        <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">❤</span> 
+        <span style='background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;'>love</span> 
         by 
-        <a href="https://www.linkedin.com/in/corriemonteverde/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Corrie</a> + 
-        <a href="https://www.linkedin.com/in/mlaffin/" target="_blank" style="text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">Matt</a>
+        <a href='https://www.linkedin.com/in/corriemonteverde/' target='_blank' style='text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;'>Corrie</a> + 
+        <a href='https://www.linkedin.com/in/mlaffin/' target='_blank' style='text-decoration: none; background: linear-gradient(90deg, #1E90FF, #9370DB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;'>Matt</a>
     </div>
-    <div style="width: 25%; margin-right: 30px; text-align: right;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog" target="_blank" style="
-            background: linear-gradient(90deg, #1E90FF, #9370DB);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50px;
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        ">
-            <span style="margin-right: 6px;">💬</span> Share feedback
+    <div style='width: 25%; margin-right: 30px; text-align: right;'>
+        <a href='https://docs.google.com/forms/d/e/1FAIpQLSezvpoz4Jf2Ez0ukxU9y_q6iK4l4j5COVc1giJBQSJIUm9c0A/viewform?usp=dialog' target='_blank' style='background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 10px 15px; border-radius: 50px; text-decoration: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); font-weight: 600; display: inline-flex; align-items: center; font-size: 14px; transition: all 0.3s ease;'>
+            <span style='margin-right: 6px;'>Feedback</span> Share feedback
         </a>
     </div>
 </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
 
 # Fallback response function 
 # Import our OpenAI helper module
