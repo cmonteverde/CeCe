@@ -687,31 +687,20 @@ with col6:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Create columns for title and status display
-status_col1, status_col2 = st.columns([3, 1])
+# Display the title question without status indicators
+st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
 
-# Display the title question in the first column
-with status_col1:
-    st.markdown('<div class="title-text">What would you like CeCe to do for you today?</div>', unsafe_allow_html=True)
-
-# Run API status check if not done before
-with status_col2:
+# Run API status check silently without showing UI elements
+if not st.session_state.api_status_checked:
     try:
-        # Check OpenAI API status
-        if not st.session_state.api_status_checked:
-            status_code, is_working = test_api_status.check_openai_api_status(display_message=False)
-            if is_working:
-                st.success("✅ OpenAI API Connected", icon="✅")
-            elif status_code == 429:
-                st.warning("⚠️ Using Fallback Responses", icon="⚠️")
-            else:
-                st.warning("⚠️ Using Fallback Responses", icon="⚠️")
-            
-            # Mark as checked
-            st.session_state.api_status_checked = True
+        # Just check API status in the background
+        status_code, is_working = test_api_status.check_openai_api_status(display_message=False)
+        # Mark as checked to prevent repeated attempts
+        st.session_state.api_status_checked = True
     except Exception as e:
         # If the API check fails, don't crash
-        st.warning("⚠️ Using Fallback Responses", icon="⚠️")
+        print(f"API check error: {str(e)}")
+        # Mark as checked to prevent repeated attempts
         st.session_state.api_status_checked = True
 
 # Display the chat history in a more visually appealing way
