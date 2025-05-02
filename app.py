@@ -828,15 +828,15 @@ if user_input:
         st.rerun()
 
 # If we're in thinking mode, process the query and generate a response
-if st.session_state.thinking:
+if st.session_state.thinking and not st.session_state.query_processed:
     try:
         # Extract user query from chat history
-        user_query = st.session_state.chat_history[-2]["content"] if len(st.session_state.chat_history) >= 2 else ""
+        user_query = st.session_state.chat_history[-1]["content"] if len(st.session_state.chat_history) >= 1 else ""
         
-        # Get chat history for context (excluding the most recent user message that we're about to process)
+        # Get chat history for context (excluding welcome message and the most recent user message that we're about to process)
         messages = [
             {"role": msg["role"], "content": msg["content"]} 
-            for msg in st.session_state.chat_history[:-2]  # Exclude latest user message and assistant "thinking"
+            for msg in st.session_state.chat_history[1:-1]  # Skip welcome message and exclude latest user message
         ]
         
         # Import for timeout handling

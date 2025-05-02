@@ -225,6 +225,15 @@ def generate_climate_response(query, chat_history=None):
     You help users with climate data visualization, scientific calculations, and understanding weather patterns.
     Your responses should be friendly, helpful, and focused on climate science.
     Include specific details about what data sources you would check and what visualizations you could generate.
+    
+    Format your responses with these elements:
+    1. The main response addressing the user's question directly
+    2. One single follow-up suggestion at the end in a separate paragraph that starts with "Would you like me to..."
+    3. End with a "Sources:" section that lists 2-3 relevant sources in a formatted way, such as:
+       Sources:
+       • [National Weather Service](https://weather.gov)
+       • [NASA POWER API](https://power.larc.nasa.gov)
+       • [NOAA Climate Data](https://www.ncdc.noaa.gov)
     """
     
     # Create messages array
@@ -265,14 +274,70 @@ def generate_climate_response(query, chat_history=None):
     # Fallback logic - use predefined responses
     print("Using fallback response system")
     climate_responses = {
-        "temperature": "Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.",
-        "precipitation": "Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps. Try the 'Generate a precipitation map' button above!",
-        "climate change": "Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.",
-        "weather": "Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.",
-        "forecast": "While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.",
-        "hello": "Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. How can I assist you today?",
-        "help": "I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data.",
-        "rain": "I can help you analyze precipitation patterns, but I don't have access to real-time weather forecasts. For the most accurate rain forecasts, I recommend checking a dedicated weather service. Would you like to explore historical precipitation data for your area instead?"
+        "temperature": """Temperature is a key climate variable. I can help you analyze temperature trends, calculate anomalies, and visualize temperature data. You can use the preset buttons above to explore temperature-related features.
+        
+Would you like me to create a temperature trend visualization for your location?
+
+Sources:
+• [NASA POWER API](https://power.larc.nasa.gov)
+• [NOAA Climate Data](https://www.ncdc.noaa.gov)""",
+
+        "precipitation": """Precipitation includes rain, snow, and other forms of water falling from the sky. I can help you analyze precipitation patterns and create visualization maps.
+        
+Would you like me to generate a precipitation map for your area?
+
+Sources:
+• [NASA POWER API](https://power.larc.nasa.gov)
+• [NOAA Precipitation Data](https://www.weather.gov/precipitation)""",
+
+        "climate change": """Climate change refers to significant changes in global temperature, precipitation, wind patterns, and other measures of climate that occur over several decades or longer. I can help you analyze climate data to understand these changes.
+        
+Would you like me to show you long-term temperature trend analysis for your region?
+
+Sources:
+• [NASA Climate Change Portal](https://climate.nasa.gov)
+• [IPCC Reports](https://www.ipcc.ch/reports)""",
+
+        "weather": """Weather refers to day-to-day conditions, while climate refers to the average weather patterns in an area over a longer period. I can help you analyze both weather data and climate trends.
+        
+Would you like me to generate a climate report for your location?
+
+Sources:
+• [National Weather Service](https://weather.gov)
+• [Weather Underground](https://www.wunderground.com)""",
+
+        "forecast": """While I don't provide real-time weather forecasts, I can help you analyze historical climate data and identify patterns that might inform future conditions.
+        
+Would you like me to analyze historical weather patterns for your area instead?
+
+Sources:
+• [National Weather Service](https://weather.gov)
+• [NOAA Climate Prediction Center](https://www.cpc.ncep.noaa.gov)""",
+
+        "hello": """Hello! I'm CeCe, your Climate Copilot. I'm here to help you analyze and visualize climate data. 
+        
+Would you like me to show you how to generate a precipitation map or analyze temperature trends?
+
+Sources:
+• [NASA POWER API](https://power.larc.nasa.gov)
+• [NOAA Climate Data](https://www.ncdc.noaa.gov)""",
+
+        "help": """I can help you with climate data analysis, visualization, and scientific calculations. Try one of the preset buttons above to get started, or ask me a specific question about climate data.
+        
+Would you like me to suggest some interesting climate analyses we could do together?
+
+Sources:
+• [NASA POWER API](https://power.larc.nasa.gov)
+• [NOAA Climate Data](https://www.ncdc.noaa.gov)
+• [Climate.gov](https://www.climate.gov)""",
+
+        "rain": """I can help you analyze precipitation patterns, but I don't have access to real-time weather forecasts. For the most accurate rain forecasts, I recommend checking a dedicated weather service. 
+        
+Would you like me to show you historical precipitation data for your area instead?
+
+Sources:
+• [National Weather Service](https://weather.gov)
+• [NOAA Precipitation Data](https://www.weather.gov/precipitation)"""
     }
     
     # Check if the query contains any of our predefined topics
@@ -282,4 +347,11 @@ def generate_climate_response(query, chat_history=None):
             return response
     
     # Default fallback response
-    return "I'm currently using fallback mode due to API limitations. I can still help you analyze climate data - try clicking one of the preset buttons above, or ask me about temperature trends, precipitation patterns, or climate change impacts!"
+    return """I'm currently using fallback mode due to API limitations. I can still help you analyze climate data through the preset buttons above, or with questions about temperature trends, precipitation patterns, or climate change impacts.
+    
+Would you like me to show you one of our specialized climate visualizations instead?
+
+Sources:
+• [NASA POWER API](https://power.larc.nasa.gov)
+• [NOAA Climate Data](https://www.ncdc.noaa.gov)
+• [Climate.gov](https://www.climate.gov)"""
