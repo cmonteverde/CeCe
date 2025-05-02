@@ -2850,7 +2850,8 @@ if st.session_state.chat_history:
     chat_container = st.container()
     
     with chat_container:
-        for message in st.session_state.chat_history:
+        # Skip the first welcome message in chat history display
+        for message in st.session_state.chat_history[1:]:
             if message["role"] == "user":
                 st.markdown(f"**You:** {message['content']}")
             else:
@@ -2864,7 +2865,8 @@ if st.session_state.chat_history:
     # Add option to download chat history
     if st.button("Download Chat History"):
         chat_text = ""
-        for message in st.session_state.chat_history:
+        # Skip the first welcome message in download
+        for message in st.session_state.chat_history[1:]:
             prefix = "You: " if message["role"] == "user" else "CeCe: "
             chat_text += f"{prefix}{message['content']}\n\n"
         
