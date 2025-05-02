@@ -439,7 +439,7 @@ industry_regions = {
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "👋 Hi there! I'm CeCe, your Climate Copilot. I can help you analyze climate data, create visualizations, and understand weather patterns. Try one of the preset buttons below or ask me a question about climate data!"}
+        {"role": "assistant", "content": "👋Hi there! I’m CeCe, your Climate Copilot. I'm here to help you explore, visualize, and make sense of climate and weather data in a way that’s clear and useful. Whether you want to generate a map, check trends, or just ask a question, I’m here to guide you. Just click one of the preset buttons below or start typing in the chat box to begin."}
     ]
 if 'uploaded_data' not in st.session_state:
     st.session_state.uploaded_data = None
