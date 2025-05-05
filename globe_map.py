@@ -8,16 +8,29 @@ that can be embedded within the main application. The globe features:
 - Full globe view at startup
 - Interactive zoom and rotation
 - Optional data layers for climate visualization
+- High-resolution topography and terrain data when zoomed in
 """
 
 import plotly.graph_objects as go
 import numpy as np
 import streamlit as st
+import folium
+from folium.plugins import MarkerCluster
+from streamlit_folium import folium_static
 
 # CeCe brand colors (blue to purple gradient)
 CECE_BLUE = "#1E90FF"
 CECE_PURPLE = "#9370DB"
 CECE_GRADIENT = [CECE_BLUE, "#5F7FEA", "#8A6CD7", CECE_PURPLE]
+
+# High-resolution map tile sources
+TERRAIN_TILES = {
+    "dark": "CartoDB dark_matter",
+    "light": "CartoDB positron",
+    "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    "terrain": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
+    "hybrid": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+}
 
 def create_globe_map(dark_mode=True, width=800, height=600):
     """
@@ -25,7 +38,7 @@ def create_globe_map(dark_mode=True, width=800, height=600):
     
     Args:
         dark_mode: Whether to use dark mode (True) or light mode (False)
-        width: Width of the map in pixels (pass None for full container width)
+        width: Width of the map in pixels (default: 800)
         height: Height of the map in pixels
         
     Returns:
@@ -189,6 +202,71 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     
     return fig
 
+def create_detailed_terrain_map(lat=0, lon=0, zoom=3, dark_mode=True):
+    """
+    Create a detailed terrain map with high-resolution topography and features
+    
+    Args:
+        lat: Latitude center point
+        lon: Longitude center point
+        zoom: Initial zoom level (higher values show more detail)
+        dark_mode: Whether to use dark mode
+        
+    Returns:
+        Folium map object with high-resolution terrain
+    """
+    # Select appropriate tile style based on dark/light mode
+    base_tile = TERRAIN_TILES["dark"] if dark_mode else TERRAIN_TILES["light"]
+    
+    # Create base map
+    m = folium.Map(
+        location=[lat, lon],
+        zoom_start=zoom,
+        tiles=base_tile,
+        control_scale=True,
+        width="100%"
+    )
+    
+    # Add terrain and topography layer
+    terrain_tile = TERRAIN_TILES["terrain"]
+    terrain_layer = folium.TileLayer(
+        tiles=terrain_tile,
+        name="Topography",
+        overlay=True,
+        opacity=0.6,
+        attr="OpenTopoMap"
+    )
+    terrain_layer.add_to(m)
+    
+    # Add satellite imagery layer
+    satellite_tile = TERRAIN_TILES["satellite"]
+    satellite_layer = folium.TileLayer(
+        tiles=satellite_tile,
+        name="Satellite",
+        overlay=True,
+        opacity=0.7,
+        attr="ESRI"
+    )
+    satellite_layer.add_to(m)
+    
+    # Add layer control to toggle between different map views
+    folium.LayerControl(position="topright").add_to(m)
+    
+    # Add a scale bar
+    folium.plugins.MeasureControl(
+        position='bottomleft',
+        primary_length_unit='kilometers',
+        secondary_length_unit='miles'
+    ).add_to(m)
+    
+    # Add a mini map for context
+    folium.plugins.MiniMap(
+        toggle_display=True,
+        tile_layer=base_tile
+    ).add_to(m)
+    
+    return m
+
 def display_globe_map(dark_mode=True):
     """Display the interactive globe map in Streamlit
     
@@ -204,7 +282,7 @@ def display_globe_map(dark_mode=True):
     """, unsafe_allow_html=True)
     
     # Create columns for controls - removed Show Countries checkbox as it's always on
-    col1, col2, col3 = st.columns([4, 1, 1])
+    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
     
     with col1:
         st.markdown("""
@@ -224,31 +302,58 @@ def display_globe_map(dark_mode=True):
     with col3:
         layer_type = st.selectbox("Data Layer", ["None", "Temperature", "Precipitation"], index=0)
     
+    with col4:
+        map_type = st.selectbox("Map Type", ["Globe", "Terrain"], index=0)
+    
+    # Store the map type preference
+    if 'map_type' not in st.session_state:
+        st.session_state.map_type = map_type
+    else:
+        st.session_state.map_type = map_type
+        
     # Determine the ideal dimensions based on the viewport
-    # Make the map taller and responsive
-    width = None  # Let Streamlit use container width for responsiveness
     height = 600  # Taller map for better visibility
     
-    # Create the globe map with adjusted dimensions
-    fig = create_globe_map(dark_mode=dark_mode, width=width, height=height)
-    
-    # Add climate layer if selected
-    if layer_type.lower() != "none":
-        fig = add_climate_layer(fig, layer_type=layer_type.lower())
-    
-    # Make the chart responsive and fill the container
-    st.plotly_chart(fig, use_container_width=True, config={
-        'displayModeBar': True,
-        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
-        'displaylogo': False,
-        'responsive': True,
-        'scrollZoom': True,
-        'doubleClick': 'reset+autosize',  # Reset view on double click
-        'scrollZoom': True,               # Enable scroll zoom (mouse wheel)
-        'toImageButtonOptions': {
-            'format': 'png',
-            'filename': 'climate_globe',
-            'height': 800,
-            'width': 1200
-        }
-    })
+    # Display different map types based on selection
+    if st.session_state.map_type == "Globe":
+        # Create the globe map (lower resolution but 3D)
+        fig = create_globe_map(dark_mode=dark_mode, width=800, height=height)
+        
+        # Add climate layer if selected
+        if layer_type.lower() != "none":
+            fig = add_climate_layer(fig, layer_type=layer_type.lower())
+        
+        # Make the chart responsive and fill the container
+        st.plotly_chart(fig, use_container_width=True, config={
+            'displayModeBar': True,
+            'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
+            'displaylogo': False,
+            'responsive': True,
+            'scrollZoom': True,
+            'doubleClick': 'reset+autosize',  # Reset view on double click
+            'toImageButtonOptions': {
+                'format': 'png',
+                'filename': 'climate_globe',
+                'height': 800,
+                'width': 1200
+            }
+        })
+    else:
+        # Create high-resolution terrain map (flat but detailed)
+        detailed_map = create_detailed_terrain_map(
+            lat=0, 
+            lon=0, 
+            zoom=3, 
+            dark_mode=dark_mode
+        )
+        
+        # Add a note about the map's capabilities
+        st.markdown("""
+        <div style="font-size: 14px; color: #888; text-align: center; margin-bottom: 10px;">
+            Zoom in to see detailed topography, roads, cities and terrain features.
+            Toggle layers using the control panel in the top right.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display the interactive folium map
+        folium_static(detailed_map, width=None, height=height-50)
