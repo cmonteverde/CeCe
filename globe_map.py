@@ -155,15 +155,24 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
         Updated Plotly figure
     """
     # Import here to avoid circular imports
-    from climate_data_sources import get_climate_layer_data
+    import sys
+    from climate_data_sources import get_climate_layer_data, generate_global_temperature_grid
     
     # If no data is provided, fetch from climate data sources
     if data is None:
         try:
-            # Get data from climate sources
-            data = get_climate_layer_data(layer_type)
+            # For temperature, directly use the grid function
+            if layer_type == "temperature":
+                data = generate_global_temperature_grid(resolution=10)  # Lower resolution for better performance
+                st.write(f"Generated temperature grid with {len(data)} points")
+            else:
+                # Get data for other layer types
+                data = get_climate_layer_data(layer_type)
+                
         except Exception as e:
             st.error(f"Error loading climate data: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
             # Fall back to empty dataframe with expected structure
             if layer_type == "temperature":
                 data = pd.DataFrame(columns=['lat', 'lon', 'temperature'])
@@ -177,35 +186,51 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     
     # Add visualization based on layer type
     if layer_type == "temperature":
+        # Debug information
+        st.write(f"Temperature data shape: {data.shape if isinstance(data, pd.DataFrame) else 'Not a DataFrame'}")
+        
         if isinstance(data, pd.DataFrame) and not data.empty and 'lat' in data.columns:
-            # Extract data columns
-            lats = data['lat'].values
-            lons = data['lon'].values
-            temps = data['temperature'].values
-            
-            # Add temperature heatmap
-            fig.add_trace(go.Densitymapbox(
-                lat=lats,
-                lon=lons,
-                z=temps,
-                radius=15,
-                colorscale=[
-                    [0, "#0d47a1"],  # Cold (deep blue)
-                    [0.5, CECE_BLUE],  # Medium (CeCe blue)
-                    [0.75, "#9370DB"],  # Warm (CeCe purple)
-                    [1, "#b71c1c"]  # Hot (red)
-                ],
-                opacity=0.6,
-                showscale=True,
-                colorbar=dict(
-                    title="Temp (°C)",
-                    titleside="top",
-                    outlinewidth=0,
-                    borderwidth=0,
-                    thickness=15
-                ),
-                hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{z:.1f}°C<extra></extra>"
-            ))
+            try:
+                # Extract data columns
+                lats = data['lat'].tolist()
+                lons = data['lon'].tolist()
+                temps = data['temperature'].tolist()
+                
+                # Show sample of data for debugging
+                st.write(f"First few points: {list(zip(lats[:3], lons[:3], temps[:3]))}")
+                
+                # Use Scattergeo instead of Densitymapbox for better globe compatibility
+                fig.add_trace(go.Scattergeo(
+                    lat=lats,
+                    lon=lons,
+                    mode='markers',
+                    marker=dict(
+                        size=5,
+                        color=temps,
+                        colorscale=[
+                            [0, "#0d47a1"],  # Cold (deep blue)
+                            [0.5, CECE_BLUE],  # Medium (CeCe blue)
+                            [0.75, "#9370DB"],  # Warm (CeCe purple)
+                            [1, "#b71c1c"]  # Hot (red)
+                        ],
+                        colorbar=dict(
+                            title="Temp (°C)",
+                            titleside="top",
+                            outlinewidth=0,
+                            borderwidth=0,
+                            thickness=15
+                        ),
+                        opacity=0.7,
+                        symbol='circle'
+                    ),
+                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>"
+                ))
+                
+                st.success("Successfully added temperature data to the map")
+            except Exception as e:
+                st.error(f"Error adding temperature data to map: {str(e)}")
+                import traceback
+                st.error(traceback.format_exc())
         else:
             st.warning("No temperature data available to display")
     
