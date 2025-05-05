@@ -534,7 +534,23 @@ if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Industry-specific buttons below the welcome message
+# Import the globe map module
+import globe_map
+
+# Add the interactive globe map below the welcome message and above the industry buttons
+try:
+    # Use session state to remember dark/light mode preference
+    if 'globe_dark_mode' not in st.session_state:
+        st.session_state.globe_dark_mode = True
+        
+    # Display the interactive globe map
+    globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
+except Exception as e:
+    st.error(f"Unable to load interactive globe map: {str(e)}")
+    # Fallback padding if map fails to load
+    st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
+
+# Industry-specific buttons below the globe map
 st.markdown("""
 <div style="margin-bottom: 15px; text-align: center;">
     <h3 style="color: white; font-size: 18px; margin-bottom: 15px;">
@@ -923,21 +939,8 @@ with col2:
                 height=0
             )
 
-# Import the globe map module
-import globe_map
-
-# Add the interactive globe map below the chat input
-try:
-    # Use session state to remember dark/light mode preference
-    if 'globe_dark_mode' not in st.session_state:
-        st.session_state.globe_dark_mode = True
-        
-    # Display the interactive globe map
-    globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
-except Exception as e:
-    st.error(f"Unable to load interactive globe map: {str(e)}")
-    # Fallback padding if map fails to load
-    st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
+# Add padding at the bottom to create space between chat box and footer
+st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
 
 # Footer bar at the bottom of the page with both elements
 footer_html = """
