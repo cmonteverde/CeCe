@@ -25,11 +25,22 @@ CECE_GRADIENT = [CECE_BLUE, "#5F7FEA", "#8A6CD7", CECE_PURPLE]
 
 # High-resolution map tile sources
 TERRAIN_TILES = {
-    "dark": "CartoDB dark_matter",
-    "light": "CartoDB positron",
-    "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    "terrain": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
-    "hybrid": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+    "dark": {
+        "base": "CartoDB dark_matter",
+        "topo": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
+        "roads": "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+        "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "relief": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}",
+        "terrain": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
+    },
+    "light": {
+        "base": "CartoDB positron",
+        "topo": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
+        "roads": "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+        "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "relief": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}",
+        "terrain": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
+    }
 }
 
 def create_globe_map(dark_mode=True, width=800, height=600):
@@ -216,54 +227,126 @@ def create_detailed_terrain_map(lat=0, lon=0, zoom=3, dark_mode=True):
         Folium map object with high-resolution terrain
     """
     # Select appropriate tile style based on dark/light mode
-    base_tile = TERRAIN_TILES["dark"] if dark_mode else TERRAIN_TILES["light"]
+    mode = "dark" if dark_mode else "light"
+    base_tiles = TERRAIN_TILES[mode]
     
-    # Create base map
+    # Create base map with the appropriate base tile
     m = folium.Map(
         location=[lat, lon],
         zoom_start=zoom,
-        tiles=base_tile,
+        tiles=base_tiles["base"],
         control_scale=True,
         width="100%"
     )
     
-    # Add terrain and topography layer
-    terrain_tile = TERRAIN_TILES["terrain"]
-    terrain_layer = folium.TileLayer(
-        tiles=terrain_tile,
+    # Add all available terrain and feature layers
+    
+    # Topography layer (shows elevation contours)
+    topo_layer = folium.TileLayer(
+        tiles=base_tiles["topo"],
         name="Topography",
         overlay=True,
-        opacity=0.6,
+        opacity=0.7,
         attr="OpenTopoMap"
     )
-    terrain_layer.add_to(m)
+    topo_layer.add_to(m)
     
-    # Add satellite imagery layer
-    satellite_tile = TERRAIN_TILES["satellite"]
+    # Roads and streets layer (shows streets, highways, etc.)
+    roads_layer = folium.TileLayer(
+        tiles=base_tiles["roads"],
+        name="Roads",
+        overlay=True,
+        opacity=0.8,
+        attr="OSM Humanitarian"
+    )
+    roads_layer.add_to(m)
+    
+    # Satellite imagery layer
     satellite_layer = folium.TileLayer(
-        tiles=satellite_tile,
+        tiles=base_tiles["satellite"],
         name="Satellite",
         overlay=True,
-        opacity=0.7,
-        attr="ESRI"
+        opacity=0.9,
+        attr="ESRI World Imagery"
     )
     satellite_layer.add_to(m)
     
-    # Add layer control to toggle between different map views
-    folium.LayerControl(position="topright").add_to(m)
+    # Terrain relief layer (shows shaded terrain)
+    relief_layer = folium.TileLayer(
+        tiles=base_tiles["relief"],
+        name="Relief",
+        overlay=True,
+        opacity=0.6,
+        attr="ESRI Shaded Relief"
+    )
+    relief_layer.add_to(m)
     
-    # Add a scale bar
+    # Enhanced terrain base layer
+    terrain_layer = folium.TileLayer(
+        tiles=base_tiles["terrain"],
+        name="Terrain Base",
+        overlay=True,
+        opacity=0.7,
+        attr="ESRI Terrain Base"
+    )
+    terrain_layer.add_to(m)
+    
+    # Add a fullscreen control
+    folium.plugins.Fullscreen(
+        position="topleft",
+        title="Expand map",
+        title_cancel="Exit fullscreen",
+        force_separate_button=True,
+    ).add_to(m)
+    
+    # Add a scale bar and measurement tools
     folium.plugins.MeasureControl(
-        position='bottomleft',
-        primary_length_unit='kilometers',
-        secondary_length_unit='miles'
+        position="bottomleft",
+        primary_length_unit="kilometers",
+        secondary_length_unit="miles",
+        primary_area_unit="sqmeters",
+        secondary_area_unit="acres"
     ).add_to(m)
     
-    # Add a mini map for context
-    folium.plugins.MiniMap(
+    # Add a mini map for context and orientation
+    minimap = folium.plugins.MiniMap(
         toggle_display=True,
-        tile_layer=base_tile
-    ).add_to(m)
+        position="bottomright",
+        tile_layer=base_tiles["base"],
+        zoom_level_offset=-5,
+        width=150,
+        height=150
+    )
+    m.add_child(minimap)
+    
+    # Add layer control to toggle between different map views
+    folium.LayerControl(position="topright", collapsed=False).add_to(m)
+    
+    # Add CeCe branding watermark
+    brand_html = f"""
+    <div style="
+        position: absolute; 
+        bottom: 10px; 
+        left: 10px; 
+        z-index: 1000;
+        background-color: {'rgba(0,0,0,0.6)' if dark_mode else 'rgba(255,255,255,0.6)'};
+        color: {'white' if dark_mode else 'black'};
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 12px;
+    ">
+        <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;">
+            CeCe Detailed Terrain Map
+        </span>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(brand_html))
+    
+    # When clicking on the map, show coordinates and elevation data
+    m.add_child(folium.LatLngPopup())
     
     return m
 
