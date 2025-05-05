@@ -19,13 +19,13 @@ CECE_BLUE = "#1E90FF"
 CECE_PURPLE = "#9370DB"
 CECE_GRADIENT = [CECE_BLUE, "#5F7FEA", "#8A6CD7", CECE_PURPLE]
 
-def create_globe_map(dark_mode=True, width=800, height=600, show_countries=True):
+def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True):
     """
     Create an interactive 3D globe visualization
     
     Args:
         dark_mode: Whether to use dark mode (True) or light mode (False)
-        width: Width of the map in pixels
+        width: Width of the map in pixels (None for full container width)
         height: Height of the map in pixels
         show_countries: Whether to show country boundaries
         
@@ -94,23 +94,33 @@ def create_globe_map(dark_mode=True, width=800, height=600, show_countries=True)
         lataxis=dict(gridcolor=grid_color, showgrid=True, gridwidth=0.5),
         lonaxis=dict(gridcolor=grid_color, showgrid=True, gridwidth=0.5),
         resolution=50,
-        bgcolor=bg_color
+        bgcolor=bg_color,
+        # Maximize the globe's display within its container
+        fitbounds="locations",
+        visible=True
     )
     
-    # Update the layout
+    # Update the layout to make it more expansive
     fig.update_layout(
         title=None,
-        width=width,
+        width=width,  # None for full container width
         height=height,
-        margin=dict(l=0, r=0, t=0, b=0),
+        autosize=True,  # Enable autosize for responsive behavior
+        margin=dict(l=0, r=0, t=0, b=0, pad=0),  # Remove all margins
         paper_bgcolor=bg_color,
         plot_bgcolor=bg_color,
         geo=dict(
             projection_rotation=dict(lon=0, lat=0, roll=0),
             # Start with a view of the full globe
             center=dict(lon=0, lat=0),
+            # Maximize the globe size within the container
+            projection_scale=1.0,  # Full size projection
+            # Allow for more interactive zoom range
+            scope="world"
         ),
-        font=dict(color=text_color)
+        font=dict(color=text_color),
+        # Enhanced display settings for better appearance
+        dragmode="orbit"
     )
     
     return fig
@@ -177,9 +187,9 @@ def display_globe_map(dark_mode=True):
     """
     # Create container for the map with styling
     st.markdown("""
-    <div style="margin-top: 30px; margin-bottom: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+    <div style="margin-top: 30px; margin-bottom: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); width: 100%;">
         <div style="background: linear-gradient(90deg, #1E90FF, #9370DB); height: 4px;"></div>
-        <div id="globe-container"></div>
+        <div id="globe-container" style="width: 100%;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -207,16 +217,23 @@ def display_globe_map(dark_mode=True):
     with col4:
         layer_type = st.selectbox("Data Layer", ["None", "Temperature", "Precipitation"], index=0)
     
-    # Create the globe map
-    fig = create_globe_map(dark_mode=dark_mode, show_countries=show_countries)
+    # Determine the ideal dimensions based on the viewport
+    # Make the map taller and responsive
+    width = None  # Let Streamlit use container width for responsiveness
+    height = 600  # Taller map for better visibility
+    
+    # Create the globe map with adjusted dimensions
+    fig = create_globe_map(dark_mode=dark_mode, show_countries=show_countries, width=width, height=height)
     
     # Add climate layer if selected
     if layer_type.lower() != "none":
         fig = add_climate_layer(fig, layer_type=layer_type.lower())
     
-    # Display the map
+    # Make the chart responsive and fill the container
     st.plotly_chart(fig, use_container_width=True, config={
         'displayModeBar': True,
         'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
         'displaylogo': False,
+        'responsive': True,
+        'scrollZoom': True,
     })
