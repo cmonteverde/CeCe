@@ -451,7 +451,7 @@ industry_regions = {
 # Initialize session state variables
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "👋Hi there! I’m CeCe, your Climate Copilot. I'm here to help you explore, visualize, and make sense of climate and weather data in a way that’s clear and useful. Whether you want to generate a map, check trends, or just ask a question, I’m here to guide you. Just click one of the preset buttons below or start typing in the chat box to begin."}
+        {"role": "assistant", "content": "👋Hi there! I’m CeCe, your Climate Copilot. I'm here to help you explore, visualize, and make sense of climate and weather data in a way that’s clear and useful. Whether you want to generate a map, check trends, or just ask a question, I’m here to guide you. Click one of the preset buttons below or start typing in the chat box to begin."}
     ]
 if 'uploaded_data' not in st.session_state:
     st.session_state.uploaded_data = None
@@ -773,7 +773,7 @@ if "thinking" in st.session_state and st.session_state.thinking:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input - use follow-up suggestion from the response as the placeholder if available
-placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Give me a breakdown of the weather in San Diego, CA for tomorrow. And suggest a few activities."
+placeholder_text = st.session_state.suggested_follow_up if 'suggested_follow_up' in st.session_state else "Give me a breakdown of the weather in San Diego, CA for tomorrow"
 
 # Add an HTML div with class for JavaScript targeting
 st.markdown("<div class='chat-input-container' id='chat-input-anchor'></div>", unsafe_allow_html=True)
@@ -923,8 +923,21 @@ with col2:
                 height=0
             )
 
-# Add significant padding at the bottom to create more space between chat box and footer
-st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
+# Import the globe map module
+import globe_map
+
+# Add the interactive globe map below the chat input
+try:
+    # Use session state to remember dark/light mode preference
+    if 'globe_dark_mode' not in st.session_state:
+        st.session_state.globe_dark_mode = True
+        
+    # Display the interactive globe map
+    globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
+except Exception as e:
+    st.error(f"Unable to load interactive globe map: {str(e)}")
+    # Fallback padding if map fails to load
+    st.markdown("<div style='height: 350px'></div>", unsafe_allow_html=True)
 
 # Footer bar at the bottom of the page with both elements
 footer_html = """
