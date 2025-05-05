@@ -19,15 +19,14 @@ CECE_BLUE = "#1E90FF"
 CECE_PURPLE = "#9370DB"
 CECE_GRADIENT = [CECE_BLUE, "#5F7FEA", "#8A6CD7", CECE_PURPLE]
 
-def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True):
+def create_globe_map(dark_mode=True, width=800, height=600):
     """
     Create an interactive 3D globe visualization
     
     Args:
         dark_mode: Whether to use dark mode (True) or light mode (False)
-        width: Width of the map in pixels (None for full container width)
+        width: Width of the map in pixels (pass None for full container width)
         height: Height of the map in pixels
-        show_countries: Whether to show country boundaries
         
     Returns:
         Plotly figure object
@@ -39,12 +38,16 @@ def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True
         bg_color = "rgba(0,0,0,0)"
         text_color = "white"
         grid_color = "#444"
+        coast_color = CECE_BLUE  # Use CeCe blue for coastlines in dark mode
+        country_color = "#555"
     else:
         land_color = "#E5E5E5" 
         ocean_color = "#EAEAEF"
         bg_color = "rgba(255,255,255,0)"
         text_color = "#333"
         grid_color = "#ddd"
+        coast_color = CECE_PURPLE  # Use CeCe purple for coastlines in light mode
+        country_color = "#777"
     
     # Create the base figure with a globe projection
     fig = go.Figure()
@@ -54,8 +57,8 @@ def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True
         locationmode="country names",
         z=[1] * 250,  # Dummy data for coloring
         colorscale=[[0, land_color], [1, land_color]],
-        marker_line_color="#555" if dark_mode else "#999",
-        marker_line_width=0.5 if show_countries else 0,
+        marker_line_color=country_color,
+        marker_line_width=0.5,  # Always show country lines
         showscale=False,
         hoverinfo="skip"
     ))
@@ -81,12 +84,12 @@ def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True
     # Configure the 3D projection and interactivity
     fig.update_geos(
         projection_type="orthographic",
-        showcoastlines=True, coastlinecolor=CECE_GRADIENT[0],
+        showcoastlines=True, coastlinecolor=coast_color,
         showland=True, landcolor=land_color,
         showocean=True, oceancolor=ocean_color,
         showlakes=True, lakecolor=ocean_color,
-        showcountries=show_countries,
-        countrycolor="#555" if dark_mode else "#999",
+        showcountries=True,  # Always show country lines
+        countrycolor=country_color,
         showframe=False,
         framecolor=grid_color,
         showsubunits=False,
@@ -100,7 +103,7 @@ def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True
         visible=True
     )
     
-    # Update the layout to make it more expansive
+    # Update the layout to make it more expansive and improve zoom
     fig.update_layout(
         title=None,
         width=width,  # None for full container width
@@ -120,7 +123,14 @@ def create_globe_map(dark_mode=True, width=None, height=600, show_countries=True
         ),
         font=dict(color=text_color),
         # Enhanced display settings for better appearance
-        dragmode="orbit"
+        dragmode="pan",  # Change to "pan" for better touch interaction
+        # Enable direct zoom control
+        modebar=dict(
+            orientation="v",
+            bgcolor="rgba(0,0,0,0)",
+            color=text_color,
+            activecolor=coast_color
+        )
     )
     
     return fig
@@ -193,8 +203,8 @@ def display_globe_map(dark_mode=True):
     </div>
     """, unsafe_allow_html=True)
     
-    # Create columns for controls
-    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+    # Create columns for controls - removed Show Countries checkbox as it's always on
+    col1, col2, col3 = st.columns([4, 1, 1])
     
     with col1:
         st.markdown("""
@@ -209,12 +219,9 @@ def display_globe_map(dark_mode=True):
         """, unsafe_allow_html=True)
     
     with col2:
-        show_countries = st.checkbox("Show Countries", value=True)
-    
-    with col3:
         dark_mode = st.checkbox("Dark Mode", value=dark_mode)
     
-    with col4:
+    with col3:
         layer_type = st.selectbox("Data Layer", ["None", "Temperature", "Precipitation"], index=0)
     
     # Determine the ideal dimensions based on the viewport
@@ -223,7 +230,7 @@ def display_globe_map(dark_mode=True):
     height = 600  # Taller map for better visibility
     
     # Create the globe map with adjusted dimensions
-    fig = create_globe_map(dark_mode=dark_mode, show_countries=show_countries, width=width, height=height)
+    fig = create_globe_map(dark_mode=dark_mode, width=width, height=height)
     
     # Add climate layer if selected
     if layer_type.lower() != "none":
@@ -236,4 +243,12 @@ def display_globe_map(dark_mode=True):
         'displaylogo': False,
         'responsive': True,
         'scrollZoom': True,
+        'doubleClick': 'reset+autosize',  # Reset view on double click
+        'scrollZoom': True,               # Enable scroll zoom (mouse wheel)
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': 'climate_globe',
+            'height': 800,
+            'width': 1200
+        }
     })
