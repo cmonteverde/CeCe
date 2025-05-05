@@ -12,6 +12,7 @@ that can be embedded within the main application. The globe features:
 
 import plotly.graph_objects as go
 import numpy as np
+import pandas as pd 
 import streamlit as st
 
 # CeCe brand colors (blue to purple gradient)
@@ -147,33 +148,46 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     
     Args:
         fig: Plotly figure object (globe)
-        layer_type: Type of climate layer ("temperature", "precipitation", etc.)
-        data: Climate data to visualize
+        layer_type: Type of climate layer ("temperature", "co2", "sea_level", "glacier")
+        data: Climate data to visualize (DataFrame or None to fetch from source)
         
     Returns:
         Updated Plotly figure
     """
-    # If no data is provided, create sample data for demonstration
+    # Import here to avoid circular imports
+    from climate_data_sources import get_climate_layer_data
+    
+    # If no data is provided, fetch from climate data sources
     if data is None:
-        if layer_type == "temperature":
-            # Generate sample temperature data
-            lats = np.linspace(-90, 90, 37)
-            lons = np.linspace(-180, 180, 73)
-            lon_grid, lat_grid = np.meshgrid(lons, lats)
-            
-            # Create a sample temperature pattern (warmer at equator, cooler at poles)
-            temp_data = 20 * np.cos(np.radians(lat_grid)) - 5 * np.random.rand(*lat_grid.shape)
-            
-            # Convert to flat arrays for Plotly
-            lats_flat = lat_grid.flatten()
-            lons_flat = lon_grid.flatten()
-            temp_flat = temp_data.flatten()
+        try:
+            # Get data from climate sources
+            data = get_climate_layer_data(layer_type)
+        except Exception as e:
+            st.error(f"Error loading climate data: {str(e)}")
+            # Fall back to empty dataframe with expected structure
+            if layer_type == "temperature":
+                data = pd.DataFrame(columns=['lat', 'lon', 'temperature'])
+            else:
+                data = pd.DataFrame()
+    
+    # Check if data is a dictionary (error or specific format)
+    if isinstance(data, dict) and "error" in data:
+        st.error(f"Climate data error: {data['error']}")
+        return fig
+    
+    # Add visualization based on layer type
+    if layer_type == "temperature":
+        if isinstance(data, pd.DataFrame) and not data.empty and 'lat' in data.columns:
+            # Extract data columns
+            lats = data['lat'].values
+            lons = data['lon'].values
+            temps = data['temperature'].values
             
             # Add temperature heatmap
             fig.add_trace(go.Densitymapbox(
-                lat=lats_flat,
-                lon=lons_flat,
-                z=temp_flat,
+                lat=lats,
+                lon=lons,
+                z=temps,
                 radius=15,
                 colorscale=[
                     [0, "#0d47a1"],  # Cold (deep blue)
@@ -192,6 +206,159 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                 ),
                 hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{z:.1f}°C<extra></extra>"
             ))
+        else:
+            st.warning("No temperature data available to display")
+    
+    elif layer_type == "co2":
+        # Add CO2 concentration visualization
+        # For CO2, we'll add a text annotation with current level
+        # and trend since it's a global value not tied to specific locations
+        try:
+            from climate_data_sources import fetch_co2_data
+            co2_df = fetch_co2_data()
+            
+            if not co2_df.empty and 'co2' in co2_df.columns.str.lower():
+                # Get latest CO2 value and trend
+                co2_col = [col for col in co2_df.columns if 'co2' in col.lower()][0]
+                latest_co2 = co2_df[co2_col].iloc[-1]
+                one_year_ago = co2_df[co2_col].iloc[-13] if len(co2_df) > 13 else co2_df[co2_col].iloc[0]
+                annual_change = latest_co2 - one_year_ago
+                
+                # Add annotation
+                fig.add_annotation(
+                    x=0.5,
+                    y=0.95,
+                    text=f"Current CO₂: {latest_co2:.1f} ppm<br>Annual change: {annual_change:+.1f} ppm",
+                    showarrow=False,
+                    font=dict(size=16, color="#FF5722"),
+                    bgcolor="rgba(0,0,0,0.6)",
+                    bordercolor="#FF5722",
+                    borderwidth=2,
+                    borderpad=4,
+                    align="center",
+                    xref="paper",
+                    yref="paper"
+                )
+                
+                # Add a visual indicator of CO2 concentration
+                # We'll create colored circles at different latitudes to show the global CO2 distribution
+                latitudes = np.linspace(-60, 60, 13)
+                for lat in latitudes:
+                    fig.add_trace(go.Scattergeo(
+                        lat=[lat],
+                        lon=[0],  # Center longitude
+                        mode="markers",
+                        marker=dict(
+                            size=max(10, min(40, latest_co2/10)),  # Size based on CO2 level
+                            color="#FF5722",
+                            opacity=0.7,
+                            symbol="circle"
+                        ),
+                        name="CO₂ Concentration",
+                        hoverinfo="text",
+                        hovertext=f"Global CO₂: {latest_co2:.1f} ppm",
+                        showlegend=False
+                    ))
+        except Exception as e:
+            st.error(f"Error displaying CO2 data: {str(e)}")
+    
+    elif layer_type == "sea_level":
+        # Add sea level rise visualization
+        try:
+            from climate_data_sources import fetch_sea_level_data
+            sea_level_df = fetch_sea_level_data()
+            
+            if not sea_level_df.empty and 'GMSL' in sea_level_df.columns:
+                # Get latest value and trend
+                latest_year = sea_level_df['Year'].iloc[-1]
+                latest_level = sea_level_df['GMSL'].iloc[-1]
+                ten_years_ago_idx = max(0, len(sea_level_df) - 11)
+                ten_year_change = latest_level - sea_level_df['GMSL'].iloc[ten_years_ago_idx]
+                
+                # Add annotation
+                fig.add_annotation(
+                    x=0.5,
+                    y=0.9,
+                    text=f"Sea Level Rise: {latest_level:.1f} mm<br>10-year change: {ten_year_change:+.1f} mm",
+                    showarrow=False,
+                    font=dict(size=16, color="#2196F3"),
+                    bgcolor="rgba(0,0,0,0.6)",
+                    bordercolor="#2196F3",
+                    borderwidth=2,
+                    borderpad=4,
+                    align="center",
+                    xref="paper",
+                    yref="paper"
+                )
+                
+                # Add coastline highlight to indicate sea level rise
+                # We'll create a thicker coastline with a blue glow effect
+                fig.update_geos(
+                    showcoastlines=True,
+                    coastlinecolor="#2196F3",
+                    coastlinewidth=2
+                )
+        except Exception as e:
+            st.error(f"Error displaying sea level data: {str(e)}")
+    
+    elif layer_type == "glacier":
+        # Add glacier melt visualization
+        try:
+            from climate_data_sources import fetch_glacier_data
+            glacier_df = fetch_glacier_data()
+            
+            if not glacier_df.empty and 'Mean cumulative mass balance' in glacier_df.columns:
+                # Get latest value and trend
+                latest_year = glacier_df['Year'].iloc[-1]
+                latest_balance = glacier_df['Mean cumulative mass balance'].iloc[-1]
+                
+                # Add annotation
+                fig.add_annotation(
+                    x=0.5,
+                    y=0.85,
+                    text=f"Glacier Mass Balance: {latest_balance:.1f} mm w.e.<br>Year: {latest_year}",
+                    showarrow=False,
+                    font=dict(size=16, color="#90CAF9"),
+                    bgcolor="rgba(0,0,0,0.6)",
+                    bordercolor="#90CAF9",
+                    borderwidth=2,
+                    borderpad=4,
+                    align="center",
+                    xref="paper",
+                    yref="paper"
+                )
+                
+                # Add glacier visualization at key locations
+                glacier_locations = [
+                    {"name": "Greenland", "lat": 72.0, "lon": -40.0},
+                    {"name": "Antarctica", "lat": -75.0, "lon": 0.0},
+                    {"name": "Alps", "lat": 46.0, "lon": 8.0},
+                    {"name": "Himalayas", "lat": 28.0, "lon": 85.0},
+                    {"name": "Andes", "lat": -40.0, "lon": -70.0},
+                    {"name": "Alaska", "lat": 61.0, "lon": -148.0}
+                ]
+                
+                for loc in glacier_locations:
+                    fig.add_trace(go.Scattergeo(
+                        lat=[loc["lat"]],
+                        lon=[loc["lon"]],
+                        mode="markers",
+                        marker=dict(
+                            size=15,
+                            color="#90CAF9",
+                            opacity=0.8,
+                            symbol="diamond"
+                        ),
+                        name=loc["name"],
+                        hoverinfo="text",
+                        hovertext=f"{loc['name']} Glacier Impact<br>Global Balance: {latest_balance:.1f} mm w.e.",
+                        showlegend=False
+                    ))
+        except Exception as e:
+            st.error(f"Error displaying glacier data: {str(e)}")
+    
+    else:
+        st.warning(f"Unsupported climate layer type: {layer_type}")
     
     return fig
 
@@ -228,7 +395,9 @@ def display_globe_map(dark_mode=True):
         dark_mode = st.checkbox("Dark Mode", value=dark_mode)
     
     with col3:
-        layer_type = st.selectbox("Data Layer", ["None", "Temperature", "Precipitation"], index=0)
+        layer_type = st.selectbox("Data Layer", 
+                                ["None", "Temperature", "CO2", "Sea Level", "Glacier"], 
+                                index=0)
     
     # Determine the ideal dimensions based on the viewport
     height = 600  # Taller map for better visibility
