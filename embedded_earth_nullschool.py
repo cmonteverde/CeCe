@@ -28,18 +28,18 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     # Create a direct URL to Earth Nullschool with a specific, working format
     # This is a simplified approach to ensure the visualization works
     if mode == "wind":
-        # For wind, use this format that works reliably
-        # Use a color scale that matches our blue-purple gradient
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic={location}/overlay=wind/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+        # For wind, use this format that works reliably, with default color scheme
+        # The color will be managed by Earth Nullschool's native visualization
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic=0.00,0.00,409"
     elif mode == "ocean":
-        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic=0.00,0.00,409"
     elif mode == "chem":
-        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic=0.00,0.00,409"
     elif mode == "particulates":
-        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic=0.00,0.00,409"
     else:
         # Default fallback
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic=0.00,0.00,409"
     
     # Create a stylish container with header
     st.markdown("""
@@ -119,20 +119,20 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         if st.button("Update Visualization"):
             # Use the same URL pattern as above for consistency
             if selected_mode == "wind":
-                # For wind, show wind overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+                # For wind, use the default Earth Nullschool color scheme
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}=0.00,0.00,409"
             elif selected_mode == "ocean":
-                # For ocean, show currents with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+                # For ocean, use the default Earth Nullschool color scheme
+                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}=0.00,0.00,409"
             elif selected_mode == "chem":
-                # For chemistry, show selected overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+                # For chemistry, use the default Earth Nullschool color scheme
+                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}=0.00,0.00,409"
             elif selected_mode == "particulates":
-                # For particulates, show selected overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+                # For particulates, use the default Earth Nullschool color scheme
+                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}=0.00,0.00,409"
             else:
-                # Default fallback with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}={location}/overlay-scale=12.0/overlay-rotate=-10/overlay-color=0000ff,4169E1,7B68EE,9370DB"
+                # Default fallback with default Earth Nullschool color scheme
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}=0.00,0.00,409"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
