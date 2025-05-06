@@ -22,12 +22,24 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
         date: Date for the data (current, YYYY/MM/DD, etc.)
     """
-    # Use the original direct embed code from earth.nullschool.net
-    # This is the most reliable way to embed the visualization
-    url = "https://earth.nullschool.net/current/wind/surface/level/orthographic=-90.00,30.00,293"
-    
-    # Define base_url for control panel
+    # Earth Nullschool URL creation using the exact format from the site
     base_url = "https://earth.nullschool.net"
+    
+    # Create a direct URL to Earth Nullschool with a specific, working format
+    # This is a simplified approach to ensure the visualization works
+    if mode == "wind":
+        # For wind, use this format that works reliably
+        # Use the blue-purple color scale by appending the overlay-color parameter
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic={location}/overlay-color=blue-purple"
+    elif mode == "ocean":
+        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic={location}/overlay-color=blue-purple"
+    elif mode == "chem":
+        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic={location}/overlay-color=blue-purple"
+    elif mode == "particulates":
+        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic={location}/overlay-color=blue-purple"
+    else:
+        # Default fallback
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic={location}/overlay-color=blue-purple"
     
     # Create a stylish container with header
     st.markdown("""
@@ -105,18 +117,22 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Using the correct format to create Earth Nullschool URL
+            # Use the same URL pattern as above for consistency
             if selected_mode == "wind":
-                new_url = f"https://earth.nullschool.net/{selected_date}/wind/surface/level/orthographic=-90.00,30.00,293"
+                # For wind, show wind overlay with blue-purple colors
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}={location}/overlay-color=blue-purple"
             elif selected_mode == "ocean":
-                new_url = f"https://earth.nullschool.net/{selected_date}/ocean/surface/currents/orthographic=-90.00,30.00,293"
+                # For ocean, show currents with blue-purple colors
+                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}={location}/overlay-color=blue-purple"
             elif selected_mode == "chem":
-                new_url = f"https://earth.nullschool.net/{selected_date}/chem/surface/level/orthographic=-90.00,30.00,293"
+                # For chemistry, show selected overlay with blue-purple colors
+                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-color=blue-purple"
             elif selected_mode == "particulates":
-                new_url = f"https://earth.nullschool.net/{selected_date}/particulates/surface/level/orthographic=-90.00,30.00,293"
+                # For particulates, show selected overlay with blue-purple colors
+                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-color=blue-purple"
             else:
-                # Default fallback
-                new_url = f"https://earth.nullschool.net/{selected_date}/wind/surface/level/orthographic=-90.00,30.00,293"
+                # Default fallback with blue-purple colors
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}={location}/overlay-color=blue-purple"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
