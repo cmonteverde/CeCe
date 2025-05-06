@@ -104,7 +104,7 @@ def nullschool_earth(width=800, height=600):
             // Earth colors
             const oceanColor = "#151515";
             const landColor = "#222";
-            const landStrokeColor = "#444";
+            const landStrokeColor = "#666";  // Brighter outline color
             const graticuleColor = "#333";
             
             // Wind particle system
@@ -198,44 +198,38 @@ def nullschool_earth(width=800, height=600):
                 earthCtx.lineWidth = 0.5;
                 earthCtx.stroke();
                 
-                // Draw land areas
-                fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-50m.json')
-                    .then(response => response.json())
-                    .then(world => {{
-                        const land = topojson.feature(world, world.objects.land);
-                        
-                        earthCtx.beginPath();
-                        path(land);
-                        earthCtx.fillStyle = landColor;
-                        earthCtx.fill();
-                        
-                        earthCtx.beginPath();
-                        path(land);
-                        earthCtx.strokeStyle = landStrokeColor;
-                        earthCtx.lineWidth = 0.5;
-                        earthCtx.stroke();
-                    }})
-                    .catch(error => {{
-                        console.error("Error loading world data:", error);
-                        // Draw a simple continent outline as fallback
-                        drawFallbackContinents();
-                    }});
+                // Draw land areas directly without external data
+                drawFallbackContinents();
             }}
             
             function drawFallbackContinents() {{
                 // Draw simple continent shapes as fallback
-                // Simplified continent outlines
+                // More detailed continent outlines
                 const continents = [
                     // Africa
-                    [[-15, 35], [50, 35], [50, -35], [-15, -35]],
-                    // Eurasia
-                    [[-10, 80], [170, 80], [170, 0], [-10, 0]],
+                    [[-18, 35], [51, 36], [56, 30], [51, 10], [44, 5], [50, -35], [18, -35], [13, -10], [-15, 15], [-18, 35]],
+                    // Europe
+                    [[-10, 60], [45, 60], [50, 45], [20, 35], [-10, 35], [-10, 60]],
+                    // Asia
+                    [[50, 80], [180, 70], [180, 50], [145, 40], [145, 15], [120, 0], [95, 5], [70, 25], [50, 40], [50, 80]],
                     // North America
-                    [[-170, 80], [-50, 80], [-50, 0], [-170, 0]],
+                    [[-170, 80], [-50, 80], [-50, 50], [-60, 30], [-90, 30], [-125, 50], [-170, 60], [-170, 80]],
+                    // Central America
+                    [[-90, 30], [-60, 30], [-75, 10], [-82, 8], [-90, 15], [-90, 30]],
                     // South America
-                    [[-80, 10], [-30, 10], [-30, -55], [-80, -55]],
+                    [[-82, 8], [-75, 10], [-35, 0], [-35, -10], [-55, -55], [-75, -55], [-82, -20], [-82, 8]],
                     // Australia
-                    [[110, -10], [155, -10], [155, -40], [110, -40]]
+                    [[110, -10], [155, -10], [155, -40], [110, -40], [110, -10]],
+                    // Antarctica
+                    [[-180, -60], [180, -60], [180, -90], [-180, -90], [-180, -60]],
+                    // Greenland
+                    [[-45, 85], [-20, 85], [-20, 60], [-45, 60], [-45, 85]],
+                    // Indonesia/Pacific Islands
+                    [[95, 5], [120, 0], [145, 15], [145, -10], [95, -5], [95, 5]],
+                    // Madagascar
+                    [[45, -10], [50, -15], [50, -28], [45, -30], [42, -20], [45, -10]],
+                    // British Isles
+                    [[-10, 60], [-2, 60], [-2, 50], [-10, 50], [-10, 60]]
                 ];
                 
                 continents.forEach(continent => {{
@@ -258,7 +252,7 @@ def nullschool_earth(width=800, height=600):
                     earthCtx.fillStyle = landColor;
                     earthCtx.fill();
                     earthCtx.strokeStyle = landStrokeColor;
-                    earthCtx.lineWidth = 0.5;
+                    earthCtx.lineWidth = 0.8;  // Increased line width
                     earthCtx.stroke();
                 }});
             }}
