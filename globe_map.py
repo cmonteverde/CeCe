@@ -156,31 +156,26 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     """
     # Import here to avoid circular imports
     import sys
-    from era5_data import fetch_era5_global_temperature_grid
     
     # If no data is provided, fetch appropriate data based on layer type
     if data is None:
         try:
-            # For temperature, use ERA5 global grid if available
+            # Always use the simpler model for now
             if layer_type == "temperature":
-                try:
-                    # Try to get ERA5 data with a small notification
-                    with st.spinner("Fetching global temperature data from ERA5..."):
-                        data = fetch_era5_global_temperature_grid(resolution=20)  # Use lower resolution for better performance
-                        st.success(f"Using ERA5 global temperature data with {len(data)} points")
-                except Exception as e:
-                    st.error(f"Error accessing ERA5 data: {str(e)}")
-                    # Fall back to simpler model
-                    from climate_data_sources import generate_global_temperature_grid
-                    data = generate_global_temperature_grid(resolution=10)
-                    st.info(f"Using generated temperature grid with {len(data)} points")
+                from climate_data_sources import generate_global_temperature_grid
+                with st.spinner("Generating global temperature grid..."):
+                    data = generate_global_temperature_grid(resolution=5)  # Higher resolution for better visual
+                    if isinstance(data, pd.DataFrame):
+                        st.success(f"Generated temperature grid with {len(data)} points")
             else:
                 # Get data for other layer types
                 from climate_data_sources import get_climate_layer_data
                 data = get_climate_layer_data(layer_type)
                 
         except Exception as e:
-            st.error(f"Error loading climate data: {str(e)}")
+            st.error(f"Error generating climate data: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
             # Fall back to empty dataframe with expected structure
             if layer_type == "temperature":
                 data = pd.DataFrame(columns=['lat', 'lon', 'temperature'])
