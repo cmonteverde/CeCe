@@ -561,13 +561,9 @@ try:
         selected_map_style = map_styles[map_style_idx].lower().replace(" ", "_")
         st.session_state.map_style = selected_map_style
     
-    # Display the appropriate visualization based on selection
-    if st.session_state.map_style == "earth_nullschool":
-        # Use our custom animated Earth with blue-purple colors and proper zoom control
-        animated_earth.display_animated_earth(dark_mode=True, width=800, height=500)
-    else:
-        # Display the classic globe map
-        globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
+    # Always use the more reliable globe map with CeCe's blue-purple color scheme
+    # This is more stable than the Earth Nullschool or animated Earth visualizations
+    globe_map.display_globe_map(dark_mode=True)
         
 except Exception as e:
     st.error(f"Unable to load interactive globe map: {str(e)}")
