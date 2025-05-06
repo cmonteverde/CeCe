@@ -22,24 +22,12 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
         date: Date for the data (current, YYYY/MM/DD, etc.)
     """
-    # Earth Nullschool URL creation using the exact format from the site
-    base_url = "https://earth.nullschool.net"
+    # Use the original direct embed code from earth.nullschool.net
+    # This is the most reliable way to embed the visualization
+    url = "https://earth.nullschool.net/current/wind/surface/level/orthographic=-90.00,30.00,293"
     
-    # Create a direct URL to Earth Nullschool with a specific, working format
-    # This is a simplified approach to ensure the visualization works
-    if mode == "wind":
-        # For wind, use this format that works reliably, with default color scheme
-        # The color will be managed by Earth Nullschool's native visualization
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic=0.00,0.00,409"
-    elif mode == "ocean":
-        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic=0.00,0.00,409"
-    elif mode == "chem":
-        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic=0.00,0.00,409"
-    elif mode == "particulates":
-        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic=0.00,0.00,409"
-    else:
-        # Default fallback
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic=0.00,0.00,409"
+    # Define base_url for control panel
+    base_url = "https://earth.nullschool.net"
     
     # Create a stylish container with header
     st.markdown("""
@@ -117,22 +105,18 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Use the same URL pattern as above for consistency
+            # Using the correct format to create Earth Nullschool URL
             if selected_mode == "wind":
-                # For wind, use the default Earth Nullschool color scheme
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}=0.00,0.00,409"
+                new_url = f"https://earth.nullschool.net/{selected_date}/wind/surface/level/orthographic=-90.00,30.00,293"
             elif selected_mode == "ocean":
-                # For ocean, use the default Earth Nullschool color scheme
-                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}=0.00,0.00,409"
+                new_url = f"https://earth.nullschool.net/{selected_date}/ocean/surface/currents/orthographic=-90.00,30.00,293"
             elif selected_mode == "chem":
-                # For chemistry, use the default Earth Nullschool color scheme
-                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}=0.00,0.00,409"
+                new_url = f"https://earth.nullschool.net/{selected_date}/chem/surface/level/orthographic=-90.00,30.00,293"
             elif selected_mode == "particulates":
-                # For particulates, use the default Earth Nullschool color scheme
-                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}=0.00,0.00,409"
+                new_url = f"https://earth.nullschool.net/{selected_date}/particulates/surface/level/orthographic=-90.00,30.00,293"
             else:
-                # Default fallback with default Earth Nullschool color scheme
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}=0.00,0.00,409"
+                # Default fallback
+                new_url = f"https://earth.nullschool.net/{selected_date}/wind/surface/level/orthographic=-90.00,30.00,293"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
