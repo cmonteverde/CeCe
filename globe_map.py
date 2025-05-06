@@ -198,23 +198,96 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                 lons = data['lon'].tolist()
                 temps = data['temperature'].tolist()
                 
-                # Convert to grid for heatmap/interpolation
-                # For better visualization, organize data into bins/grid cells
-                temp_min = min(temps)
-                temp_max = max(temps)
+                # Convert to grid for contourf visualization
+                # This requires converting our irregular lat/lon points to a regular grid for contourf
+                import matplotlib.pyplot as plt
+                from matplotlib.colors import LinearSegmentedColormap
+                import io
+                import base64
+                from scipy.interpolate import griddata
                 
-                # Create interpolated temperature surface
-                # Group data points into bins for regions to make a smoother visual appearance
-                # We'll use a colored point approach with varying sizes and opacity
+                # Create a regular grid for the contour plot
+                grid_lon = np.linspace(-180, 180, 180)  # 2-degree resolution for longitude
+                grid_lat = np.linspace(-90, 90, 90)     # 2-degree resolution for latitude
+                grid_lon_mesh, grid_lat_mesh = np.meshgrid(grid_lon, grid_lat)
                 
-                # First create larger, low-opacity circles for a base heatmap effect
+                # Interpolate temperature values to the regular grid
+                grid_temp = griddata((lons, lats), temps, (grid_lon_mesh, grid_lat_mesh), 
+                                     method='cubic', fill_value=np.nan)
+                
+                # Define the custom colormap
+                colors = [
+                    "#0d47a1",  # Deep blue (cold)
+                    CECE_BLUE,  # CeCe blue (cool)
+                    "#ffffff",  # White (moderate)
+                    "#9370DB",  # CeCe purple (warm)
+                    "#b71c1c"   # Deep red (hot)
+                ]
+                positions = [0, 0.3, 0.5, 0.7, 1.0]
+                cmap = LinearSegmentedColormap.from_list('cece_temp', list(zip(positions, colors)))
+                
+                # Create a new matplotlib figure for the contour plot
+                plt.figure(figsize=(12, 6))
+                
+                # Calculate contour levels
+                temp_min = np.nanmin(grid_temp)
+                temp_max = np.nanmax(grid_temp)
+                levels = np.linspace(temp_min, temp_max, 20)  # 20 temperature levels for smooth contours
+                
+                # Create the filled contour plot
+                contour = plt.contourf(grid_lon_mesh, grid_lat_mesh, grid_temp, 
+                                      levels=levels, cmap=cmap, extend='both')
+                
+                # Add coastlines for reference
+                plt.contour(grid_lon_mesh, grid_lat_mesh, ~np.isnan(grid_temp), 
+                           levels=[0.5], colors='gray', linewidths=0.5)
+                
+                # Remove axis labels and ticks for a cleaner map
+                plt.axis('off')
+                
+                # Set the aspect ratio to be suitable for a map
+                plt.gca().set_aspect('equal')
+                
+                # Add a colorbar
+                cbar = plt.colorbar(contour, orientation='vertical', pad=0.01)
+                cbar.set_label('Temperature (°C)', fontsize=10)
+                
+                # Save the figure to a bytes buffer
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, 
+                           transparent=True, dpi=150)
+                buf.seek(0)
+                
+                # Convert the image to base64 for embedding in Plotly
+                img_str = base64.b64encode(buf.read()).decode('utf-8')
+                
+                # Close the matplotlib figure to free memory
+                plt.close()
+                
+                # Calculate bounds for the image overlay
+                # The bounds are [west, south, east, north]
+                bounds = [-180, -90, 180, 90]
+                
+                # Add the contour plot as an image overlay
+                fig.add_layout_image(
+                    dict(
+                        source=f'data:image/png;base64,{img_str}',
+                        x=bounds[0],
+                        y=bounds[3],
+                        sizex=bounds[2] - bounds[0],
+                        sizey=bounds[3] - bounds[1],
+                        sizing="stretch",
+                        opacity=0.8,
+                        layer="above"
+                    )
+                )
+                
+                # Add an invisible trace with colorbar for the temperature scale
                 fig.add_trace(go.Scattergeo(
-                    lat=lats,
-                    lon=lons,
+                    lat=[None],
+                    lon=[None],
                     mode='markers',
                     marker=dict(
-                        size=15,  # Larger markers to create overlap/heatmap effect
-                        color=temps,
                         colorscale=[
                             [0, "#0d47a1"],      # Cold (deep blue)
                             [0.3, CECE_BLUE],    # Cool (CeCe blue)
@@ -222,6 +295,7 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                             [0.7, "#9370DB"],    # Warm (CeCe purple)
                             [1, "#b71c1c"]       # Hot (red)
                         ],
+                        showscale=True,
                         colorbar=dict(
                             title=dict(
                                 text="Temp (°C)",
@@ -229,36 +303,30 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                             ),
                             outlinewidth=0,
                             borderwidth=0,
-                            thickness=15
+                            thickness=15,
+                            len=0.8
                         ),
-                        opacity=0.5,  # Semi-transparent for blending
-                        symbol='circle'
+                        cmin=temp_min,
+                        cmax=temp_max
                     ),
                     name="Temperature",
-                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>"
+                    hoverinfo='none'
                 ))
                 
-                # Then add smaller, higher-opacity circles for the data points
+                # Add visible data points for hover information
                 fig.add_trace(go.Scattergeo(
                     lat=lats,
                     lon=lons,
                     mode='markers',
                     marker=dict(
-                        size=5,  # Smaller markers for precise points
-                        color=temps,
-                        colorscale=[
-                            [0, "#0d47a1"],      # Cold (deep blue)
-                            [0.3, CECE_BLUE],    # Cool (CeCe blue)
-                            [0.5, "#ffffff"],    # Moderate (white)
-                            [0.7, "#9370DB"],    # Warm (CeCe purple)
-                            [1, "#b71c1c"]       # Hot (red)
-                        ],
-                        opacity=0.8,  # More opaque for data points
-                        symbol='circle',
-                        showscale=False  # Don't show duplicate colorbar
+                        size=3,
+                        color='rgba(0,0,0,0)',  # Transparent markers for hover only
+                        symbol='circle'
                     ),
-                    showlegend=False,
-                    hoverinfo='skip'  # Skip hover to avoid duplicate tooltips
+                    name="Data Points",
+                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{text:.1f}°C<extra></extra>",
+                    text=temps,
+                    showlegend=False
                 ))
             except Exception as e:
                 st.error(f"Error adding temperature data to map: {str(e)}")
