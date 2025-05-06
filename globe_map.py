@@ -506,6 +506,150 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     
     return fig
 
+def create_temperature_heatmap(dark_mode=True, data=None):
+    """
+    Create a 2D heatmap of global temperature distribution using Plotly
+    
+    Args:
+        dark_mode: Whether to use dark mode
+        data: Temperature data (DataFrame with lat, lon, temperature columns)
+        
+    Returns:
+        Plotly figure
+    """
+    # If no data provided, get it from climate_data_sources
+    if data is None:
+        from climate_data_sources import generate_global_temperature_grid
+        with st.spinner("Generating high-resolution temperature grid..."):
+            data = generate_global_temperature_grid(resolution=2)  # Higher resolution for heatmap
+    
+    if not isinstance(data, pd.DataFrame) or data.empty or 'lat' not in data.columns:
+        st.error("No valid temperature data available")
+        return go.Figure()
+    
+    # Extract data
+    lats = data['lat'].tolist()
+    lons = data['lon'].tolist()
+    temps = data['temperature'].tolist()
+    
+    # Create a pivoted grid for the heatmap
+    from scipy.interpolate import griddata
+    
+    # Generate a regular grid
+    grid_lon = np.linspace(-180, 180, 180)  # 2-degree resolution
+    grid_lat = np.linspace(-90, 90, 90)
+    
+    # Create a meshgrid for contour plotting
+    lon_mesh, lat_mesh = np.meshgrid(grid_lon, grid_lat)
+    
+    # Interpolate temperature values onto the regular grid
+    try:
+        temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='cubic')
+    except Exception:
+        try:
+            temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='linear')
+        except Exception:
+            # Fallback to nearest interpolation if others fail
+            temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='nearest')
+    
+    # Define color scale
+    temp_colorscale = [
+        [0, "#0d47a1"],      # Cold (deep blue)
+        [0.3, CECE_BLUE],    # Cool (CeCe blue)
+        [0.5, "#ffffff"],    # Moderate (white)
+        [0.7, "#9370DB"],    # Warm (CeCe purple)
+        [1, "#b71c1c"]       # Hot (red)
+    ]
+    
+    # Set background colors based on mode
+    if dark_mode:
+        bg_color = "#111"
+        text_color = "white"
+        country_color = "#444"
+    else:
+        bg_color = "#f5f5f5"
+        text_color = "#333"
+        country_color = "#999"
+    
+    # Create the heatmap figure
+    fig = go.Figure()
+    
+    # Add the contour filled trace
+    fig.add_trace(go.Contour(
+        z=temp_grid,
+        x=grid_lon,
+        y=grid_lat,
+        colorscale=temp_colorscale,
+        contours=dict(
+            showlabels=False,
+            coloring='heatmap',
+            start=np.nanmin(temp_grid),
+            end=np.nanmax(temp_grid),
+            size=(np.nanmax(temp_grid) - np.nanmin(temp_grid)) / 20,  # 20 levels
+        ),
+        colorbar=dict(
+            title=dict(
+                text="Temperature (°C)",
+                side="top",
+                font=dict(color=text_color)
+            ),
+            thickness=15,
+            len=0.9,
+            tickfont=dict(color=text_color),
+            outlinewidth=0,
+        ),
+        hoverinfo='text',
+        hovertemplate='Lat: %{y:.1f}°<br>Lon: %{x:.1f}°<br>Temp: %{z:.1f}°C<extra></extra>'
+    ))
+    
+    # Add coastlines and country borders using geo scatter
+    from geojson_utils import get_coastlines, get_country_borders
+    
+    # Add world boundaries and coastlines
+    coastlines = get_coastlines()
+    for line in coastlines:
+        fig.add_trace(go.Scatter(
+            x=line[0],
+            y=line[1],
+            mode='lines',
+            line=dict(width=1.0, color=country_color),
+            hoverinfo='skip',
+            showlegend=False
+        ))
+        
+    # Update layout
+    fig.update_layout(
+        title=None,
+        autosize=True,
+        height=500,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor=bg_color,
+        plot_bgcolor=bg_color,
+        font=dict(color=text_color),
+        xaxis=dict(
+            title="Longitude",
+            range=[-180, 180],
+            tickvals=[-180, -120, -60, 0, 60, 120, 180],
+            ticktext=['-180°', '-120°', '-60°', '0°', '60°', '120°', '180°'],
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(color=text_color)
+        ),
+        yaxis=dict(
+            title="Latitude",
+            range=[-90, 90],
+            tickvals=[-90, -60, -30, 0, 30, 60, 90],
+            ticktext=['-90°', '-60°', '-30°', '0°', '30°', '60°', '90°'],
+            showgrid=False,
+            zeroline=False,
+            scaleanchor="x",
+            scaleratio=0.5,  # Adjust to make the map look properly proportioned
+            tickfont=dict(color=text_color)
+        ),
+    )
+    
+    return fig
+
 def display_globe_map(dark_mode=True):
     """Display the interactive globe map in Streamlit
     
@@ -543,28 +687,58 @@ def display_globe_map(dark_mode=True):
                                 ["None", "Temperature", "CO2", "Sea Level", "Glacier"], 
                                 index=0)
     
-    # Determine the ideal dimensions based on the viewport
-    height = 600  # Taller map for better visibility
+    # Add view type selector for Temperature layer only
+    view_type = "globe"
+    if layer_type.lower() == "temperature":
+        view_options = ["Globe", "Contour Map"]
+        view_idx = st.radio("View Type", view_options, horizontal=True, 
+                            label_visibility="collapsed")
+        view_type = view_options[view_idx].lower().replace(" ", "_") if view_idx < len(view_options) else "globe"
     
-    # Create the globe map
-    fig = create_globe_map(dark_mode=dark_mode, width=800, height=height)
-    
-    # Add climate layer if selected
-    if layer_type.lower() != "none":
-        fig = add_climate_layer(fig, layer_type=layer_type.lower())
-    
-    # Make the chart responsive and fill the container
-    st.plotly_chart(fig, use_container_width=True, config={
-        'displayModeBar': True,
-        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
-        'displaylogo': False,
-        'responsive': True,
-        'scrollZoom': True,
-        'doubleClick': 'reset+autosize',  # Reset view on double click
-        'toImageButtonOptions': {
-            'format': 'png',
-            'filename': 'climate_globe',
-            'height': 800,
-            'width': 1200
-        }
-    })
+    # Temperature needs special handling depending on view type
+    if layer_type.lower() == "temperature" and view_type == "contour_map":
+        # Show the temperature contour map
+        with st.spinner("Generating temperature contour map..."):
+            from climate_data_sources import generate_global_temperature_grid
+            temp_data = generate_global_temperature_grid(resolution=2)
+            fig = create_temperature_heatmap(dark_mode=dark_mode, data=temp_data)
+            
+            # Make the chart responsive and fill the container
+            st.plotly_chart(fig, use_container_width=True, config={
+                'displayModeBar': True,
+                'displaylogo': False,
+                'responsive': True,
+                'toImageButtonOptions': {
+                    'format': 'png',
+                    'filename': 'temperature_map',
+                    'height': 600,
+                    'width': 1200
+                }
+            })
+    else:
+        # Show the globe with any selected layer
+        # Determine the ideal dimensions based on the viewport
+        height = 600  # Taller map for better visibility
+        
+        # Create the globe map
+        fig = create_globe_map(dark_mode=dark_mode, width=800, height=height)
+        
+        # Add climate layer if selected
+        if layer_type.lower() != "none":
+            fig = add_climate_layer(fig, layer_type=layer_type.lower())
+        
+        # Make the chart responsive and fill the container
+        st.plotly_chart(fig, use_container_width=True, config={
+            'displayModeBar': True,
+            'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
+            'displaylogo': False,
+            'responsive': True,
+            'scrollZoom': True,
+            'doubleClick': 'reset+autosize',  # Reset view on double click
+            'toImageButtonOptions': {
+                'format': 'png',
+                'filename': 'climate_globe',
+                'height': 800,
+                'width': 1200
+            }
+        })
