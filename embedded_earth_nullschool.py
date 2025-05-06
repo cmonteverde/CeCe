@@ -22,12 +22,21 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
         date: Date for the data (current, YYYY/MM/DD, etc.)
     """
-    # Earth Nullschool URL creation - use the correct format
+    # Earth Nullschool URL creation using the exact format from the site
     base_url = "https://earth.nullschool.net"
     
-    # Use the embed URL format which is more iframe-friendly
-    # Format should be: base/#current/wind/surface/level/orthographic
-    url = f"{base_url}/#{date}/{mode}/surface/{overlay}/{projection}={location}"
+    # Use the correct URL format for Earth Nullschool
+    # Format example: https://earth.nullschool.net/#current/wind/surface/level/orthographic=-97.01,39.68,897
+    if mode == "wind":
+        level_param = "level"
+    elif mode == "ocean":
+        level_param = "currents"
+    elif mode == "chem" or mode == "particulates":
+        level_param = "particles"
+    else:
+        level_param = "level"
+        
+    url = f"{base_url}/#{date}/{mode}/surface/{level_param}/{projection}={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -105,8 +114,17 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Generate new URL based on selections, using the same format as initial URL
-            new_url = f"{base_url}/#{selected_date}/{selected_mode}/surface/{selected_overlay}/{selected_projection}={location}"
+            # Generate new URL based on selections, consistent with the same logic as above
+            if selected_mode == "wind":
+                level_param = "level" 
+            elif selected_mode == "ocean":
+                level_param = "currents"
+            elif selected_mode == "chem" or selected_mode == "particulates":
+                level_param = "particles"
+            else:
+                level_param = "level"
+                
+            new_url = f"{base_url}/#{selected_date}/{selected_mode}/surface/{level_param}/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
