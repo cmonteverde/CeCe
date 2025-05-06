@@ -400,32 +400,40 @@ def display_animated_earth(dark_mode=True, width=800, height=600):
         width: Visualization width
         height: Visualization height
     """
-    header_color = "white" if dark_mode else "#333"
+    # Simple globe visualization with very clear instruction for zoom
     st.markdown("""
-    <div style="margin-top: 20px; margin-bottom: 20px; border-radius: 10px; 
-              overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
-        <div style="background: linear-gradient(90deg, #1E90FF, #9370DB); height: 4px;"></div>
-        <h3 style="margin: 10px 15px; color: """ + header_color + """;">
+    <div style="margin: 20px 0; padding: 15px; border-radius: 10px; background-color: #111; 
+              color: white; text-align: center;">
+        <div style="background: linear-gradient(90deg, #1E90FF, #9370DB); height: 4px; margin-bottom: 15px;"></div>
+        <h3 style="margin-bottom: 15px; color: white;">
             <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); 
                         -webkit-background-clip: text; 
-                        -webkit-text-fill-color: transparent;">
-                CeCe Global Wind Patterns
+                        -webkit-text-fill-color: transparent; font-weight: bold;">
+                CeCe Global Climate Visualization
             </span>
         </h3>
+        <p style="margin-bottom: 15px; color: #CCC; font-size: 14px;">
+            ℹ️ <strong>Controls:</strong> Drag to rotate • Use mouse wheel to zoom in/out • Double-click to zoom in
+        </p>
+    </div>
     """, unsafe_allow_html=True)
     
     # Generate the visualization HTML
     html = animated_earth_html(dark_mode=dark_mode, width=width, height=height)
     
-    # Display in Streamlit
-    components.html(html, height=height+40, scrolling=False)
+    # Display in Streamlit with explicit height to ensure it's visible
+    components.html(html, height=height+80, scrolling=False)
     
-    footer_color = "#BBB" if dark_mode else "#777"
-    # Add information about the visualization
+    # Clear instructions about zooming
     st.markdown("""
-    <div style="padding: 0 15px 10px; color: """ + footer_color + """; font-size: 12px; text-align: right;">
-        Interactive 3D globe visualization - Drag to rotate, scroll to zoom
-    </div>
+    <div style="margin-top: 10px; padding: 10px; background-color: rgba(30, 144, 255, 0.1); 
+              border-left: 4px solid #1E90FF; border-radius: 4px;">
+        <p style="margin: 0; color: white; font-size: 14px;">
+            <strong>Zoom Controls:</strong><br>
+            • <strong>Zoom In:</strong> Scroll wheel up or double-click<br>
+            • <strong>Zoom Out:</strong> Scroll wheel down or Shift+double-click<br>
+            • <strong>Reset View:</strong> Press 'R' key
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
