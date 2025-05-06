@@ -38,13 +38,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     
     # Add custom color parameter that matches our logo gradient (blue to purple)
     # The color parameter format is: /overlay=param,min,max,scale
-    # We're using a custom blue-purple gradient similar to our logo
+    # Using standard color scales that align with our blue-purple theme
     if overlay == "wind":
-        color_param = "overlay=wind,0,30,blues-purples"
+        color_param = "overlay=wind,0,30,Purples"
     elif overlay == "temp":
-        color_param = "overlay=temp,-10,35,blues-purples"
-    elif overlay in ["rh", "tpw", "tcw", "precip", "mslp"]:
-        color_param = f"overlay={overlay},0,100,blues-purples"
+        color_param = "overlay=temp,-10,35,RdPu"
+    elif overlay in ["rh", "tpw"]:
+        color_param = f"overlay={overlay},0,100,Blues"
+    elif overlay in ["tcw", "precip", "mslp"]:
+        color_param = f"overlay={overlay},0,100,BuPu"
     else:
         color_param = ""
     
@@ -141,11 +143,13 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             
             # Add custom color parameter that matches our logo gradient (blue to purple)
             if selected_overlay == "wind":
-                color_param = "overlay=wind,0,30,blues-purples"
+                color_param = "overlay=wind,0,30,Purples"
             elif selected_overlay == "temp":
-                color_param = "overlay=temp,-10,35,blues-purples"
-            elif selected_overlay in ["rh", "tpw", "tcw", "precip", "mslp"]:
-                color_param = f"overlay={selected_overlay},0,100,blues-purples"
+                color_param = "overlay=temp,-10,35,RdPu"
+            elif selected_overlay in ["rh", "tpw"]:
+                color_param = f"overlay={selected_overlay},0,100,Blues"
+            elif selected_overlay in ["tcw", "precip", "mslp"]:
+                color_param = f"overlay={selected_overlay},0,100,BuPu"
             else:
                 color_param = ""
                 
