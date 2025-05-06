@@ -561,8 +561,8 @@ try:
         selected_map_style = map_styles[map_style_idx].lower().replace(" ", "_")
         st.session_state.map_style = selected_map_style
     
-    # Use a direct iframe to Earth Nullschool with blue-purple colors
-    nullschool_url = "https://earth.nullschool.net/#current/wind/surface/level/overlay=wind/orthographic=0.00,0.00,409/overlay-color=blue-purple"
+    # Use a direct iframe to Earth Nullschool with specific blue-purple colors
+    nullschool_url = "https://earth.nullschool.net/#current/wind/surface/level/overlay=total_precipitable_water/orthographic=0.00,0.00,409/loc=0,0/anim=off/grid=on/projection=winkel3/color=gradient:0,1/color=hex:2f3f8f,5963cf,9370db,4682b4,1e90ff"
     
     # Display the iframe
     st.markdown(f"""
