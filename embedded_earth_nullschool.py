@@ -8,38 +8,15 @@ through an iframe.
 
 import streamlit as st
 
-def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
-                            projection="orthographic", location="0.00,0.00,409", 
-                            date="current"):
+def display_earth_nullschool(height=600):
     """
     Display embedded Earth Nullschool visualization in an iframe
     
     Args:
         height: Height of the iframe in pixels
-        mode: Visualization mode (wind, ocean, chem, particulates, etc.)
-        overlay: Data overlay (total_precipitable_water, temp, etc.)
-        projection: Map projection (orthographic, waterman, patterson, etc.)
-        location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
-        date: Date for the data (current, YYYY/MM/DD, etc.)
     """
-    # Earth Nullschool URL creation using the exact format from the site
-    base_url = "https://earth.nullschool.net"
-    
-    # Create a direct URL to Earth Nullschool with a specific, working format
-    # This is a simplified approach to ensure the visualization works
-    if mode == "wind":
-        # For wind, use this format that works reliably
-        # Use the blue-purple color scale by appending the overlay-color parameter
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic={location}/overlay-color=blue-purple"
-    elif mode == "ocean":
-        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic={location}/overlay-color=blue-purple"
-    elif mode == "chem":
-        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic={location}/overlay-color=blue-purple"
-    elif mode == "particulates":
-        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic={location}/overlay-color=blue-purple"
-    else:
-        # Default fallback
-        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic={location}/overlay-color=blue-purple"
+    # Earth Nullschool URL with blue-purple color scheme
+    url = "https://earth.nullschool.net/#current/wind/surface/level/overlay=wind/orthographic=0.00,0.00,409/overlay-color=blue-purple"
     
     # Create a stylish container with header
     st.markdown("""
@@ -63,14 +40,13 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Create iframe with Earth Nullschool and add custom zoom JavaScript
-    iframe_html = f"""
-    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;" id="earth-container">
+    # Create a simple iframe without JavaScript
+    st.markdown(f"""
+    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
         <iframe src="{url}" 
                 width="100%" 
                 height="{height}" 
                 frameborder="0"
-                id="earth-iframe"
                 style="border-radius: 15px; border: none; overflow: hidden;">
         </iframe>
     </div>
@@ -88,50 +64,14 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             • <strong>Try pinch-to-zoom</strong> on touchscreens
         </p>
     </div>
-    
-    <script>
-    // Add event listeners to forward wheel events to iframe (may help with some browsers)
-    document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('earth-container');
-        const iframe = document.getElementById('earth-iframe');
-        
-        if (container && iframe) {
-            container.addEventListener('wheel', function(event) {
-                // Forward the wheel event to the iframe
-                const iframeRect = iframe.getBoundingClientRect();
-                const x = event.clientX - iframeRect.left;
-                const y = event.clientY - iframeRect.top;
-                
-                // Create a new wheel event to dispatch to the iframe
-                const iframeWindow = iframe.contentWindow;
-                if (iframeWindow) {
-                    try {
-                        // Send a message to the iframe content
-                        iframeWindow.postMessage({
-                            type: 'wheel',
-                            deltaY: event.deltaY,
-                            x: x,
-                            y: y
-                        }, '*');
-                    } catch (e) {
-                        // Silent error - iframe might not be accessible due to cross-origin restrictions
-                        console.log('Wheel event could not be forwarded to iframe');
-                    }
-                }
-            });
-        }
-    });
-    </script>
-    """
-    
-    st.markdown(iframe_html, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     # Add visualization controls
     with st.expander("Visualization Controls"):
         col1, col2 = st.columns(2)
         
         with col1:
-            selected_mode = st.selectbox(
+            mode = st.selectbox(
                 "Mode", 
                 ["wind", "ocean", "chem", "particulates", "space"],
                 index=0
@@ -146,48 +86,41 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
                 "space": ["aurora", "clouds_ir", "tdso"]
             }
             
-            selected_overlay = st.selectbox(
+            overlay = st.selectbox(
                 "Data Overlay",
-                overlay_options.get(selected_mode, ["wind"]),
+                overlay_options.get(mode, ["wind"]),
                 index=0
             )
             
         with col2:
-            selected_projection = st.selectbox(
+            projection = st.selectbox(
                 "Projection", 
                 ["orthographic", "waterman", "patterson", "equirectangular", "stereographic", "mercator"],
                 index=0
             )
             
             date_options = ["current", "2023/12/25", "2023/09/01", "2023/06/01", "2023/03/01"]
-            selected_date = st.selectbox("Date", date_options, index=0)
+            date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Use the same URL pattern as above for consistency
-            if selected_mode == "wind":
-                # For wind, show wind overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}={location}/overlay-color=blue-purple"
-            elif selected_mode == "ocean":
-                # For ocean, show currents with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}={location}/overlay-color=blue-purple"
-            elif selected_mode == "chem":
-                # For chemistry, show selected overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-color=blue-purple"
-            elif selected_mode == "particulates":
-                # For particulates, show selected overlay with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}={location}/overlay-color=blue-purple"
-            else:
-                # Default fallback with blue-purple colors
-                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}={location}/overlay-color=blue-purple"
+            # Base URL
+            base_url = "https://earth.nullschool.net"
+            location = "0.00,0.00,409"
             
-            # Update the iframe (via Streamlit rerun)
+            # Create the appropriate URL based on selection
+            if mode == "wind":
+                new_url = f"{base_url}/#{date}/wind/surface/level/overlay={overlay}/{projection}={location}/overlay-color=blue-purple"
+            elif mode == "ocean":
+                new_url = f"{base_url}/#{date}/ocean/surface/currents/{projection}={location}/overlay-color=blue-purple"
+            elif mode == "chem":
+                new_url = f"{base_url}/#{date}/chem/surface/level/overlay={overlay}/{projection}={location}/overlay-color=blue-purple"
+            elif mode == "particulates":
+                new_url = f"{base_url}/#{date}/particulates/surface/level/overlay={overlay}/{projection}={location}/overlay-color=blue-purple"
+            else:
+                new_url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/{projection}={location}/overlay-color=blue-purple"
+            
+            # Store URL in session state and rerun
             st.session_state.earth_nullschool_url = new_url
-            st.session_state.earth_nullschool_config = {
-                "mode": selected_mode,
-                "overlay": selected_overlay,
-                "projection": selected_projection,
-                "date": selected_date
-            }
             st.rerun()
 
 
