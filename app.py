@@ -29,11 +29,13 @@ import climate_resilience
 import simple_artistic_maps
 import felt_inspired_maps
 import embedded_felt_map
+import animated_earth
 
 # Import our API status checker and helper
 import test_api_status
 import openai_helper
 import felt_map_demo
+import globe_map
 
 # Load environment variables
 load_dotenv()
@@ -534,17 +536,38 @@ if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Import the globe map module
+# Import the earth visualization modules
+import animated_earth
 import globe_map
 
-# Add the interactive globe map below the welcome message and above the industry buttons
+# Add the interactive earth map below the welcome message and above the industry buttons
 try:
     # Use session state to remember dark/light mode preference
     if 'globe_dark_mode' not in st.session_state:
         st.session_state.globe_dark_mode = True
         
-    # Display the interactive globe map
-    globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
+    # Determine which visualization to show based on map_style preference
+    if 'map_style' not in st.session_state:
+        st.session_state.map_style = "earth_nullschool"  # Set the earth nullschool style as default
+    
+    # Show map type selection toggle
+    map_styles = ["Earth Nullschool", "Classic Globe"]
+    cols = st.columns([7, 3])
+    with cols[1]:
+        map_style_idx = st.radio("Map Style", options=range(len(map_styles)), 
+                                 format_func=lambda idx: map_styles[idx],
+                                 horizontal=True, label_visibility="collapsed")
+        selected_map_style = map_styles[map_style_idx].lower().replace(" ", "_")
+        st.session_state.map_style = selected_map_style
+    
+    # Display the appropriate visualization based on selection
+    if st.session_state.map_style == "earth_nullschool":
+        # Display the animated earth nullschool style map
+        animated_earth.display_animated_earth(dark_mode=st.session_state.globe_dark_mode, width=1000, height=500)
+    else:
+        # Display the classic globe map
+        globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
+        
 except Exception as e:
     st.error(f"Unable to load interactive globe map: {str(e)}")
     # Fallback padding if map fails to load
