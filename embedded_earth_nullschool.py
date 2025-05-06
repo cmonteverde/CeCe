@@ -26,7 +26,7 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     base_url = "https://earth.nullschool.net"
     
     # Use the embed URL format which is more iframe-friendly
-    url = f"{base_url}/#{mode}/{overlay}/orthographic={location}"
+    url = f"{base_url}/#{date}/{mode}/{overlay}/{projection}={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -104,14 +104,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         
         if st.button("Update Visualization"):
             # Generate new URL based on selections, using the same format as initial URL
-            new_url = f"{base_url}/#{selected_mode}/{selected_overlay}/{selected_projection}={location}"
+            new_url = f"{base_url}/#{selected_date}/{selected_mode}/{selected_overlay}/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
             st.session_state.earth_nullschool_config = {
                 "mode": selected_mode,
                 "overlay": selected_overlay,
-                "projection": selected_projection
+                "projection": selected_projection,
+                "date": selected_date
             }
             st.rerun()
 
