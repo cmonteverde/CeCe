@@ -537,7 +537,7 @@ if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Import the earth visualization modules
-import embedded_earth_nullschool
+import animated_earth
 import globe_map
 
 # Add the interactive earth map below the welcome message and above the industry buttons
@@ -551,7 +551,7 @@ try:
         st.session_state.map_style = "earth_nullschool"  # Set the earth nullschool style as default
     
     # Show map type selection toggle
-    map_styles = ["Earth Nullschool", "Classic Globe"]
+    map_styles = ["Animated Earth", "Classic Globe"]
     cols = st.columns([7, 3])
     with cols[1]:
         map_style_idx = st.radio("Map Style", options=range(len(map_styles)), 
@@ -561,9 +561,9 @@ try:
         st.session_state.map_style = selected_map_style
     
     # Display the appropriate visualization based on selection
-    if st.session_state.map_style == "earth_nullschool":
-        # Display the official Earth Nullschool map in an iframe
-        embedded_earth_nullschool.display_earth_nullschool(height=500)
+    if st.session_state.map_style == "animated_earth":
+        # Display the D3.js based animated earth visualization
+        animated_earth.display_animated_earth(dark_mode=st.session_state.globe_dark_mode, width=800, height=500)
     else:
         # Display the classic globe map
         globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)

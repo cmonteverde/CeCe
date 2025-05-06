@@ -22,10 +22,11 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
         date: Date for the data (current, YYYY/MM/DD, etc.)
     """
-    # Earth Nullschool URL creation
+    # Earth Nullschool URL creation - use a different approach
     base_url = "https://earth.nullschool.net"
-    # Always use "current" for reliable data availability
-    url = f"{base_url}/#current/{mode}/{overlay}/orthographic={location}"
+    
+    # Use the embed URL format which is more iframe-friendly
+    url = f"{base_url}/#{mode}/{overlay}/orthographic={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -102,16 +103,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Generate new URL based on selections, always use "current" for reliable data
-            new_url = f"{base_url}/#current/{selected_mode}/{selected_overlay}/{selected_projection}={location}"
+            # Generate new URL based on selections, using the same format as initial URL
+            new_url = f"{base_url}/#{selected_mode}/{selected_overlay}/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
             st.session_state.earth_nullschool_config = {
                 "mode": selected_mode,
                 "overlay": selected_overlay,
-                "projection": selected_projection,
-                "date": "current"  # Always use current data
+                "projection": selected_projection
             }
             st.rerun()
 

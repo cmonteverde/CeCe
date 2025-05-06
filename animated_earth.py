@@ -23,37 +23,38 @@ def generate_wind_data(resolution=2):
     Returns:
         Dictionary with wind data
     """
-    # Create a grid of points
-    lats = np.arange(-90, 91, resolution)
-    lons = np.arange(-180, 181, resolution)
+    # Create a grid of lat/lon coordinates
+    lats = np.arange(-90, 90 + resolution, resolution)
+    lons = np.arange(-180, 180 + resolution, resolution)
     
-    # Generate wind vectors (u, v components)
-    data = []
+    # Sample wind data (u and v components for each grid point)
+    grid_data = []
+    
     for lat in lats:
         for lon in lons:
-            # Create simple wind pattern based on latitude and longitude
-            # This is a simplified model - in reality, would use actual climate data
+            # Create a simple wind pattern (this is placeholder data)
+            # In a real application, this would be real climate data
             u = 5 * np.cos(np.radians(lat)) * np.sin(np.radians(lon))
-            v = 5 * np.cos(np.radians(lat)) * np.cos(np.radians(lon))
+            v = 5 * np.sin(np.radians(lat)) * np.cos(np.radians(lon))
             
-            # Add some variation based on latitude
-            if abs(lat) > 60:  # polar regions
-                u *= 0.5
-                v *= 0.5
-            elif abs(lat) < 15:  # equatorial regions
-                u *= 1.2
-                v *= 0.8
-                
-            data.append({
-                "lat": lat,
-                "lon": lon,
-                "u": u,  # east-west component
-                "v": v   # north-south component
+            # Add wind magnitude for coloring
+            magnitude = np.sqrt(u**2 + v**2)
+            
+            grid_data.append({
+                "lat": float(lat),
+                "lon": float(lon),
+                "u": float(u),
+                "v": float(v),
+                "magnitude": float(magnitude)
             })
     
-    return {"data": data, "date": "2025-05-06", "resolution": resolution}
+    return {
+        "date": "2023-05-06",
+        "grid_resolution": resolution,
+        "data": grid_data
+    }
 
-def animated_earth_html(wind_data, dark_mode=True, width=800, height=600):
+def animated_earth_html(wind_data=None, dark_mode=True, width=800, height=600):
     """
     Create HTML for the animated earth visualization
     
@@ -66,296 +67,323 @@ def animated_earth_html(wind_data, dark_mode=True, width=800, height=600):
     Returns:
         HTML string for the visualization
     """
-    # Convert wind_data to JSON
+    if wind_data is None:
+        wind_data = generate_wind_data()
+    
+    # Convert wind data to JSON string
     wind_data_json = json.dumps(wind_data)
     
-    # Define the HTML content with embedded CSS and JavaScript
-    html = f"""
+    # HTML and JavaScript for the visualization - using triple quotes rather than f-string
+    html = """
     <!DOCTYPE html>
     <html>
     <head>
-        <meta charset="utf-8">
-        <title>Animated Earth</title>
+        <title>Animated Earth Visualization</title>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://d3js.org/d3-geo.v2.min.js"></script>
+        <script src="https://d3js.org/topojson.v3.min.js"></script>
         <style>
-            body {{ margin: 0; padding: 0; overflow: hidden; background-color: {('#000' if dark_mode else '#fff')}; }}
-            #map {{ width: 100%; height: 100%; position: absolute; }}
-            #animation {{ width: 100%; height: 100%; position: absolute; }}
-            #overlay {{ width: 100%; height: 100%; position: absolute; }}
-            .fill-screen {{ width: 100%; height: 100%; position: absolute; }}
-            #status {{ 
+            body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: Arial, sans-serif; 
+                background-color: """ + ('#111' if dark_mode else '#fff') + """; 
+            }
+            .earth-container { 
+                position: relative; 
+                width: """ + str(width) + """px; 
+                height: """ + str(height) + """px; 
+                margin: 0 auto; 
+            }
+            .earth-canvas { 
                 position: absolute; 
-                bottom: 20px; 
-                left: 50%; 
-                transform: translateX(-50%); 
-                color: {'#fff' if dark_mode else '#333'}; 
-                font-family: sans-serif; 
-                font-size: 12px; 
-            }}
+                top: 0; 
+                left: 0; 
+            }
+            .earth-svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+            .controls {
+                position: absolute;
+                bottom: 10px;
+                left: 10px;
+                z-index: 20;
+                background-color: """ + ('rgba(0, 0, 0, 0.5)' if dark_mode else 'rgba(255, 255, 255, 0.5)') + """;
+                padding: 5px;
+                border-radius: 5px;
+                color: """ + ('#fff' if dark_mode else '#333') + """;
+                font-size: 12px;
+            }
         </style>
     </head>
     <body>
-        <div id="viz-container" style="width: {width}px; height: {height}px; position: relative; margin: 0 auto;">
-            <svg id="map" class="fill-screen" xmlns="http://www.w3.org/2000/svg" version="1.1"></svg>
-            <canvas id="animation" class="fill-screen"></canvas>
-            <canvas id="overlay" class="fill-screen"></canvas>
-            <div id="status"></div>
+        <div class="earth-container">
+            <canvas class="earth-canvas" id="earth-canvas" width=\"""" + str(width) + """\" height=\"""" + str(height) + """\"></canvas>
+            <svg class="earth-svg" id="earth-svg" width=\"""" + str(width) + """\" height=\"""" + str(height) + """\"></svg>
+            <div class="controls">
+                <div>Drag to rotate | Scroll to zoom</div>
+            </div>
         </div>
-        
-        <!-- Load D3 and TopoJSON -->
-        <script src="https://d3js.org/d3.v7.min.js"></script>
-        <script src="https://d3js.org/topojson.v3.min.js"></script>
-        <script src="https://d3js.org/d3-geo-projection.v4.min.js"></script>
-        
+
         <script>
-        (function() {{
-            "use strict";
-            
-            // Constants for visualization
-            const WIDTH = {width};
-            const HEIGHT = {height};
-            const VELOCITY_SCALE = 0.015;
-            const MAX_PARTICLE_AGE = 100;
-            const PARTICLE_LINE_WIDTH = 1.0;
-            const PARTICLE_MULTIPLIER = 8;
-            const FRAME_RATE = 40;
-            const NULL_WIND_VECTOR = [NaN, NaN, null];
-            
-            // Background color based on mode
-            const backgroundColor = "{('#000' if dark_mode else '#fff')}";
-            const globeColor = "{('#303030' if dark_mode else '#e0e0e0')}";
-            const coastColor = "{('#505050' if dark_mode else '#808080')}";
-            
             // Wind data from Python
-            const windData = {wind_data_json};
+            const windData = """ + wind_data_json + """;
             
-            // SVG and Canvas contexts
-            const svg = d3.select("#map");
-            const animationCanvas = document.getElementById("animation");
-            const animationContext = animationCanvas.getContext("2d");
-            const overlayCanvas = document.getElementById("overlay");
-            const overlayContext = overlayCanvas.getContext("2d");
-            
-            // Set canvas dimensions
-            animationCanvas.width = WIDTH;
-            animationCanvas.height = HEIGHT;
-            overlayCanvas.width = WIDTH;
-            overlayCanvas.height = HEIGHT;
-            
-            // D3 projection and path generators
-            const projection = d3.geoOrthographic()
-                .scale(Math.min(WIDTH, HEIGHT) / 2.5)
-                .translate([WIDTH / 2, HEIGHT / 2]);
+            // Visualization configuration
+            const config = {
+                width: """ + str(width) + """,
+                height: """ + str(height) + """,
+                darkMode: """ + str(dark_mode).lower() + """,
+                particleCount: 3000,
+                particleMaxAge: 100,
+                particleSpeedFactor: 0.25,
+                globeColor: """ + ('"#0C2B66"' if dark_mode else '"#4169E1"') + """,
+                landColor: """ + ('"#2A3C4D"' if dark_mode else '"#C0D6E4"') + """,
+                particleColor: d3.scaleLinear()
+                    .domain([0, 10, 20, 30])
+                    .range([""" + ('"#4575b4", "#74add1", "#fdae61", "#d73027"' if dark_mode else '"#053061", "#4393c3", "#fdae61", "#a50026"') + """])
+            };
+
+            // Create the visualization
+            document.addEventListener('DOMContentLoaded', function() {{
+                // Setup canvas and WebGL context
+                const canvas = document.getElementById('earth-canvas');
+                const context = canvas.getContext('2d');
                 
-            const path = d3.geoPath()
-                .projection(projection);
-            
-            // Create the globe base
-            svg.append("circle")
-                .attr("cx", WIDTH / 2)
-                .attr("cy", HEIGHT / 2)
-                .attr("r", projection.scale())
-                .attr("fill", globeColor);
+                // Setup SVG for the globe outline
+                const svg = d3.select('#earth-svg');
                 
-            // Load world map data
-            d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(world => {{
-                // Draw countries
-                svg.append("g")
-                    .selectAll("path")
-                    .data(topojson.feature(world, world.objects.countries).features)
-                    .enter().append("path")
-                    .attr("d", path)
-                    .attr("fill", "none")
-                    .attr("stroke", coastColor)
-                    .attr("stroke-width", 0.5);
-                    
-                // Set up the particle system
-                initializeParticles();
-                
-                // Make the globe interactive
-                setupInteractivity();
-                
-                // Start the animation
-                startAnimation();
-            }}).catch(error => {{
-                document.getElementById("status").innerText = "Error loading map data: " + error;
-            }});
-            
-            // Vector field from raw data
-            let vectorField = buildVectorField(windData);
-            
-            // Particle system
-            let particles = [];
-            
-            function buildVectorField(data) {{
-                // Build a grid from the raw data
-                const points = data.data;
-                const field = {{
-                    getVector: (lon, lat) => {{
-                        // Find the nearest point in our dataset
-                        let closest = null;
-                        let closestDist = Infinity;
-                        
-                        for (const point of points) {{
-                            const dist = Math.sqrt(
-                                Math.pow(point.lon - lon, 2) + 
-                                Math.pow(point.lat - lat, 2)
-                            );
-                            
-                            if (dist < closestDist) {{
-                                closestDist = dist;
-                                closest = point;
-                            }}
-                        }}
-                        
-                        if (!closest || closestDist > 10) {{
-                            return NULL_WIND_VECTOR;
-                        }}
-                        
-                        return [closest.u, closest.v, Math.sqrt(closest.u * closest.u + closest.v * closest.v)];
-                    }}
-                }};
-                
-                return field;
-            }}
-            
-            function initializeParticles() {{
-                const numParticles = Math.round(projection.scale() * PARTICLE_MULTIPLIER);
-                particles = [];
-                
-                for (let i = 0; i < numParticles; i++) {{
-                    particles.push(randomParticle());
-                }}
-            }}
-            
-            function randomParticle() {{
-                // Random position on the globe
-                const lambda = Math.random() * 360 - 180;  // longitude
-                const phi = Math.random() * 180 - 90;      // latitude
-                
-                return {{
-                    x: lambda,
-                    y: phi,
-                    age: Math.floor(Math.random() * MAX_PARTICLE_AGE),
-                    xt: 0,
-                    yt: 0
-                }};
-            }}
-            
-            function evolve() {{
+                // Create a rotating globe
                 const projection = d3.geoOrthographic()
-                    .scale(Math.min(WIDTH, HEIGHT) / 2.5)
-                    .translate([WIDTH / 2, HEIGHT / 2]);
+                    .scale(Math.min(config.width, config.height) * 0.45)
+                    .translate([config.width / 2, config.height / 2]);
                 
-                particles.forEach(particle => {{
-                    if (particle.age > MAX_PARTICLE_AGE) {{
-                        Object.assign(particle, randomParticle());
-                        return;
-                    }}
-                    
-                    const vector = vectorField.getVector(particle.x, particle.y);
-                    
-                    if (vector[2] === null) {{
-                        // No wind vector found, retire this particle
-                        particle.age = MAX_PARTICLE_AGE;
-                        return;
-                    }}
-                    
-                    // Update position using wind vector
-                    const x = particle.x + vector[0] * VELOCITY_SCALE;
-                    const y = particle.y + vector[1] * VELOCITY_SCALE;
-                    
-                    // Save positions for drawing
-                    const pos1 = projection([particle.x, particle.y]);
-                    const pos2 = projection([x, y]);
-                    
-                    if (pos1 && pos2) {{
-                        particle.xt = pos1[0];
-                        particle.yt = pos1[1];
-                        particle.x = x;
-                        particle.y = y;
-                    }} else {{
-                        // Off the visible globe, retire this particle
-                        particle.age = MAX_PARTICLE_AGE;
-                    }}
-                    
-                    particle.age += 1;
-                }});
-            }}
-            
-            function draw() {{
-                // Clear the canvas
-                animationContext.clearRect(0, 0, WIDTH, HEIGHT);
+                // Path generator for land masses
+                const path = d3.geoPath().projection(projection);
                 
-                // Set drawing style
-                animationContext.lineWidth = PARTICLE_LINE_WIDTH;
-                animationContext.strokeStyle = "{('#76b6f4' if dark_mode else '#4682b4')}";
-                animationContext.globalAlpha = 0.8;
+                // Create and initialize particles
+                let particles = [];
                 
-                // Draw the particles
-                animationContext.beginPath();
-                particles.forEach(particle => {{
-                    if (particle.age < MAX_PARTICLE_AGE) {{
-                        // Calculate vector
-                        const vector = vectorField.getVector(particle.x, particle.y);
-                        if (vector[2] !== null) {{
-                            // Get next position
-                            const x = particle.x + vector[0] * VELOCITY_SCALE;
-                            const y = particle.y + vector[1] * VELOCITY_SCALE;
+                // Load world map data
+                d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+                    .then(function(world) {{
+                        // Extract land topojson
+                        const land = topojson.feature(world, world.objects.land);
+                        
+                        // Draw land contours
+                        svg.append('path')
+                            .datum({{type: 'Sphere'}})
+                            .attr('class', 'ocean')
+                            .attr('fill', config.globeColor)
+                            .attr('stroke', config.darkMode ? '#555' : '#999')
+                            .attr('stroke-width', 1)
+                            .attr('d', path);
                             
-                            // Project to screen coordinates
-                            const pos = projection([x, y]);
-                            if (pos) {{
-                                animationContext.moveTo(particle.xt, particle.yt);
-                                animationContext.lineTo(pos[0], pos[1]);
-                                
-                                // Update position for next frame
-                                particle.xt = pos[0];
-                                particle.yt = pos[1];
-                            }}
-                        }}
-                    }}
-                }});
-                animationContext.stroke();
-            }}
-            
-            function startAnimation() {{
-                let lastFrameTime = Date.now();
+                        svg.append('path')
+                            .datum(land)
+                            .attr('class', 'land')
+                            .attr('fill', config.landColor)
+                            .attr('d', path);
+                            
+                        // Add country borders
+                        svg.append('path')
+                            .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
+                            .attr('class', 'boundary')
+                            .attr('fill', 'none')
+                            .attr('stroke', config.darkMode ? '#555' : '#999')
+                            .attr('stroke-width', 0.5)
+                            .attr('d', path);
+                            
+                        // Initialize particles
+                        initParticles();
+                        
+                        // Add rotation controls
+                        let v0, q0, r0;
+                        const drag = d3.drag()
+                            .on('start', (event) => {{
+                                v0 = versor.cartesian(projection.invert([event.x, event.y]));
+                                q0 = versor(r0 = projection.rotate());
+                            }})
+                            .on('drag', (event) => {{
+                                const v1 = versor.cartesian(projection.invert([event.x, event.y]));
+                                const q1 = versor.multiply(q0, versor.delta(v0, v1));
+                                projection.rotate(r0 = versor.rotation(q1));
+                                updateProjection();
+                            }});
+                            
+                        svg.call(drag);
+                        
+                        // Add zoom controls
+                        svg.call(d3.zoom()
+                            .scaleExtent([0.75, 5])
+                            .on('zoom', (event) => {{
+                                projection.scale(Math.min(config.width, config.height) * 0.45 * event.transform.k);
+                                updateProjection();
+                            }}));
+                            
+                        // Start animation loop
+                        d3.timer(animate);
+                    });
                 
-                function frame() {{
-                    const now = Date.now();
-                    const elapsed = now - lastFrameTime;
-                    
-                    if (elapsed > (1000 / FRAME_RATE)) {{
-                        evolve();
-                        draw();
-                        lastFrameTime = now;
+                // Versor math for smooth rotation (from D3 examples)
+                const versor = {{
+                    cartesian: (λ, φ) => {{
+                        λ = λ * Math.PI / 180;
+                        φ = φ * Math.PI / 180;
+                        const cosφ = Math.cos(φ);
+                        return [
+                            cosφ * Math.cos(λ),
+                            cosφ * Math.sin(λ),
+                            Math.sin(φ)
+                        ];
+                    }},
+                    rotation: (q) => {{
+                        return [
+                            Math.atan2(2 * (q[0] * q[1] + q[3] * q[2]), 1 - 2 * (q[1] * q[1] + q[2] * q[2])) * 180 / Math.PI,
+                            Math.asin(Math.max(-1, Math.min(1, 2 * (q[0] * q[2] - q[3] * q[1])))) * 180 / Math.PI,
+                            Math.atan2(2 * (q[0] * q[3] + q[1] * q[2]), 1 - 2 * (q[2] * q[2] + q[3] * q[3])) * 180 / Math.PI
+                        ];
+                    }},
+                    multiply: (a, b) => {{
+                        return [
+                            a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+                            a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+                            a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+                            a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]
+                        ];
+                    }},
+                    delta: (a, b) => {{
+                        const d = [0, 0, 0, 0];
+                        const c = versor.cartesian;
+                        a = typeof a[0] === 'number' ? c(a[0], a[1]) : a;
+                        b = typeof b[0] === 'number' ? c(b[0], b[1]) : b;
+                        const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+                        const d_tan = Math.acos(Math.max(-1, Math.min(1, dot)));
+                        const d_a = d_tan ? Math.sin(d_tan) : null;
+                        if (d_a) {{
+                            for (let i = 0; i < 3; ++i) {{
+                                d[i + 1] = (a[(i + 1) % 3] * b[(i + 2) % 3] - a[(i + 2) % 3] * b[(i + 1) % 3]) / d_a;
+                            }}
+                            d[0] = Math.cos(d_tan);
+                        }} else {{
+                            d[0] = 1;
+                        }}
+                        return d;
                     }}
-                    
-                    requestAnimationFrame(frame);
+                }};
+                
+                // Update paths when projection changes
+                function updateProjection() {{
+                    svg.selectAll('path').attr('d', path);
                 }}
                 
-                frame();
-            }}
-            
-            function setupInteractivity() {{
-                let drag = d3.drag()
-                    .on("drag", event => {{
-                        const rotate = projection.rotate();
-                        projection.rotate([
-                            rotate[0] + event.dx / 4,
-                            rotate[1] - event.dy / 4
-                        ]);
-                        
-                        // Update the map paths
-                        svg.selectAll("path").attr("d", path);
-                        
-                        // Force regenerate particles
-                        particles.forEach(p => p.age = MAX_PARTICLE_AGE);
-                    }});
+                // Initialize particles for wind animation
+                function initParticles() {{
+                    particles = [];
+                    for (let i = 0; i < config.particleCount; i++) {{
+                        // Random position on the globe
+                        particles.push({{
+                            x: Math.random() * config.width,
+                            y: Math.random() * config.height,
+                            age: Math.floor(Math.random() * config.particleMaxAge),
+                            active: false
+                        }});
+                    }}
+                }}
                 
-                svg.call(drag);
-            }}
-        }})();
+                // Find wind vector at given position using bilinear interpolation
+                function getWindVector(λ, φ) {{
+                    // Convert to grid coordinates
+                    const lat = Math.round(φ / windData.grid_resolution) * windData.grid_resolution;
+                    const lon = Math.round(λ / windData.grid_resolution) * windData.grid_resolution;
+                    
+                    // Find data points
+                    const point = windData.data.find(d => d.lat === lat && d.lon === lon);
+                    
+                    if (point) {{
+                        return {{
+                            u: point.u,
+                            v: point.v,
+                            magnitude: point.magnitude
+                        }};
+                    }}
+                    
+                    // Default if not found
+                    return {{ u: 0, v: 0, magnitude: 0 }};
+                }}
+                
+                // Animation loop
+                function animate() {{
+                    // Clear canvas
+                    context.clearRect(0, 0, config.width, config.height);
+                    
+                    // Update particles
+                    particles.forEach((p, i) => {{
+                        p.age += 1;
+                        
+                        if (p.age > config.particleMaxAge) {{
+                            // Reset expired particle to a new random position
+                            p.x = Math.random() * config.width;
+                            p.y = Math.random() * config.height;
+                            p.age = 0;
+                            p.active = false;
+                        }}
+                        
+                        // Get the lat/lon from the current x/y position
+                        const λφ = projection.invert([p.x, p.y]);
+                        
+                        // Check if particle is on the front side of the globe
+                        if (λφ) {{
+                            // Particle is in view
+                            const λ = λφ[0];  // longitude
+                            const φ = λφ[1];  // latitude
+                            
+                            // Get wind vector at this position
+                            const wind = getWindVector(λ, φ);
+                            
+                            // Apply wind force to move the particle
+                            if (wind.magnitude > 0) {{
+                                // Adjust particle position based on wind
+                                const projected = projection([
+                                    λ + wind.u * config.particleSpeedFactor, 
+                                    φ + wind.v * config.particleSpeedFactor
+                                ]);
+                                
+                                if (projected) {{
+                                    // Store previous position for drawing
+                                    p.px = p.x;
+                                    p.py = p.y;
+                                    
+                                    // Update position
+                                    p.x = projected[0];
+                                    p.y = projected[1];
+                                    p.active = true;
+                                    
+                                    // Set color based on wind magnitude
+                                    p.color = config.particleColor(wind.magnitude);
+                                }}
+                            }}
+                            
+                            // Draw particle as a line from previous to current position
+                            if (p.active) {{
+                                context.beginPath();
+                                context.moveTo(p.px, p.py);
+                                context.lineTo(p.x, p.y);
+                                context.strokeStyle = p.color;
+                                context.lineWidth = 1.5;
+                                context.globalAlpha = (1 - p.age / config.particleMaxAge) * 0.85;
+                                context.stroke();
+                            }}
+                        }} else {{
+                            // Particle is not in view (behind the globe)
+                            p.active = false;
+                        }}
+                    }});
+                }}
+            }});
         </script>
     </body>
     </html>
@@ -372,45 +400,46 @@ def display_animated_earth(dark_mode=True, width=800, height=600):
         width: Visualization width
         height: Visualization height
     """
-    # Create container for the visualization with styling
+    header_color = "white" if dark_mode else "#333"
     st.markdown("""
-    <div style="margin-top: 30px; margin-bottom: 30px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); width: 100%;">
+    <div style="margin-top: 20px; margin-bottom: 20px; border-radius: 10px; 
+              overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
         <div style="background: linear-gradient(90deg, #1E90FF, #9370DB); height: 4px;"></div>
-        <div id="animated-earth-container" style="width: 100%;"></div>
-    </div>
+        <h3 style="margin: 10px 15px; color: """ + header_color + """;">
+            <span style="background: linear-gradient(90deg, #1E90FF, #9370DB); 
+                        -webkit-background-clip: text; 
+                        -webkit-text-fill-color: transparent;">
+                CeCe Global Wind Patterns
+            </span>
+        </h3>
     """, unsafe_allow_html=True)
     
-    # Create columns for controls
-    col1, col2, col3 = st.columns([4, 1, 1])
+    # Generate the visualization HTML
+    html = animated_earth_html(dark_mode=dark_mode, width=width, height=height)
     
-    with col1:
-        st.markdown("""
-        <div style="background: linear-gradient(90deg, #1E90FF, #9370DB); 
-                   -webkit-background-clip: text;
-                   -webkit-text-fill-color: transparent;
-                   font-weight: bold;
-                   font-size: 18px;
-                   margin-top: 5px;">
-            CeCe Global Climate Explorer
-        </div>
-        """, unsafe_allow_html=True)
+    # Display in Streamlit
+    components.html(html, height=height+40, scrolling=False)
+    
+    footer_color = "#BBB" if dark_mode else "#777"
+    # Add information about the visualization
+    st.markdown("""
+    <div style="padding: 0 15px 10px; color: """ + footer_color + """; font-size: 12px; text-align: right;">
+        Interactive 3D globe visualization - Drag to rotate, scroll to zoom
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# Run as standalone for testing
+if __name__ == "__main__":
+    st.set_page_config(page_title="Animated Earth", layout="wide")
+    
+    st.title("Animated Earth Visualization")
+    
+    col1, col2 = st.columns([4, 1])
     
     with col2:
-        dark_mode = st.checkbox("Dark Mode", value=dark_mode)
+        dark_mode = st.checkbox("Dark Mode", value=True)
     
-    with col3:
-        layer_type = st.selectbox("Data Layer", 
-                             ["Wind", "Temperature", "CO2", "Sea Level", "Glacier"], 
-                             index=0)
-    
-    # Generate sample wind data
-    wind_data = generate_wind_data()
-    
-    # Create the animated earth HTML
-    html = animated_earth_html(wind_data, dark_mode=dark_mode, width=width, height=height)
-    
-    # Display using Streamlit components
-    components.html(html, height=height+50, scrolling=False)
-
-if __name__ == "__main__":
-    display_animated_earth()
+    with col1:
+        display_animated_earth(dark_mode=dark_mode, width=800, height=500)
