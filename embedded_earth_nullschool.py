@@ -63,19 +63,65 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Create iframe with Earth Nullschool
+    # Create iframe with Earth Nullschool and add custom zoom JavaScript
     iframe_html = f"""
-    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
+    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;" id="earth-container">
         <iframe src="{url}" 
                 width="100%" 
                 height="{height}" 
                 frameborder="0"
+                id="earth-iframe"
                 style="border-radius: 15px; border: none; overflow: hidden;">
         </iframe>
     </div>
     <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
         Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
     </div>
+    
+    <!-- Add instructions for zoom -->
+    <div style="margin-top: 10px; padding: 10px; background-color: rgba(30, 144, 255, 0.1); 
+              border-left: 4px solid #1E90FF; border-radius: 4px;">
+        <p style="margin: 0; color: white; font-size: 14px;">
+            <strong>Zoom Controls:</strong><br>
+            • <strong>Double-click</strong> to zoom in<br>
+            • <strong>Shift+double-click</strong> to zoom out<br>
+            • <strong>Try pinch-to-zoom</strong> on touchscreens
+        </p>
+    </div>
+    
+    <script>
+    // Add event listeners to forward wheel events to iframe (may help with some browsers)
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('earth-container');
+        const iframe = document.getElementById('earth-iframe');
+        
+        if (container && iframe) {
+            container.addEventListener('wheel', function(event) {
+                // Forward the wheel event to the iframe
+                const iframeRect = iframe.getBoundingClientRect();
+                const x = event.clientX - iframeRect.left;
+                const y = event.clientY - iframeRect.top;
+                
+                // Create a new wheel event to dispatch to the iframe
+                const iframeWindow = iframe.contentWindow;
+                if (iframeWindow) {
+                    try {
+                        // Send a message to the iframe content
+                        iframeWindow.postMessage({
+                            type: 'wheel',
+                            deltaY: event.deltaY,
+                            x: x,
+                            y: y
+                        }, '*');
+                    } catch (e) {
+                        // Silent error - iframe might not be accessible due to cross-origin restrictions
+                        console.log('Wheel event could not be forwarded to iframe');
+                    }
+                }
+            });
+        }
+    });
+    </script>
     """
     
     st.markdown(iframe_html, unsafe_allow_html=True)
