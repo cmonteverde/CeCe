@@ -14,6 +14,10 @@ import plotly.graph_objects as go
 import numpy as np
 import pandas as pd 
 import streamlit as st
+import io
+import base64
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.interpolate import griddata
 
 # CeCe brand colors (blue to purple gradient)
 CECE_BLUE = "#1E90FF"
@@ -198,104 +202,104 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                 lons = data['lon'].tolist()
                 temps = data['temperature'].tolist()
                 
-                # Convert to grid for contourf visualization
-                # This requires converting our irregular lat/lon points to a regular grid for contourf
-                import matplotlib.pyplot as plt
-                from matplotlib.colors import LinearSegmentedColormap
-                import io
-                import base64
+                # Process the temperature data for proper contour visualization on a globe
                 from scipy.interpolate import griddata
                 
-                # Create a regular grid for the contour plot
-                grid_lon = np.linspace(-180, 180, 180)  # 2-degree resolution for longitude
-                grid_lat = np.linspace(-90, 90, 90)     # 2-degree resolution for latitude
-                grid_lon_mesh, grid_lat_mesh = np.meshgrid(grid_lon, grid_lat)
-                
-                # Interpolate temperature values to the regular grid
-                grid_temp = griddata((lons, lats), temps, (grid_lon_mesh, grid_lat_mesh), 
-                                     method='cubic', fill_value=np.nan)
-                
-                # Define the custom colormap
-                colors = [
-                    "#0d47a1",  # Deep blue (cold)
-                    CECE_BLUE,  # CeCe blue (cool)
-                    "#ffffff",  # White (moderate)
-                    "#9370DB",  # CeCe purple (warm)
-                    "#b71c1c"   # Deep red (hot)
+                # Define the custom colorscale for temperature
+                temp_colorscale = [
+                    [0, "#0d47a1"],      # Cold (deep blue)
+                    [0.3, CECE_BLUE],    # Cool (CeCe blue)
+                    [0.5, "#ffffff"],    # Moderate (white)
+                    [0.7, "#9370DB"],    # Warm (CeCe purple)
+                    [1, "#b71c1c"]       # Hot (red)
                 ]
-                positions = [0, 0.3, 0.5, 0.7, 1.0]
-                cmap = LinearSegmentedColormap.from_list('cece_temp', list(zip(positions, colors)))
                 
-                # Create a new matplotlib figure for the contour plot
-                plt.figure(figsize=(12, 6))
+                # Calculate temperature range
+                temp_min = min(temps)
+                temp_max = max(temps)
                 
-                # Calculate contour levels
-                temp_min = np.nanmin(grid_temp)
-                temp_max = np.nanmax(grid_temp)
-                levels = np.linspace(temp_min, temp_max, 20)  # 20 temperature levels for smooth contours
+                # Create a regular grid for the contour plot (higher resolution)
+                # We'll create small choropleth regions that will map correctly to the globe
+                resolution = 2  # 2-degree resolution
                 
-                # Create the filled contour plot
-                contour = plt.contourf(grid_lon_mesh, grid_lat_mesh, grid_temp, 
-                                      levels=levels, cmap=cmap, extend='both')
+                # Create a higher resolution grid of points for interpolation
+                grid_lats = []
+                grid_lons = []
+                grid_temps = []
                 
-                # Add coastlines for reference
-                plt.contour(grid_lon_mesh, grid_lat_mesh, ~np.isnan(grid_temp), 
-                           levels=[0.5], colors='gray', linewidths=0.5)
+                # Define resolution for interpolation
+                lat_step = resolution
+                lon_step = resolution
                 
-                # Remove axis labels and ticks for a cleaner map
-                plt.axis('off')
+                # Interpolate to a higher resolution grid (to be displayed as small choropleth regions)
+                for lat in np.arange(-90, 91, lat_step):
+                    for lon in np.arange(-180, 181, lon_step):
+                        grid_lats.append(lat)
+                        grid_lons.append(lon)
                 
-                # Set the aspect ratio to be suitable for a map
-                plt.gca().set_aspect('equal')
+                # Use scipy's griddata to interpolate temperatures to our regular grid
+                points = np.column_stack((lats, lons))
+                grid_points = np.column_stack((grid_lats, grid_lons))
                 
-                # Add a colorbar
-                cbar = plt.colorbar(contour, orientation='vertical', pad=0.01)
-                cbar.set_label('Temperature (°C)', fontsize=10)
+                # Perform the interpolation using 'cubic' method for smooth transitions
+                try:
+                    grid_temps = griddata(points, temps, grid_points, method='cubic', fill_value=np.nan)
+                except Exception as e:
+                    # Fall back to 'linear' if cubic fails
+                    try:
+                        grid_temps = griddata(points, temps, grid_points, method='linear', fill_value=np.nan)
+                    except Exception as e2:
+                        # If all else fails, use 'nearest'
+                        grid_temps = griddata(points, temps, grid_points, method='nearest', fill_value=np.nan)
                 
-                # Save the figure to a bytes buffer
-                buf = io.BytesIO()
-                plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, 
-                           transparent=True, dpi=150)
-                buf.seek(0)
+                # Remove any NaN values for proper visualization
+                valid_indices = ~np.isnan(grid_temps)
+                clean_lats = np.array(grid_lats)[valid_indices]
+                clean_lons = np.array(grid_lons)[valid_indices]
+                clean_temps = grid_temps[valid_indices]
                 
-                # Convert the image to base64 for embedding in Plotly
-                img_str = base64.b64encode(buf.read()).decode('utf-8')
+                # Instead of creating individual choropleth regions, use a contour approach with go.Contourcarpet
+                # This is more efficient for a globe and will properly follow the curvature
                 
-                # Close the matplotlib figure to free memory
-                plt.close()
+                # Create grid for contour visualization
+                # Group data into bins of lat/lon for better performance
+                temp_dict = {}
+                lat_bins = {}
+                lon_bins = {}
                 
-                # Calculate bounds for the image overlay
-                # The bounds are [west, south, east, north]
-                bounds = [-180, -90, 180, 90]
+                # Create bins to collect temperature values
+                for i in range(len(clean_lats)):
+                    lat_bin = round(clean_lats[i])  # Round to nearest degree
+                    lon_bin = round(clean_lons[i])
+                    
+                    key = f"{lat_bin},{lon_bin}"
+                    if key not in temp_dict:
+                        temp_dict[key] = []
+                        lat_bins[key] = lat_bin
+                        lon_bins[key] = lon_bin
+                    
+                    temp_dict[key].append(clean_temps[i])
                 
-                # Add the contour plot as an image overlay
-                fig.add_layout_image(
-                    dict(
-                        source=f'data:image/png;base64,{img_str}',
-                        x=bounds[0],
-                        y=bounds[3],
-                        sizex=bounds[2] - bounds[0],
-                        sizey=bounds[3] - bounds[1],
-                        sizing="stretch",
-                        opacity=0.8,
-                        layer="above"
-                    )
-                )
+                # Calculate average temperature in each bin
+                bin_lats = []
+                bin_lons = []
+                bin_temps = []
                 
-                # Add an invisible trace with colorbar for the temperature scale
+                for key in temp_dict:
+                    bin_lats.append(lat_bins[key])
+                    bin_lons.append(lon_bins[key])
+                    # Average temp in this bin
+                    bin_temps.append(sum(temp_dict[key]) / len(temp_dict[key]))
+                
+                # Add a temperature heatmap using Scattergeo with appropriate sizing to create a contour effect
                 fig.add_trace(go.Scattergeo(
-                    lat=[None],
-                    lon=[None],
+                    lat=bin_lats,
+                    lon=bin_lons,
                     mode='markers',
                     marker=dict(
-                        colorscale=[
-                            [0, "#0d47a1"],      # Cold (deep blue)
-                            [0.3, CECE_BLUE],    # Cool (CeCe blue)
-                            [0.5, "#ffffff"],    # Moderate (white)
-                            [0.7, "#9370DB"],    # Warm (CeCe purple)
-                            [1, "#b71c1c"]       # Hot (red)
-                        ],
-                        showscale=True,
+                        size=25,  # Size adjusted to create overlapping effect
+                        color=bin_temps,
+                        colorscale=temp_colorscale,
                         colorbar=dict(
                             title=dict(
                                 text="Temp (°C)",
@@ -303,29 +307,45 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                             ),
                             outlinewidth=0,
                             borderwidth=0,
-                            thickness=15,
-                            len=0.8
+                            thickness=15
                         ),
-                        cmin=temp_min,
-                        cmax=temp_max
+                        opacity=0.8,
+                        symbol='circle',
+                        line=dict(width=0)
                     ),
                     name="Temperature",
-                    hoverinfo='none'
+                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>"
                 ))
                 
-                # Add visible data points for hover information
+                # We already have a colorbar from the main trace, no need for a separate one
+                
+                # Add a sparse set of visible data points for hover information
+                # Use a subset of the original points to avoid cluttering
+                if len(lats) > 100:
+                    # Sample points to reduce density
+                    sample_indices = np.linspace(0, len(lats)-1, 100, dtype=int)
+                    hover_lats = [lats[i] for i in sample_indices]
+                    hover_lons = [lons[i] for i in sample_indices]
+                    hover_temps = [temps[i] for i in sample_indices]
+                else:
+                    hover_lats = lats
+                    hover_lons = lons
+                    hover_temps = temps
+                
                 fig.add_trace(go.Scattergeo(
-                    lat=lats,
-                    lon=lons,
+                    lat=hover_lats,
+                    lon=hover_lons,
                     mode='markers',
                     marker=dict(
-                        size=3,
-                        color='rgba(0,0,0,0)',  # Transparent markers for hover only
-                        symbol='circle'
+                        size=4,
+                        color=hover_temps,
+                        colorscale=temp_colorscale,
+                        opacity=0.8,
+                        symbol='circle',
+                        showscale=False
                     ),
                     name="Data Points",
-                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{text:.1f}°C<extra></extra>",
-                    text=temps,
+                    hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>",
                     showlegend=False
                 ))
             except Exception as e:
