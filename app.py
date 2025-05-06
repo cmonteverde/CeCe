@@ -563,8 +563,8 @@ try:
     
     # Display the appropriate visualization based on selection
     if st.session_state.map_style == "earth_nullschool":
-        # Use our custom animated Earth implementation with blue/purple gradient
-        animated_earth.display_animated_earth(dark_mode=True, width=800, height=500)
+        # Display the official Earth Nullschool map with blue-purple color scheme
+        embedded_earth_nullschool.display_earth_nullschool(height=500)
     else:
         # Display the classic globe map
         globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
