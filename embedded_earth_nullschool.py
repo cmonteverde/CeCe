@@ -8,7 +8,7 @@ through an iframe.
 
 import streamlit as st
 
-def display_earth_nullschool(height=600, mode="wind", overlay="total_precipitable_water", 
+def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
                             date="current"):
     """
@@ -24,7 +24,8 @@ def display_earth_nullschool(height=600, mode="wind", overlay="total_precipitabl
     """
     # Earth Nullschool URL creation
     base_url = "https://earth.nullschool.net"
-    url = f"{base_url}/#{date}/{mode}/{overlay}/orthographic={location}"
+    # Always use "current" for reliable data availability
+    url = f"{base_url}/#current/{mode}/{overlay}/orthographic={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -77,11 +78,11 @@ def display_earth_nullschool(height=600, mode="wind", overlay="total_precipitabl
             )
             
             overlay_options = {
-                "wind": ["total_precipitable_water", "temp", "wind", "relative_humidity", "3hr_precipitation"],
-                "ocean": ["currents", "waves", "temp"],
-                "chem": ["co2", "so2", "o3", "no2", "pm2.5", "pm10"],
-                "particulates": ["dust", "carbon"],
-                "space": ["aurora", "clouds_ir"]
+                "wind": ["wind", "temp", "relative_humidity", "total_precipitable_water", "total_cloud_water", "3hr_precipitation", "mean_sea_level_pressure"],
+                "ocean": ["currents", "waves", "temp", "primary_waves", "sea_surface_temp"],
+                "chem": ["co2", "cosc", "so2", "o3", "no2", "pm2.5", "pm10", "duexttau"],
+                "particulates": ["dust", "carbon", "so4ext", "aod550"],
+                "space": ["aurora", "clouds_ir", "tdso"]
             }
             
             selected_overlay = st.selectbox(
@@ -101,8 +102,8 @@ def display_earth_nullschool(height=600, mode="wind", overlay="total_precipitabl
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Generate new URL based on selections
-            new_url = f"{base_url}/#{selected_date}/{selected_mode}/{selected_overlay}/{selected_projection}={location}"
+            # Generate new URL based on selections, always use "current" for reliable data
+            new_url = f"{base_url}/#current/{selected_mode}/{selected_overlay}/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
@@ -110,7 +111,7 @@ def display_earth_nullschool(height=600, mode="wind", overlay="total_precipitabl
                 "mode": selected_mode,
                 "overlay": selected_overlay,
                 "projection": selected_projection,
-                "date": selected_date
+                "date": "current"  # Always use current data
             }
             st.rerun()
 
