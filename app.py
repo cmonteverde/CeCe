@@ -563,8 +563,8 @@ try:
     
     # Display the appropriate visualization based on selection
     if st.session_state.map_style == "earth_nullschool":
-        # Use the Earth Nullschool iframe with blue-purple colors, which includes built-in zoom
-        embedded_earth_nullschool.display_earth_nullschool(height=500)
+        # Use our custom animated Earth with blue-purple colors and proper zoom control
+        animated_earth.display_animated_earth(dark_mode=True, width=800, height=500)
     else:
         # Display the classic globe map
         globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
