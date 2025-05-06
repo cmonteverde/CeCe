@@ -144,7 +144,7 @@ def animated_earth_html(wind_data=None, dark_mode=True, width=800, height=600):
                 landColor: """ + ('"#2A3C4D"' if dark_mode else '"#C0D6E4"') + """,
                 particleColor: d3.scaleLinear()
                     .domain([0, 10, 20, 30])
-                    .range(['"#1E90FF", "#4169E1", "#7B68EE", "#9370DB"'])
+                    .range(["#1E90FF", "#4169E1", "#7B68EE", "#9370DB"])
             };
 
             // Create the visualization
