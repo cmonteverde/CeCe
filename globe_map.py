@@ -164,9 +164,11 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
             if layer_type == "temperature":
                 from climate_data_sources import generate_global_temperature_grid
                 with st.spinner("Generating global temperature grid..."):
-                    data = generate_global_temperature_grid(resolution=5)  # Higher resolution for better visual
+                    # Use a higher resolution grid for better visual effect
+                    resolution = 3  # 3-degree resolution for better heatmap without slowing down too much
+                    data = generate_global_temperature_grid(resolution=resolution)
                     if isinstance(data, pd.DataFrame):
-                        st.success(f"Generated temperature grid with {len(data)} points")
+                        st.success(f"Generated high-resolution temperature visualization with {len(data)} points")
             else:
                 # Get data for other layer types
                 from climate_data_sources import get_climate_layer_data
@@ -196,20 +198,29 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                 lons = data['lon'].tolist()
                 temps = data['temperature'].tolist()
                 
-                # Use Scattergeo for better globe compatibility
+                # Convert to grid for heatmap/interpolation
+                # For better visualization, organize data into bins/grid cells
+                temp_min = min(temps)
+                temp_max = max(temps)
+                
+                # Create interpolated temperature surface
+                # Group data points into bins for regions to make a smoother visual appearance
+                # We'll use a colored point approach with varying sizes and opacity
+                
+                # First create larger, low-opacity circles for a base heatmap effect
                 fig.add_trace(go.Scattergeo(
                     lat=lats,
                     lon=lons,
                     mode='markers',
                     marker=dict(
-                        size=5,
+                        size=15,  # Larger markers to create overlap/heatmap effect
                         color=temps,
                         colorscale=[
-                            [0, "#0d47a1"],  # Cold (deep blue)
-                            [0.3, CECE_BLUE],  # Cool (CeCe blue)
-                            [0.5, "#ffffff"],  # Moderate (white)
-                            [0.7, "#9370DB"],  # Warm (CeCe purple)
-                            [1, "#b71c1c"]  # Hot (red)
+                            [0, "#0d47a1"],      # Cold (deep blue)
+                            [0.3, CECE_BLUE],    # Cool (CeCe blue)
+                            [0.5, "#ffffff"],    # Moderate (white)
+                            [0.7, "#9370DB"],    # Warm (CeCe purple)
+                            [1, "#b71c1c"]       # Hot (red)
                         ],
                         colorbar=dict(
                             title=dict(
@@ -220,11 +231,34 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                             borderwidth=0,
                             thickness=15
                         ),
-                        opacity=0.7,
+                        opacity=0.5,  # Semi-transparent for blending
                         symbol='circle'
                     ),
                     name="Temperature",
                     hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>"
+                ))
+                
+                # Then add smaller, higher-opacity circles for the data points
+                fig.add_trace(go.Scattergeo(
+                    lat=lats,
+                    lon=lons,
+                    mode='markers',
+                    marker=dict(
+                        size=5,  # Smaller markers for precise points
+                        color=temps,
+                        colorscale=[
+                            [0, "#0d47a1"],      # Cold (deep blue)
+                            [0.3, CECE_BLUE],    # Cool (CeCe blue)
+                            [0.5, "#ffffff"],    # Moderate (white)
+                            [0.7, "#9370DB"],    # Warm (CeCe purple)
+                            [1, "#b71c1c"]       # Hot (red)
+                        ],
+                        opacity=0.8,  # More opaque for data points
+                        symbol='circle',
+                        showscale=False  # Don't show duplicate colorbar
+                    ),
+                    showlegend=False,
+                    hoverinfo='skip'  # Skip hover to avoid duplicate tooltips
                 ))
             except Exception as e:
                 st.error(f"Error adding temperature data to map: {str(e)}")

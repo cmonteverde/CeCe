@@ -272,12 +272,12 @@ def fetch_glacier_data():
             # If both sources fail, return empty DataFrame
             return pd.DataFrame(columns=['Year', 'Mean cumulative mass balance'])
 
-def generate_global_temperature_grid(resolution=5):
+def generate_global_temperature_grid(resolution=3):
     """
     Generate a grid of global temperature data for mapping
     
     Args:
-        resolution: Grid resolution in degrees (default: 5)
+        resolution: Grid resolution in degrees (default: 3)
         
     Returns:
         DataFrame with lat, lon, and temperature values
