@@ -11,13 +11,12 @@ that can be embedded within the main application. The globe features:
 """
 
 import plotly.graph_objects as go
+import plotly.express as px
 import numpy as np
 import pandas as pd 
 import streamlit as st
 import io
 import base64
-from matplotlib.colors import LinearSegmentedColormap
-from scipy.interpolate import griddata
 
 # CeCe brand colors (blue to purple gradient)
 CECE_BLUE = "#1E90FF"
@@ -517,6 +516,10 @@ def create_temperature_heatmap(dark_mode=True, data=None):
     Returns:
         Plotly figure
     """
+    import plotly.express as px
+    import numpy as np
+    import pandas as pd
+    
     # If no data provided, get it from climate_data_sources
     if data is None:
         from climate_data_sources import generate_global_temperature_grid
@@ -532,28 +535,17 @@ def create_temperature_heatmap(dark_mode=True, data=None):
     lons = data['lon'].tolist()
     temps = data['temperature'].tolist()
     
-    # Create a pivoted grid for the heatmap
-    from scipy.interpolate import griddata
+    # Set color theme parameters based on dark mode
+    if dark_mode:
+        template = "plotly_dark"
+        bg_color = "#111"
+    else:
+        template = "plotly_white"
+        bg_color = "#f5f5f5"
     
-    # Generate a regular grid
-    grid_lon = np.linspace(-180, 180, 180)  # 2-degree resolution
-    grid_lat = np.linspace(-90, 90, 90)
-    
-    # Create a meshgrid for contour plotting
-    lon_mesh, lat_mesh = np.meshgrid(grid_lon, grid_lat)
-    
-    # Interpolate temperature values onto the regular grid
-    try:
-        temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='cubic')
-    except Exception:
-        try:
-            temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='linear')
-        except Exception:
-            # Fallback to nearest interpolation if others fail
-            temp_grid = griddata((lons, lats), temps, (lon_mesh, lat_mesh), method='nearest')
-    
-    # Define color scale
-    temp_colorscale = [
+    # Use plotly express for a simpler approach with built-in interpolation
+    # Create custom colorscale
+    custom_colorscale = [
         [0, "#0d47a1"],      # Cold (deep blue)
         [0.3, CECE_BLUE],    # Cool (CeCe blue)
         [0.5, "#ffffff"],    # Moderate (white)
@@ -561,90 +553,54 @@ def create_temperature_heatmap(dark_mode=True, data=None):
         [1, "#b71c1c"]       # Hot (red)
     ]
     
-    # Set background colors based on mode
-    if dark_mode:
-        bg_color = "#111"
-        text_color = "white"
-        country_color = "#444"
-    else:
-        bg_color = "#f5f5f5"
-        text_color = "#333"
-        country_color = "#999"
+    # Create basic figure with contour plot
+    fig = px.density_contour(
+        x=lons, 
+        y=lats, 
+        z=temps,
+        labels={"x": "Longitude", "y": "Latitude", "z": "Temperature (°C)"},
+        color_continuous_scale=custom_colorscale,
+        width=800,
+        height=500
+    )
     
-    # Create the heatmap figure
-    fig = go.Figure()
-    
-    # Add the contour filled trace
-    fig.add_trace(go.Contour(
-        z=temp_grid,
-        x=grid_lon,
-        y=grid_lat,
-        colorscale=temp_colorscale,
+    # Convert to filled contours
+    fig.update_traces(
         contours=dict(
+            coloring='fill',
             showlabels=False,
-            coloring='heatmap',
-            start=np.nanmin(temp_grid),
-            end=np.nanmax(temp_grid),
-            size=(np.nanmax(temp_grid) - np.nanmin(temp_grid)) / 20,  # 20 levels
+            showlines=True,
         ),
-        colorbar=dict(
-            title=dict(
-                text="Temperature (°C)",
-                side="top",
-                font=dict(color=text_color)
-            ),
-            thickness=15,
-            len=0.9,
-            tickfont=dict(color=text_color),
-            outlinewidth=0,
-        ),
-        hoverinfo='text',
-        hovertemplate='Lat: %{y:.1f}°<br>Lon: %{x:.1f}°<br>Temp: %{z:.1f}°C<extra></extra>'
-    ))
+        showscale=True,
+        hovertemplate='Lon: %{x:.1f}°<br>Lat: %{y:.1f}°<br>Temp: %{z:.1f}°C<extra></extra>'
+    )
     
-    # Add coastlines and country borders using geo scatter
-    from geojson_utils import get_coastlines, get_country_borders
-    
-    # Add world boundaries and coastlines
-    coastlines = get_coastlines()
-    for line in coastlines:
-        fig.add_trace(go.Scatter(
-            x=line[0],
-            y=line[1],
-            mode='lines',
-            line=dict(width=1.0, color=country_color),
-            hoverinfo='skip',
-            showlegend=False
-        ))
-        
-    # Update layout
+    # Improve layout  
     fig.update_layout(
-        title=None,
-        autosize=True,
-        height=500,
-        margin=dict(l=0, r=0, t=0, b=0),
+        template=template,
         paper_bgcolor=bg_color,
         plot_bgcolor=bg_color,
-        font=dict(color=text_color),
+        margin=dict(l=10, r=10, t=30, b=10),
         xaxis=dict(
             title="Longitude",
             range=[-180, 180],
             tickvals=[-180, -120, -60, 0, 60, 120, 180],
             ticktext=['-180°', '-120°', '-60°', '0°', '60°', '120°', '180°'],
-            showgrid=False,
-            zeroline=False,
-            tickfont=dict(color=text_color)
         ),
         yaxis=dict(
             title="Latitude",
             range=[-90, 90],
             tickvals=[-90, -60, -30, 0, 30, 60, 90],
             ticktext=['-90°', '-60°', '-30°', '0°', '30°', '60°', '90°'],
-            showgrid=False,
-            zeroline=False,
             scaleanchor="x",
             scaleratio=0.5,  # Adjust to make the map look properly proportioned
-            tickfont=dict(color=text_color)
+        ),
+        coloraxis_colorbar=dict(
+            title="Temperature (°C)",
+            titleside="top",
+            thickness=15,
+            len=0.9,
+            outlinewidth=0,
         ),
     )
     
