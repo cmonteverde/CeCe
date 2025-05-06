@@ -537,7 +537,7 @@ if st.session_state.chat_history and len(st.session_state.chat_history) > 0:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Import the earth visualization modules
-import animated_earth
+import nullschool_earth
 import globe_map
 
 # Add the interactive earth map below the welcome message and above the industry buttons
@@ -562,8 +562,8 @@ try:
     
     # Display the appropriate visualization based on selection
     if st.session_state.map_style == "earth_nullschool":
-        # Display the animated earth nullschool style map
-        animated_earth.display_animated_earth(dark_mode=st.session_state.globe_dark_mode, width=1000, height=500)
+        # Display the nullschool style map
+        nullschool_earth.display_nullschool_earth(width=800, height=500)
     else:
         # Display the classic globe map
         globe_map.display_globe_map(dark_mode=st.session_state.globe_dark_mode)
