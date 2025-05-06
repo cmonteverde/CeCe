@@ -264,6 +264,106 @@ def fetch_era5_precipitation_map(lat, lon, start_date, end_date, radius_degrees=
             os.remove(output_file)
         raise Exception(f"Error fetching ERA5 precipitation map: {str(e)}")
 
+def fetch_era5_global_temperature_grid(resolution=10, date=None):
+    """
+    Fetch ERA5 global temperature data at the specified resolution
+    
+    Args:
+        resolution: Resolution in degrees (default: 10 to limit data volume)
+        date: Date for the data in format 'YYYY-MM-DD' (default: yesterday)
+        
+    Returns:
+        DataFrame with global temperature grid data (lat, lon, temperature)
+    """
+    # If no date is provided, use yesterday
+    if date is None:
+        yesterday = datetime.now() - timedelta(days=1)
+        date = yesterday.strftime('%Y-%m-%d')
+    
+    # Parse the date
+    date_obj = datetime.strptime(date, '%Y-%m-%d')
+    
+    # Format for request
+    year = str(date_obj.year)
+    month = f"{date_obj.month:02d}"
+    day = f"{date_obj.day:02d}"
+    
+    # Initialize CDS client
+    try:
+        client = get_cds_client()
+    except Exception as e:
+        raise Exception(f"Failed to initialize CDS client: {str(e)}")
+    
+    # Create a grid covering the globe at the specified resolution
+    lat_step = resolution
+    lon_step = resolution
+    
+    # Create latitude and longitude grids
+    lats = list(range(-90, 91, lat_step))
+    lons = list(range(-180, 181, lon_step))
+    
+    # Initialize DataFrame for results
+    results = []
+    
+    # Prepare output file
+    output_file = 'era5_global_temp.nc'
+    
+    try:
+        # Request global temperature data from CDS
+        client.retrieve(
+            'reanalysis-era5-single-levels',
+            {
+                'product_type': 'reanalysis',
+                'format': 'netcdf',
+                'variable': ['2m_temperature'],
+                'year': [year],
+                'month': [month],
+                'day': [day],
+                'time': ['12:00'],  # Noon UTC to get a representative daily temperature
+                'area': [90, -180, -90, 180],  # Global: North, West, South, East
+            },
+            output_file
+        )
+        
+        # Read the netCDF file
+        ds = xr.open_dataset(output_file)
+        
+        # Extract temperature data
+        if 't2m' in ds:
+            temp_var = 't2m'
+        elif '2m_temperature' in ds:
+            temp_var = '2m_temperature'
+        else:
+            raise Exception("Temperature variable not found in ERA5 data")
+        
+        # Get the first (and only) time point
+        ds_single_time = ds.isel(time=0)
+        
+        # Convert to DataFrame
+        df = ds_single_time[temp_var].to_dataframe().reset_index()
+        
+        # Convert from Kelvin to Celsius
+        if temp_var in df.columns:
+            df['temperature'] = df[temp_var] - 273.15
+            df = df.drop(columns=[temp_var])
+        
+        # Rename columns for consistency with our display requirements
+        if 'latitude' in df.columns:
+            df = df.rename(columns={'latitude': 'lat'})
+        if 'longitude' in df.columns:
+            df = df.rename(columns={'longitude': 'lon'})
+        
+        # Clean up the file
+        os.remove(output_file)
+        
+        return df
+    
+    except Exception as e:
+        # If file exists but there was an error, clean up
+        if os.path.exists(output_file):
+            os.remove(output_file)
+        raise Exception(f"Error fetching ERA5 global temperature grid: {str(e)}")
+
 def get_era5_temperature_trends(lat, lon, start_date, end_date):
     """
     Get temperature trends from ERA5 data

@@ -156,23 +156,31 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     """
     # Import here to avoid circular imports
     import sys
-    from climate_data_sources import get_climate_layer_data, generate_global_temperature_grid
+    from era5_data import fetch_era5_global_temperature_grid
     
-    # If no data is provided, fetch from climate data sources
+    # If no data is provided, fetch appropriate data based on layer type
     if data is None:
         try:
-            # For temperature, directly use the grid function
+            # For temperature, use ERA5 global grid if available
             if layer_type == "temperature":
-                data = generate_global_temperature_grid(resolution=10)  # Lower resolution for better performance
-                st.write(f"Generated temperature grid with {len(data)} points")
+                try:
+                    # Try to get ERA5 data with a small notification
+                    with st.spinner("Fetching global temperature data from ERA5..."):
+                        data = fetch_era5_global_temperature_grid(resolution=20)  # Use lower resolution for better performance
+                        st.success(f"Using ERA5 global temperature data with {len(data)} points")
+                except Exception as e:
+                    st.error(f"Error accessing ERA5 data: {str(e)}")
+                    # Fall back to simpler model
+                    from climate_data_sources import generate_global_temperature_grid
+                    data = generate_global_temperature_grid(resolution=10)
+                    st.info(f"Using generated temperature grid with {len(data)} points")
             else:
                 # Get data for other layer types
+                from climate_data_sources import get_climate_layer_data
                 data = get_climate_layer_data(layer_type)
                 
         except Exception as e:
             st.error(f"Error loading climate data: {str(e)}")
-            import traceback
-            st.error(traceback.format_exc())
             # Fall back to empty dataframe with expected structure
             if layer_type == "temperature":
                 data = pd.DataFrame(columns=['lat', 'lon', 'temperature'])
@@ -186,9 +194,6 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
     
     # Add visualization based on layer type
     if layer_type == "temperature":
-        # Debug information
-        st.write(f"Temperature data shape: {data.shape if isinstance(data, pd.DataFrame) else 'Not a DataFrame'}")
-        
         if isinstance(data, pd.DataFrame) and not data.empty and 'lat' in data.columns:
             try:
                 # Extract data columns
@@ -196,10 +201,7 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                 lons = data['lon'].tolist()
                 temps = data['temperature'].tolist()
                 
-                # Show sample of data for debugging
-                st.write(f"First few points: {list(zip(lats[:3], lons[:3], temps[:3]))}")
-                
-                # Use Scattergeo instead of Densitymapbox for better globe compatibility
+                # Use Scattergeo for better globe compatibility
                 fig.add_trace(go.Scattergeo(
                     lat=lats,
                     lon=lons,
@@ -209,8 +211,9 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                         color=temps,
                         colorscale=[
                             [0, "#0d47a1"],  # Cold (deep blue)
-                            [0.5, CECE_BLUE],  # Medium (CeCe blue)
-                            [0.75, "#9370DB"],  # Warm (CeCe purple)
+                            [0.3, CECE_BLUE],  # Cool (CeCe blue)
+                            [0.5, "#ffffff"],  # Moderate (white)
+                            [0.7, "#9370DB"],  # Warm (CeCe purple)
                             [1, "#b71c1c"]  # Hot (red)
                         ],
                         colorbar=dict(
@@ -223,14 +226,11 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                         opacity=0.7,
                         symbol='circle'
                     ),
+                    name="Temperature",
                     hovertemplate="Lat: %{lat:.2f}<br>Lon: %{lon:.2f}<br>Temp: %{marker.color:.1f}°C<extra></extra>"
                 ))
-                
-                st.success("Successfully added temperature data to the map")
             except Exception as e:
                 st.error(f"Error adding temperature data to map: {str(e)}")
-                import traceback
-                st.error(traceback.format_exc())
         else:
             st.warning("No temperature data available to display")
     
