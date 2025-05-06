@@ -25,35 +25,20 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     # Earth Nullschool URL creation using the exact format from the site
     base_url = "https://earth.nullschool.net"
     
-    # Use the correct URL format for Earth Nullschool
-    # Format example: https://earth.nullschool.net/#current/wind/surface/level/orthographic=-97.01,39.68,897
+    # Create a direct URL to Earth Nullschool with a specific, working format
+    # This is a simplified approach to ensure the visualization works
     if mode == "wind":
-        level_param = "level"
+        # For wind, use this format that works reliably
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=wind/orthographic={location}"
     elif mode == "ocean":
-        level_param = "currents"
-    elif mode == "chem" or mode == "particulates":
-        level_param = "particles"
+        url = f"{base_url}/#{date}/ocean/surface/currents/orthographic={location}"
+    elif mode == "chem":
+        url = f"{base_url}/#{date}/chem/surface/level/overlay=so2/orthographic={location}"
+    elif mode == "particulates":
+        url = f"{base_url}/#{date}/particulates/surface/level/overlay=pm2.5/orthographic={location}"
     else:
-        level_param = "level"
-    
-    # Add custom color parameter that matches our logo gradient (blue to purple)
-    # The color parameter format is: /overlay=param,min,max,scale
-    # Using standard color scales that align with our blue-purple theme
-    if overlay == "wind":
-        color_param = "overlay=wind,0,30,Purples"
-    elif overlay == "temp":
-        color_param = "overlay=temp,-10,35,RdPu"
-    elif overlay in ["rh", "tpw"]:
-        color_param = f"overlay={overlay},0,100,Blues"
-    elif overlay in ["tcw", "precip", "mslp"]:
-        color_param = f"overlay={overlay},0,100,BuPu"
-    else:
-        color_param = ""
-    
-    if color_param:
-        url = f"{base_url}/#{date}/{mode}/surface/{level_param}/{color_param}/{projection}={location}"
-    else:
-        url = f"{base_url}/#{date}/{mode}/surface/{level_param}/{projection}={location}"
+        # Default fallback
+        url = f"{base_url}/#{date}/wind/surface/level/overlay=temp/orthographic={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -131,32 +116,22 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             selected_date = st.selectbox("Date", date_options, index=0)
         
         if st.button("Update Visualization"):
-            # Generate new URL based on selections, consistent with the same logic as above
+            # Use the same URL pattern as above for consistency
             if selected_mode == "wind":
-                level_param = "level" 
+                # For wind, show wind overlay
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=wind/{selected_projection}={location}"
             elif selected_mode == "ocean":
-                level_param = "currents"
-            elif selected_mode == "chem" or selected_mode == "particulates":
-                level_param = "particles"
+                # For ocean, show currents
+                new_url = f"{base_url}/#{selected_date}/ocean/surface/currents/{selected_projection}={location}"
+            elif selected_mode == "chem":
+                # For chemistry, show selected overlay
+                new_url = f"{base_url}/#{selected_date}/chem/surface/level/overlay={selected_overlay}/{selected_projection}={location}"
+            elif selected_mode == "particulates":
+                # For particulates, show selected overlay
+                new_url = f"{base_url}/#{selected_date}/particulates/surface/level/overlay={selected_overlay}/{selected_projection}={location}"
             else:
-                level_param = "level"
-            
-            # Add custom color parameter that matches our logo gradient (blue to purple)
-            if selected_overlay == "wind":
-                color_param = "overlay=wind,0,30,Purples"
-            elif selected_overlay == "temp":
-                color_param = "overlay=temp,-10,35,RdPu"
-            elif selected_overlay in ["rh", "tpw"]:
-                color_param = f"overlay={selected_overlay},0,100,Blues"
-            elif selected_overlay in ["tcw", "precip", "mslp"]:
-                color_param = f"overlay={selected_overlay},0,100,BuPu"
-            else:
-                color_param = ""
-                
-            if color_param:
-                new_url = f"{base_url}/#{selected_date}/{selected_mode}/surface/{level_param}/{color_param}/{selected_projection}={location}"
-            else:
-                new_url = f"{base_url}/#{selected_date}/{selected_mode}/surface/{level_param}/{selected_projection}={location}"
+                # Default fallback
+                new_url = f"{base_url}/#{selected_date}/wind/surface/level/overlay=temp/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
