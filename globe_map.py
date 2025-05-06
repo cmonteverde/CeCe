@@ -212,8 +212,10 @@ def add_climate_layer(fig, layer_type="temperature", data=None):
                             [1, "#b71c1c"]  # Hot (red)
                         ],
                         colorbar=dict(
-                            title="Temp (°C)",
-                            titleside="top",
+                            title=dict(
+                                text="Temp (°C)",
+                                side="top"
+                            ),
                             outlinewidth=0,
                             borderwidth=0,
                             thickness=15

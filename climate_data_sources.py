@@ -27,40 +27,77 @@ def fetch_global_temperature_data():
     Returns:
         DataFrame with global temperature anomaly data
     """
-    # NASA GISTEMP v4 global temperature anomaly data
-    url = "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv"
+    # Try alternative source first - NOAA Global Climate Report
+    url = "https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/global/time-series/globe/land_ocean/ytd/12/1880-2023.csv"
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
         response.raise_for_status()
         
-        # Skip the header rows and parse the data
-        lines = response.text.split('\n')
-        data_start = 0
-        for i, line in enumerate(lines):
-            if line.startswith('Year'):
-                data_start = i
-                break
+        # Parse the CSV data
+        df = pd.read_csv(io.StringIO(response.text), skiprows=4)
         
-        data_text = '\n'.join(lines[data_start:])
-        df = pd.read_csv(io.StringIO(data_text))
-        
-        # Format data - convert monthly columns to numeric
-        for col in df.columns:
-            if col not in ['Year', 'J-D', 'D-N', 'DJF', 'MAM', 'JJA', 'SON']:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-        # Calculate annual mean if J-D (Jan-Dec) is not available
-        if 'J-D' not in df.columns:
-            month_cols = [col for col in df.columns if col not in ['Year', 'J-D', 'D-N', 'DJF', 'MAM', 'JJA', 'SON']]
-            df['Mean'] = df[month_cols].mean(axis=1)
-        else:
-            df['Mean'] = df['J-D']
+        # Rename columns for consistency
+        if 'Year' in df.columns and 'Value' in df.columns:
+            df.rename(columns={'Value': 'Mean'}, inplace=True)
             
+        # Convert the anomaly to proper scale if needed
+        if 'Mean' in df.columns:
+            # NOAA data is usually already in the right scale, but check values to make sure
+            if df['Mean'].mean() > 100 or df['Mean'].mean() < -100:
+                # If values seem too large or small, rescale
+                df['Mean'] = df['Mean'] / 100
+                
         return df
-    except Exception as e:
-        st.error(f"Error fetching global temperature data: {str(e)}")
-        # Return empty DataFrame with expected columns
-        return pd.DataFrame(columns=['Year', 'Mean'])
+    except Exception as noaa_error:
+        # If the NOAA data fails, try the NASA source with additional headers
+        try:
+            # NASA GISTEMP v4 global temperature anomaly data
+            nasa_url = "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv"
+            
+            # Add browser-like headers to avoid 403 errors
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Cache-Control': 'max-age=0'
+            }
+            
+            response = requests.get(nasa_url, headers=headers)
+            response.raise_for_status()
+            
+            # Skip the header rows and parse the data
+            lines = response.text.split('\n')
+            data_start = 0
+            for i, line in enumerate(lines):
+                if line.startswith('Year'):
+                    data_start = i
+                    break
+            
+            data_text = '\n'.join(lines[data_start:])
+            df = pd.read_csv(io.StringIO(data_text))
+            
+            # Format data - convert monthly columns to numeric
+            for col in df.columns:
+                if col not in ['Year', 'J-D', 'D-N', 'DJF', 'MAM', 'JJA', 'SON']:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            # Calculate annual mean if J-D (Jan-Dec) is not available
+            if 'J-D' not in df.columns:
+                month_cols = [col for col in df.columns if col not in ['Year', 'J-D', 'D-N', 'DJF', 'MAM', 'JJA', 'SON']]
+                df['Mean'] = df[month_cols].mean(axis=1)
+            else:
+                df['Mean'] = df['J-D']
+                
+            return df
+        except Exception as nasa_error:
+            # Log both errors for debugging
+            st.error(f"Error fetching global temperature data from NOAA: {str(noaa_error)}")
+            st.error(f"Error fetching global temperature data from NASA: {str(nasa_error)}")
+            
+            # Return empty DataFrame with expected columns
+            return pd.DataFrame(columns=['Year', 'Mean'])
 
 @st.cache_data(ttl=3600)
 def fetch_co2_data():
