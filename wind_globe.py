@@ -4,9 +4,9 @@ import json
 import random
 import math
 
-def generate_wind_data(resolution=10):
+def generate_wind_data(resolution=5):
     """
-    Generate sample wind data on a global grid
+    Generate sample wind data on a global grid with realistic global wind patterns
     
     Args:
         resolution: Grid resolution in degrees
@@ -19,13 +19,49 @@ def generate_wind_data(resolution=10):
     # Generate points across the globe with latitude (-90 to 90) and longitude (-180 to 180)
     for lat in range(-90, 91, resolution):
         for lon in range(-180, 181, resolution):
-            # Create some realistic-looking patterns
-            # Wind direction changes with latitude (simplified Coriolis effect)
-            u = 5 * math.cos(math.radians(lat)) + random.uniform(-1, 1)
-            v = 3 * math.sin(math.radians(lon/2)) + random.uniform(-1, 1)
+            # Global wind pattern factors
+            # 1. Trade winds: easterly winds between 0-30 degrees N/S
+            # 2. Westerlies: westerly winds between 30-60 degrees N/S
+            # 3. Polar easterlies: easterly winds between 60-90 degrees N/S
+            # 4. Coriolis effect: deflection based on hemisphere
             
-            # Stronger winds near the equator
-            magnitude = (4 + random.uniform(-1, 1)) * (1 - abs(lat/90)**2)
+            # Base wind component calculations
+            if abs(lat) < 30:  # Trade winds
+                # Easterly flow (negative u) near equator
+                u_base = -5 - 3 * (1 - abs(lat)/30)
+                # Small meridional component toward equator
+                v_base = -1 * math.copysign(1, lat) * (abs(lat)/30)
+            elif abs(lat) < 60:  # Westerlies
+                # Westerly flow (positive u) in mid-latitudes
+                u_base = 7 * (1 - (abs(lat) - 30)/30)
+                # Small poleward component
+                v_base = 2 * math.copysign(1, lat) * ((abs(lat) - 30)/30)
+            else:  # Polar easterlies
+                # Easterly flow (negative u) near poles
+                u_base = -4 * ((abs(lat) - 60)/30)
+                # Equatorward component
+                v_base = -1 * math.copysign(1, lat) * ((abs(lat) - 60)/30)
+            
+            # Add variation based on longitude (simplified stationary waves)
+            u_variation = 2 * math.sin(math.radians(2 * lon))
+            v_variation = 1.5 * math.sin(math.radians(2 * lon + 45))
+            
+            # Add randomization for turbulence
+            u_random = random.uniform(-1, 1)
+            v_random = random.uniform(-1, 1)
+            
+            # Combine components
+            u = u_base + u_variation + u_random
+            v = v_base + v_variation + v_random
+            
+            # Calculate magnitude (wind speed)
+            magnitude = math.sqrt(u**2 + v**2)
+            
+            # Reduce winds at poles to avoid visual artifacts
+            if abs(lat) > 80:
+                u *= (90 - abs(lat)) / 10
+                v *= (90 - abs(lat)) / 10
+                magnitude *= (90 - abs(lat)) / 10
             
             wind_data.append({
                 "lat": lat,
@@ -47,7 +83,7 @@ def interactive_wind_globe(height=600):
     """
     # Generate sample wind data
     try:
-        wind_data = generate_wind_data(10)
+        wind_data = generate_wind_data(5)  # Higher resolution (smaller grid spacing)
     except Exception as e:
         wind_data = []
         st.error(f"Error generating wind data: {str(e)}")
@@ -93,7 +129,9 @@ def interactive_wind_globe(height=600):
                 opacity: 0.2;
             }}
             .particle {{
-                fill: rgba(100, 180, 255, 0.6);
+                fill: rgba(0, 191, 255, 0.8);
+                stroke: rgba(30, 144, 255, 0.4);
+                stroke-width: 0.5px;
             }}
             .controls {{
                 position: absolute;
@@ -185,8 +223,8 @@ def interactive_wind_globe(height=600):
                     
                     // Create particles for wind visualization
                     const particles = [];
-                    const numParticles = 700;
-                    const maxAge = 100;
+                    const numParticles = 1500;
+                    const maxAge = 120;
                     
                     function initParticles() {{
                         for (let i = 0; i < numParticles; i++) {{
@@ -251,8 +289,22 @@ def interactive_wind_globe(height=600):
                                         .attr("class", "particle")
                                         .attr("cx", p.x)
                                         .attr("cy", p.y)
-                                        .attr("r", 1.2)
+                                        .attr("r", 1.5)
                                         .attr("opacity", 1 - p.age / maxAge);
+                                    
+                                    // Draw trail for more visible wind flow
+                                    if (p.prevX && p.prevY) {{
+                                        particleGroup.append("line")
+                                            .attr("x1", p.prevX)
+                                            .attr("y1", p.prevY)
+                                            .attr("x2", p.x)
+                                            .attr("y2", p.y)
+                                            .attr("stroke", "rgba(30, 144, 255, 0.3)")
+                                            .attr("stroke-width", 1)
+                                            .attr("opacity", 0.7 - p.age / maxAge);
+                                    }}
+                                    p.prevX = p.x;
+                                    p.prevY = p.y;
                                         
                                     // Update age
                                     p.age++;
