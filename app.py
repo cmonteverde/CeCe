@@ -561,9 +561,34 @@ try:
         selected_map_style = map_styles[map_style_idx].lower().replace(" ", "_")
         st.session_state.map_style = selected_map_style
     
-    # Use the simple globe map with blue-purple colors built in
-    # This is the most reliable visualization option
-    globe_map.display_globe_map(dark_mode=True)
+    # Use a direct iframe to Earth Nullschool with wind visualization and blue-purple colors
+    nullschool_url = "https://earth.nullschool.net/#current/wind/surface/level/orthographic=0.00,0.00,409/loc=0,0/grid=on/anim=on/overlay=wind/projection=winkel3/color=hex:1e90ff,5963cf,9370db"
+    
+    # Display the iframe
+    st.markdown(f"""
+    <div style="width: 100%; height: 500px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
+        <iframe src="{nullschool_url}" 
+                width="100%" 
+                height="500" 
+                frameborder="0"
+                style="border-radius: 15px; border: none; overflow: hidden;">
+        </iframe>
+    </div>
+    <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
+        Earth visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+    </div>
+    
+    <!-- Add instructions for zoom -->
+    <div style="margin-top: 10px; padding: 10px; background-color: rgba(30, 144, 255, 0.1); 
+              border-left: 4px solid #1E90FF; border-radius: 4px;">
+        <p style="margin: 0; color: white; font-size: 14px;">
+            <strong>Zoom Controls:</strong><br>
+            • <strong>Double-click</strong> to zoom in<br>
+            • <strong>Shift+double-click</strong> to zoom out<br>
+            • <strong>Pinch-to-zoom</strong> on touchscreens
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
         
 except Exception as e:
     st.error(f"Unable to load interactive globe map: {str(e)}")
