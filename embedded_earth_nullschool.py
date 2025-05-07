@@ -10,7 +10,7 @@ import streamlit as st
 
 def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
-                            date="current"):
+                            date="current", map_detail="high"):
     """
     Display embedded Earth Nullschool visualization in an iframe
     
@@ -21,6 +21,7 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         projection: Map projection (orthographic, waterman, patterson, etc.)
         location: Format "lat,lon,zoom" (e.g., "0.00,0.00,409")
         date: Date for the data (current, YYYY/MM/DD, etc.)
+        map_detail: Level of map detail ("high", "medium", "low")
     """
     # Earth Nullschool URL creation using the exact format from the site
     base_url = "https://earth.nullschool.net"
@@ -35,8 +36,16 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         level_param = "particles"
     else:
         level_param = "level"
+    
+    # Add map detail parameter
+    map_detail_param = ""
+    if map_detail == "high":
+        map_detail_param = "detail=true"
+    elif map_detail == "low":
+        map_detail_param = "detail=false"
         
-    url = f"{base_url}/#{date}/{mode}/surface/{level_param}/{projection}={location}"
+    base_url_with_detail = f"{base_url}" + (f"?{map_detail_param}" if map_detail_param else "")
+    url = f"{base_url_with_detail}/#{date}/{mode}/surface/{level_param}/{projection}={location}"
     
     # Create a stylish container with header
     st.markdown("""
@@ -112,6 +121,12 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             
             date_options = ["current", "2023/12/25", "2023/09/01", "2023/06/01", "2023/03/01"]
             selected_date = st.selectbox("Date", date_options, index=0)
+            
+            selected_map_detail = st.selectbox(
+                "Map Detail",
+                ["medium", "high", "low"],
+                index=0
+            )
         
         if st.button("Update Visualization"):
             # Generate new URL based on selections, consistent with the same logic as above
@@ -124,7 +139,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
             else:
                 level_param = "level"
                 
-            new_url = f"{base_url}/#{selected_date}/{selected_mode}/surface/{level_param}/{selected_projection}={location}"
+            # Add map detail parameter
+            map_detail_param = ""
+            if selected_map_detail == "high":
+                map_detail_param = "detail=true"
+            elif selected_map_detail == "low":
+                map_detail_param = "detail=false"
+                
+            base_url_with_detail = f"{base_url}" + (f"?{map_detail_param}" if map_detail_param else "")
+            new_url = f"{base_url_with_detail}/#{selected_date}/{selected_mode}/surface/{level_param}/{selected_projection}={location}"
             
             # Update the iframe (via Streamlit rerun)
             st.session_state.earth_nullschool_url = new_url
@@ -132,7 +155,8 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
                 "mode": selected_mode,
                 "overlay": selected_overlay,
                 "projection": selected_projection,
-                "date": selected_date
+                "date": selected_date,
+                "map_detail": selected_map_detail
             }
             st.rerun()
 
