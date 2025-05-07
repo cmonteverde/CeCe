@@ -7,8 +7,7 @@ for full mouse interaction (zoom, rotate) within the Streamlit app.
 """
 
 import streamlit as st
-import custom_earth_wind  # Import our custom D3.js-based visualization
-import math
+import simple_earth_globe  # Using a simpler, more reliable globe implementation
 
 def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
@@ -71,18 +70,17 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Use our custom D3.js-based Earth visualization with full mouse interaction
-    # Generate URL for reference (we still use it in links)
-    custom_earth_wind.custom_earth_wind_visualization(height=height)
+    # Use our simpler, more reliable interactive globe
+    simple_earth_globe.simple_earth_globe(height=height)
     
     # Add information about the visualization features
     st.success("""
     ### Interactive Earth Visualization
     
-    This custom visualization supports:
-    - **Zoom in/out** using your mouse scroll wheel
+    This interactive globe visualization supports:
+    - **Zoom in/out** using your mouse scroll wheel or buttons
     - **Rotate** the globe by clicking and dragging
-    - **View wind patterns** with animated particles
+    - **Auto-rotation** which pauses when you interact and resumes afterward
     
     The controls in the bottom right allow you to zoom in/out and reset the view.
     """)
