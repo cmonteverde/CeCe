@@ -1,5 +1,5 @@
 import streamlit as st
-import components.v1 as components
+import streamlit.components.v1 as components
 import os
 
 def display_nullschool_earth(url="https://earth.nullschool.net", height=600):
@@ -34,6 +34,7 @@ def display_nullschool_earth(url="https://earth.nullschool.net", height=600):
                 width: 100%;
                 height: 100%;
                 border-radius: 15px;
+                pointer-events: auto !important;
             }}
             .attribution {{
                 position: absolute;
@@ -45,30 +46,83 @@ def display_nullschool_earth(url="https://earth.nullschool.net", height=600):
                 font-size: 12px;
                 color: white;
                 z-index: 10;
+                pointer-events: none;
             }}
             .attribution a {{
                 color: #1E90FF;
                 text-decoration: none;
+                pointer-events: auto;
+            }}
+            /* Override any styles that might block mouse interaction */
+            * {{
+                pointer-events: auto;
+            }}
+            /* Direct link to open in new tab fallback */
+            .fallback-link {{
+                display: block;
+                margin-top: 10px;
+                text-align: center;
+                color: white;
+                text-decoration: none;
+                background-color: rgba(30, 144, 255, 0.7);
+                padding: 10px;
+                border-radius: 5px;
+                font-weight: bold;
             }}
         </style>
     </head>
     <body>
         <div id="nullschool-container">
-            <iframe src="{url}" allowfullscreen="true" allow="fullscreen"></iframe>
+            <iframe src="{url}" 
+                allowfullscreen="true" 
+                allow="fullscreen; pointer-lock"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-popups allow-top-navigation">
+            </iframe>
             <div class="attribution">
                 Powered by <a href="https://earth.nullschool.net" target="_blank">earth.nullschool.net</a>
             </div>
         </div>
         <script>
-            // Make sure the iframe gets focus for mouse events
+            // Enhanced script to ensure iframe gets focus and handles mouse events
             document.addEventListener('DOMContentLoaded', () => {{
+                const container = document.getElementById('nullschool-container');
                 const iframe = document.querySelector('iframe');
+                
+                // Focus management
                 iframe.addEventListener('load', () => {{
+                    iframe.focus();
+                    console.log('Iframe loaded and focused');
+                }});
+                
+                // Force pointer events to work
+                iframe.style.pointerEvents = 'auto';
+                
+                // Add click handler to ensure focus
+                container.addEventListener('click', () => {{
                     iframe.focus();
                 }});
                 
-                // Help ensure mouse events work
-                iframe.style.pointerEvents = 'auto';
+                // Add a message to help debug
+                console.log('Earth Nullschool component initialized');
+                
+                // Create event listeners for scroll and mouse events
+                window.addEventListener('message', (event) => {{
+                    // Security check
+                    if (event.origin !== 'https://earth.nullschool.net') return;
+                    
+                    console.log('Received message from iframe:', event.data);
+                }});
+                
+                // Fallback in case iframe doesn't work
+                setTimeout(() => {{
+                    // Create a fallback link if interactions aren't working
+                    const fallbackLink = document.createElement('a');
+                    fallbackLink.href = "{url}";
+                    fallbackLink.target = "_blank";
+                    fallbackLink.className = "fallback-link";
+                    fallbackLink.textContent = "If mouse interaction doesn't work, click here to open in a new tab";
+                    container.appendChild(fallbackLink);
+                }}, 3000);
             }});
         </script>
     </body>

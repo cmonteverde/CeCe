@@ -73,10 +73,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     # Use our custom component for better mouse interaction
     nullschool_component.display_nullschool_earth(url=url, height=height)
     
-    # Add attribution
-    st.markdown("""
-    <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
-        Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+    # Add attribution and direct link
+    st.markdown(f"""
+    <div style="text-align: center; margin-top: 10px; margin-bottom: 15px;">
+        <a href="{url}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            Open in New Tab for Full Interaction
+        </a>
+        <div style="text-align: right; font-size: 12px; color: #888; margin-top: 5px;">
+            Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
