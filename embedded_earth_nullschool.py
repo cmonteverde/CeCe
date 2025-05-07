@@ -70,15 +70,28 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         """, unsafe_allow_html=True)
     
     # Create iframe with Earth Nullschool
+    # Include allowfullscreen and sandbox attributes to allow interaction
     iframe_html = f"""
     <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
         <iframe src="{url}" 
                 width="100%" 
                 height="{height}" 
                 frameborder="0"
-                style="border-radius: 15px; border: none; overflow: hidden;">
+                allowfullscreen="true"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-popups allow-top-navigation"
+                style="border-radius: 15px; border: none; overflow: hidden; pointer-events: auto;">
         </iframe>
     </div>
+    <style>
+        /* Enable mouse events for the iframe container */
+        iframe {{
+            pointer-events: auto !important;
+        }}
+        /* Override any Streamlit styles that might block interaction */
+        .stApp iframe {{
+            pointer-events: auto !important;
+        }}
+    </style>
     <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
         Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
     </div>
