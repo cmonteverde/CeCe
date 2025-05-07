@@ -78,6 +78,10 @@ def display_nullschool_earth(url="https://earth.nullschool.net", height=600):
                 allow="fullscreen; pointer-lock"
                 sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-popups allow-top-navigation">
             </iframe>
+            <a href="{url}" target="_blank" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 15px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; box-shadow: 0 0 20px rgba(0,0,0,0.7); text-align: center; z-index: 1000; opacity: 0.9;">
+                <span style="font-size: 18px; display: block;">🌐 Click For Interactive Map</span>
+                <span style="font-size: 12px; display: block; margin-top: 5px;">Opens in new tab with zoom and rotation</span>
+            </a>
             <div class="attribution">
                 Powered by <a href="https://earth.nullschool.net" target="_blank">earth.nullschool.net</a>
             </div>

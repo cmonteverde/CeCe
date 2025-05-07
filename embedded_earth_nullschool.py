@@ -73,17 +73,36 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
     # Use our custom component for better mouse interaction
     nullschool_component.display_nullschool_earth(url=url, height=height)
     
-    # Add attribution and direct link
-    st.markdown(f"""
-    <div style="text-align: center; margin-top: 10px; margin-bottom: 15px;">
-        <a href="{url}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            Open in New Tab for Full Interaction
-        </a>
-        <div style="text-align: right; font-size: 12px; color: #888; margin-top: 5px;">
-            Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+    # Add prominent navigation buttons including direct link
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(f"""
+        <div style="text-align: center; margin: 15px 0; padding: 15px; background-color: rgba(0,0,0,0.5); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <h3 style="color: white; margin-bottom: 15px; font-size: 16px;">Earth Nullschool Interactive Controls</h3>
+            <a href="{url}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.4); margin-bottom: 15px; width: 80%; text-align: center; font-size: 16px;">
+                <span style="display: block;">🌐 Open Interactive Map</span>
+                <span style="font-size: 12px; opacity: 0.8; display: block; margin-top: 5px;">Full zoom & rotation controls</span>
+            </a>
+            <div style="display: flex; justify-content: space-around; margin-top: 10px;">
+                <a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Winds</a>
+                <a href="https://earth.nullschool.net/#current/ocean/surface/currents/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Oceans</a>
+                <a href="https://earth.nullschool.net/#current/chem/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Chem</a>
+                <a href="https://earth.nullschool.net/#current/particulates/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Particulates</a>
+            </div>
+            <div style="text-align: center; font-size: 12px; color: #888; margin-top: 15px;">
+                Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    
+    # Add more guidance about the visualization
+    st.info("""
+    **Note:** For the best interactive experience with the Earth Nullschool visualization:
+    - Use the "Open Interactive Map" button above to open in a separate tab
+    - In the new tab, you can use scroll to zoom in/out and click-drag to rotate
+    - The visualization shows real-time global weather patterns
+    """)
+    
     
     # Add visualization controls
     with st.expander("Visualization Controls"):
