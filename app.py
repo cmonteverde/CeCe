@@ -561,9 +561,9 @@ try:
         selected_map_style = map_styles[map_style_idx].lower().replace(" ", "_")
         st.session_state.map_style = selected_map_style
     
-    # Use our custom animated Earth with blue-purple color gradient
-    # This is our own implementation for complete control over styling
-    animated_earth.display_animated_earth(dark_mode=True, width=800, height=500)
+    # Use the simple globe map with blue-purple colors built in
+    # This is the most reliable visualization option
+    globe_map.display_globe_map(dark_mode=True)
         
 except Exception as e:
     st.error(f"Unable to load interactive globe map: {str(e)}")
