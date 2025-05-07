@@ -1,13 +1,14 @@
 """
-Embedded Earth Nullschool Module
+Earth Visualization Module
 
-This module integrates the Earth Nullschool visualization by Cameron Beccario
-(https://github.com/cambecc/earth) directly into the Climate Copilot application
-using Streamlit components for better mouse interaction.
+This module provides an interactive globe visualization with wind patterns
+inspired by Earth Nullschool, but implemented directly with D3.js to allow
+for full mouse interaction (zoom, rotate) within the Streamlit app.
 """
 
 import streamlit as st
-import nullschool_component  # Import our custom component
+import custom_earth_wind  # Import our custom D3.js-based visualization
+import math
 
 def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
@@ -70,38 +71,34 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Use our custom component for better mouse interaction
-    nullschool_component.display_nullschool_earth(url=url, height=height)
+    # Use our custom D3.js-based Earth visualization with full mouse interaction
+    # Generate URL for reference (we still use it in links)
+    custom_earth_wind.custom_earth_wind_visualization(height=height)
     
-    # Add prominent navigation buttons including direct link
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown(f"""
-        <div style="text-align: center; margin: 15px 0; padding: 15px; background-color: rgba(0,0,0,0.5); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-            <h3 style="color: white; margin-bottom: 15px; font-size: 16px;">Earth Nullschool Interactive Controls</h3>
-            <a href="{url}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #1E90FF, #9370DB); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.4); margin-bottom: 15px; width: 80%; text-align: center; font-size: 16px;">
-                <span style="display: block;">🌐 Open Interactive Map</span>
-                <span style="font-size: 12px; opacity: 0.8; display: block; margin-top: 5px;">Full zoom & rotation controls</span>
-            </a>
-            <div style="display: flex; justify-content: space-around; margin-top: 10px;">
-                <a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Winds</a>
-                <a href="https://earth.nullschool.net/#current/ocean/surface/currents/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Oceans</a>
-                <a href="https://earth.nullschool.net/#current/chem/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Chem</a>
-                <a href="https://earth.nullschool.net/#current/particulates/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Particulates</a>
-            </div>
-            <div style="text-align: center; font-size: 12px; color: #888; margin-top: 15px;">
-                Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Add information about the visualization features
+    st.success("""
+    ### Interactive Earth Visualization
     
-    # Add more guidance about the visualization
-    st.info("""
-    **Note:** For the best interactive experience with the Earth Nullschool visualization:
-    - Use the "Open Interactive Map" button above to open in a separate tab
-    - In the new tab, you can use scroll to zoom in/out and click-drag to rotate
-    - The visualization shows real-time global weather patterns
+    This custom visualization supports:
+    - **Zoom in/out** using your mouse scroll wheel
+    - **Rotate** the globe by clicking and dragging
+    - **View wind patterns** with animated particles
+    
+    The controls in the bottom right allow you to zoom in/out and reset the view.
     """)
+    
+    # Add links to Earth Nullschool for additional features
+    st.markdown("""
+    <div style="text-align: center; margin: 15px 0; padding: 15px; background-color: rgba(0,0,0,0.5); border-radius: 10px;">
+        <h4 style="color: white; margin-bottom: 10px; font-size: 16px;">Additional Earth Visualization Options</h4>
+        <div style="display: flex; justify-content: space-around; margin-top: 10px;">
+            <a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Winds</a>
+            <a href="https://earth.nullschool.net/#current/ocean/surface/currents/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Oceans</a>
+            <a href="https://earth.nullschool.net/#current/chem/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Chemistry</a>
+            <a href="https://earth.nullschool.net/#current/particulates/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Particulates</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     
     # Add visualization controls
