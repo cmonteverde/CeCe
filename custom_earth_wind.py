@@ -66,51 +66,51 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
         <script src="https://d3js.org/d3-geo.v3.min.js"></script>
         <script src="https://d3js.org/topojson.v3.min.js"></script>
         <style>
-            body, html {{
+            body, html {{{{
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
                 width: 100%;
                 height: 100%;
                 background-color: {background_color};
-            }}
-            #visualization {{
+            }}}}
+            #visualization {{{{
                 width: 100%;
                 height: {height}px;
                 position: relative;
-            }}
-            .land {{
+            }}}}
+            .land {{{{
                 fill: #222;
                 stroke: #444;
                 stroke-width: 0.5;
-            }}
-            .graticule {{
+            }}}}
+            .graticule {{{{
                 fill: none;
                 stroke: #333;
                 stroke-width: 0.3;
                 opacity: 0.5;
-            }}
-            .ocean {{
+            }}}}
+            .ocean {{{{
                 fill: #10141f;
-            }}
-            .country {{
+            }}}}
+            .country {{{{
                 fill: #1e2330;
                 stroke: #333;
                 stroke-width: 0.3;
-            }}
-            .country:hover {{
+            }}}}
+            .country:hover {{{{
                 fill: #2a3142;
-            }}
-            .wind-particle {{
+            }}}}
+            .wind-particle {{{{
                 fill: rgba(30, 144, 255, 0.7);
                 stroke: none;
-            }}
-            .wind-line {{
+            }}}}
+            .wind-line {{{{
                 stroke: rgba(30, 144, 255, 0.3);
                 stroke-width: 1;
                 fill: none;
-            }}
-            .controls {{
+            }}}}
+            .controls {{{{
                 position: absolute;
                 bottom: 20px;
                 right: 20px;
@@ -121,8 +121,8 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                 font-family: sans-serif;
                 font-size: 14px;
                 z-index: 1000;
-            }}
-            .controls button {{
+            }}}}
+            .controls button {{{{
                 background: linear-gradient(90deg, #1E90FF, #9370DB);
                 border: none;
                 color: white;
@@ -131,8 +131,8 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                 cursor: pointer;
                 margin: 2px;
                 font-weight: bold;
-            }}
-            .attribution {{
+            }}}}
+            .attribution {{{{
                 position: absolute;
                 bottom: 10px;
                 left: 10px;
@@ -140,15 +140,15 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                 font-family: sans-serif;
                 font-size: 12px;
                 z-index: 1000;
-            }}
-            .attribution a {{
+            }}}}
+            .attribution a {{{{
                 color: #888;
                 text-decoration: none;
-            }}
-            .attribution a:hover {{
+            }}}}
+            .attribution a:hover {{{{
                 text-decoration: underline;
-            }}
-            .overlay {{
+            }}}}
+            .overlay {{{{
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -158,7 +158,7 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                 background: radial-gradient(circle at center, 
                     rgba(0,0,0,0) 40%, 
                     rgba(0,0,0,0.8) 100%);
-            }}
+            }}}}
         </style>
     </head>
     <body>
@@ -228,46 +228,46 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
             const numParticles = 1000;
             const maxAge = 100;
             
-            function initParticles() {{
-                for (let i = 0; i < numParticles; i++) {{
-                    particles.push({{
+            function initParticles() {{{{
+                for (let i = 0; i < numParticles; i++) {{{{
+                    particles.push({{{{
                         x: Math.random() * width,
                         y: Math.random() * height,
                         age: Math.floor(Math.random() * maxAge),
                         isDead: false
-                    }});
-                }}
-            }}
+                    }}}});
+                }}}}
+            }}}}
             
-            function updateParticles() {{
+            function updateParticles() {{{{
                 windLayer.selectAll("*").remove();
                 
-                particles.forEach((p, i) => {{
+                particles.forEach((p, i) => {{{{
                     if (p.isDead) return;
                     
                     // Convert pixel coordinates back to lat/lon
                     const latLon = projection.invert([p.x, p.y]);
-                    if (!latLon) {{
+                    if (!latLon) {{{{
                         p.isDead = true;
                         return;
-                    }}
+                    }}}}
                     
                     // Find nearest wind vector
                     let nearestWind = null;
                     let minDist = Infinity;
                     
-                    windData.forEach(w => {{
+                    windData.forEach(w => {{{{
                         const dist = Math.sqrt(
                             Math.pow(w.lat - latLon[1], 2) + 
                             Math.pow(w.lon - latLon[0], 2)
                         );
-                        if (dist < minDist) {{
+                        if (dist < minDist) {{{{
                             minDist = dist;
                             nearestWind = w;
-                        }}
-                    }});
+                        }}}}
+                    }}}});
                     
-                    if (nearestWind) {{
+                    if (nearestWind) {{{{
                         // Move particle along wind vector
                         const speed = Math.min(5, nearestWind.magnitude);
                         const x2 = p.x + nearestWind.u * 0.2;
@@ -282,7 +282,7 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                             .attr("opacity", 1 - p.age / maxAge);
                             
                         // Draw line from old to new position for faster particles
-                        if (speed > 2) {{
+                        if (speed > 2) {{{{
                             windLayer.append("line")
                                 .attr("class", "wind-line")
                                 .attr("x1", p.x)
@@ -290,7 +290,7 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                                 .attr("x2", x2)
                                 .attr("y2", y2)
                                 .attr("opacity", (1 - p.age / maxAge) * 0.5);
-                        }}
+                        }}}}
                         
                         // Update position
                         p.x = x2;
@@ -302,40 +302,40 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                             Math.pow(p.y - height/2, 2)
                         );
                         
-                        if (d > projection.scale()) {{
+                        if (d > projection.scale()) {{{{
                             p.isDead = true;
-                        }}
-                    }}
+                        }}}}
+                    }}}}
                     
                     // Age particle
                     p.age++;
-                    if (p.age > maxAge) {{
+                    if (p.age > maxAge) {{{{
                         p.isDead = true;
-                    }}
-                }});
+                    }}}}
+                }}}});
                 
                 // Replace dead particles
-                for (let i = 0; i < particles.length; i++) {{
-                    if (particles[i].isDead) {{
+                for (let i = 0; i < particles.length; i++) {{{{
+                    if (particles[i].isDead) {{{{
                         const lat = (Math.random() * 180) - 90;
                         const lon = (Math.random() * 360) - 180;
                         const pos = projection([lon, lat]);
                         
-                        if (pos) {{
-                            particles[i] = {{
+                        if (pos) {{{{
+                            particles[i] = {{{{
                                 x: pos[0],
                                 y: pos[1],
                                 age: 0,
                                 isDead: false
-                            }};
-                        }}
-                    }}
-                }}
-            }}
+                            }}}};
+                        }}}}
+                    }}}}
+                }}}}
+            }}}}
             
             // Load world data
             d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-                .then(function(world) {{
+                .then(function(world) {{{{
                     const countries = topojson.feature(world, world.objects.countries);
                     
                     // Add countries
@@ -350,35 +350,35 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                     initParticles();
                     
                     // Animation loop
-                    function animate() {{
+                    function animate() {{{{
                         const now = Date.now();
                         const elapsed = now - lastTime;
                         lastTime = now;
                         
-                        if (autoRotate) {{
+                        if (autoRotate) {{{{
                             rotate[0] += elapsed * 0.01;
                             projection.rotate(rotate);
                             
                             // Update all paths
                             svg.selectAll("path").attr("d", path);
-                        }}
+                        }}}}
                         
                         // Update wind particles
                         updateParticles();
                         
                         requestAnimationFrame(animate);
-                    }}
+                    }}}}
                     
                     animate();
                     
                     // Handle drag to rotate
                     const drag = d3.drag()
-                        .on("start", function() {{
+                        .on("start", function() {{{{
                             autoRotate = false;
                             const r = projection.rotate();
                             rotate = [r[0], r[1], r[2]];
-                        }})
-                        .on("drag", function(event) {{
+                        }}}})
+                        .on("drag", function(event) {{{{
                             const rotate = projection.rotate();
                             projection.rotate([
                                 rotate[0] + event.dx / sensitivity,
@@ -386,16 +386,16 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                                 rotate[2]
                             ]);
                             svg.selectAll("path").attr("d", path);
-                        }})
-                        .on("end", function() {{
+                        }}}})
+                        .on("end", function() {{{{
                             // Resume auto-rotation after a brief pause
-                            setTimeout(() => {{ autoRotate = true; }}, 3000);
-                        }});
+                            setTimeout(() => {{{{ autoRotate = true; }}}}, 3000);
+                        }}}});
                         
                     svg.call(drag);
                     
                     // Handle zoom with mouse wheel
-                    svg.on("wheel", function(event) {{
+                    svg.on("wheel", function(event) {{{{
                         event.preventDefault();
                         const scale = projection.scale();
                         const newScale = Math.max(
@@ -411,34 +411,34 @@ def custom_earth_wind_visualization(height=600, background_color="#000"):
                             
                         // Redraw all paths
                         svg.selectAll("path").attr("d", path);
-                    }});
+                    }}}});
                     
                     // Add control button functionality
-                    d3.select("#zoomIn").on("click", function() {{
+                    d3.select("#zoomIn").on("click", function() {{{{
                         const scale = projection.scale();
                         const newScale = Math.min(height, scale * 1.2);
                         projection.scale(newScale);
                         svg.select(".ocean").attr("r", newScale);
                         svg.selectAll("path").attr("d", path);
-                    }});
+                    }}}});
                     
-                    d3.select("#zoomOut").on("click", function() {{
+                    d3.select("#zoomOut").on("click", function() {{{{
                         const scale = projection.scale();
                         const newScale = Math.max(height / 5, scale * 0.8);
                         projection.scale(newScale);
                         svg.select(".ocean").attr("r", newScale);
                         svg.selectAll("path").attr("d", path);
-                    }});
+                    }}}});
                     
-                    d3.select("#resetView").on("click", function() {{
+                    d3.select("#resetView").on("click", function() {{{{
                         projection.scale(height / 2.5)
                             .rotate([0, 0, 0]);
                         svg.select(".ocean").attr("r", height / 2.5);
                         rotate = [0, 0, 0];
                         svg.selectAll("path").attr("d", path);
                         autoRotate = true;
-                    }});
-                })
+                    }}}});
+                }}}})
                 .catch(error => console.error("Error loading world data:", error));
         </script>
     </body>
