@@ -3,10 +3,11 @@ Embedded Earth Nullschool Module
 
 This module integrates the Earth Nullschool visualization by Cameron Beccario
 (https://github.com/cambecc/earth) directly into the Climate Copilot application
-through an iframe.
+using Streamlit components for better mouse interaction.
 """
 
 import streamlit as st
+import nullschool_component  # Import our custom component
 
 def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
@@ -69,35 +70,15 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Create iframe with Earth Nullschool
-    # Include allowfullscreen and sandbox attributes to allow interaction
-    iframe_html = f"""
-    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
-        <iframe src="{url}" 
-                width="100%" 
-                height="{height}" 
-                frameborder="0"
-                allowfullscreen="true"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-popups allow-top-navigation"
-                style="border-radius: 15px; border: none; overflow: hidden; pointer-events: auto;">
-        </iframe>
-    </div>
-    <style>
-        /* Enable mouse events for the iframe container */
-        iframe {{
-            pointer-events: auto !important;
-        }}
-        /* Override any Streamlit styles that might block interaction */
-        .stApp iframe {{
-            pointer-events: auto !important;
-        }}
-    </style>
+    # Use our custom component for better mouse interaction
+    nullschool_component.display_nullschool_earth(url=url, height=height)
+    
+    # Add attribution
+    st.markdown("""
     <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
         Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
     </div>
-    """
-    
-    st.markdown(iframe_html, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
     # Add visualization controls
     with st.expander("Visualization Controls"):
