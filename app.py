@@ -51,25 +51,11 @@ st.set_page_config(
     }
 )
 
-# Set the page background to completely black and enable iframe interactions
+# Set the page background to completely black
 st.markdown("""
 <style>
     .appview-container, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
         background-color: #000000;
-    }
-    /* Enable mouse interaction for iframes */
-    iframe {
-        pointer-events: auto !important;
-    }
-    .stApp iframe {
-        pointer-events: auto !important;
-    }
-    .streamlit-container iframe {
-        pointer-events: auto !important;
-    }
-    /* Make sure no Streamlit elements block the iframe */
-    .block-container {
-        pointer-events: auto;
     }
     [data-testid="stToolbar"] {
         right: 2rem;

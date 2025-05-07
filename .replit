@@ -20,10 +20,6 @@ author = "agent"
 task = "workflow.run"
 args = "Climate Copilot Server"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Earth Component Test"
-
 [[workflows.workflow]]
 name = "Climate Copilot Server"
 author = "agent"
@@ -31,15 +27,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "streamlit run app.py --server.port 5000"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Earth Component Test"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run test_earth_component.py --server.port 5000"
 waitForPort = 5000
 
 [[ports]]

@@ -1,13 +1,12 @@
 """
-Earth Visualization Module
+Embedded Earth Nullschool Module
 
-This module provides an interactive globe visualization with wind patterns
-inspired by Earth Nullschool, but implemented directly with D3.js to allow
-for full mouse interaction (zoom, rotate) within the Streamlit app.
+This module integrates the Earth Nullschool visualization by Cameron Beccario
+(https://github.com/cambecc/earth) directly into the Climate Copilot application
+through an iframe.
 """
 
 import streamlit as st
-import wind_globe  # Using a globe with wind patterns
 
 def display_earth_nullschool(height=600, mode="wind", overlay="wind", 
                             projection="orthographic", location="0.00,0.00,409", 
@@ -70,35 +69,22 @@ def display_earth_nullschool(height=600, mode="wind", overlay="wind",
         </div>
         """, unsafe_allow_html=True)
     
-    # Use our interactive globe with wind visualization
-    wind_globe.interactive_wind_globe(height=height)
-    
-    # Add information about the visualization features
-    st.success("""
-    ### Interactive Earth Visualization with Wind Patterns
-    
-    This interactive globe visualization supports:
-    - **Zoom in/out** using your mouse scroll wheel or buttons
-    - **Rotate** the globe by clicking and dragging
-    - **Wind flow visualization** with animated particles
-    - **Auto-rotation** which pauses when you interact and resumes afterward
-    
-    The controls in the bottom right allow you to zoom in/out and reset the view.
-    """)
-    
-    # Add links to Earth Nullschool for additional features
-    st.markdown("""
-    <div style="text-align: center; margin: 15px 0; padding: 15px; background-color: rgba(0,0,0,0.5); border-radius: 10px;">
-        <h4 style="color: white; margin-bottom: 10px; font-size: 16px;">Additional Earth Visualization Options</h4>
-        <div style="display: flex; justify-content: space-around; margin-top: 10px;">
-            <a href="https://earth.nullschool.net/#current/wind/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Winds</a>
-            <a href="https://earth.nullschool.net/#current/ocean/surface/currents/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Oceans</a>
-            <a href="https://earth.nullschool.net/#current/chem/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Chemistry</a>
-            <a href="https://earth.nullschool.net/#current/particulates/surface/level/orthographic" target="_blank" style="color: #1E90FF; text-decoration: none; font-size: 14px;">Particulates</a>
-        </div>
+    # Create iframe with Earth Nullschool
+    iframe_html = f"""
+    <div style="width: 100%; height: {height}px; overflow: hidden; border-radius: 15px; margin-bottom: 10px;">
+        <iframe src="{url}" 
+                width="100%" 
+                height="{height}" 
+                frameborder="0"
+                style="border-radius: 15px; border: none; overflow: hidden;">
+        </iframe>
     </div>
-    """, unsafe_allow_html=True)
+    <div style="text-align: right; font-size: 12px; color: #888; margin-top: -8px; margin-bottom: 15px;">
+        Visualization powered by <a href="https://earth.nullschool.net" target="_blank" style="color: #1E90FF;">earth.nullschool.net</a>
+    </div>
+    """
     
+    st.markdown(iframe_html, unsafe_allow_html=True)
     
     # Add visualization controls
     with st.expander("Visualization Controls"):
