@@ -562,8 +562,8 @@ try:
         st.session_state.map_style = selected_map_style
     
     # Use a direct iframe to Earth Nullschool with wind visualization and blue-purple colors
-    # Grid parameter set to off to remove white dots
-    nullschool_url = "https://earth.nullschool.net/#current/wind/surface/level/orthographic=0.00,0.00,409/loc=0,0/grid=off/anim=on/overlay=wind/projection=winkel3/color=hex:1e90ff,5963cf,9370db"
+    # Grid parameter set to off to remove white dots, centered map view
+    nullschool_url = "https://earth.nullschool.net/#current/wind/surface/level/orthographic=0.00,0.00,409/loc=0,0/grid=off/anim=on/overlay=wind/projection=orthographic/color=hex:1e90ff,5963cf,9370db"
     
     # Display the iframe
     st.markdown(f"""
