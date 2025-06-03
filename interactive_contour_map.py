@@ -497,9 +497,9 @@ def display_interactive_contour_map():
     # Display the map
     st.subheader("Interactive Map")
     
-    # Map display with custom height
-    map_html = m._repr_html_()
-    st.components.v1.html(map_html, height=600)
+    # Map display with streamlit_folium
+    from streamlit_folium import st_folium
+    st_folium(m, height=600, width=700)
     
     # Information section
     st.subheader("Map Features")

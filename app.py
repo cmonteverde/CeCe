@@ -1198,7 +1198,8 @@ if st.session_state.active_function == "artistic_maps":
     
 elif st.session_state.active_function == "contour_map":
     # Interactive terrain contour map
-    interactive_contour_map.display_interactive_contour_map()
+    from simple_contour_map import display_simple_contour_map
+    display_simple_contour_map()
     
 elif st.session_state.active_function == "precipitation_map":
     st.subheader("Precipitation Map for Your Region")
