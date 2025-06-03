@@ -35,28 +35,28 @@ def get_elevation_data_simple(lat: float, lon: float, grid_size: int = 20) -> Li
     elevation_data = []
     
     try:
-        # Create locations for API call
-        locations = []
-        for lat_point in lats:
-            for lon_point in lons:
-                locations.append(f"{lat_point},{lon_point}")
-        
         # Call Open-Elevation API
         url = "https://api.open-elevation.com/api/v1/lookup"
+        locations_list = []
+        for lat_point in lats:
+            for lon_point in lons:
+                locations_list.append({
+                    "latitude": float(lat_point),
+                    "longitude": float(lon_point)
+                })
+        
         data = {
-            "locations": "|".join(locations)
+            "locations": locations_list
         }
         
         response = requests.post(url, json=data, timeout=30)
         
         if response.status_code == 200:
             results = response.json()
-            for i, result in enumerate(results.get('results', [])):
-                lat_idx = i // grid_size
-                lon_idx = i % grid_size
+            for result in results.get('results', []):
                 elevation_data.append({
-                    'lat': lats[lat_idx],
-                    'lon': lons[lon_idx],
+                    'lat': result['latitude'],
+                    'lon': result['longitude'],
                     'elevation': result['elevation']
                 })
         else:
@@ -241,18 +241,23 @@ def display_simple_contour_map():
     
     # Generate map button
     if st.button("Generate Elevation Map"):
-        # Create the contour map
-        m = create_contour_map(center_lat, center_lon, intervals)
-        
-        # Display the map
-        st.subheader("Elevation Contour Map")
-        
-        # Use streamlit_folium for display
         try:
-            from streamlit_folium import st_folium
-            st_folium(m, height=600, width=700)
-        except ImportError:
-            st.error("streamlit_folium is required for map display")
+            # Create the contour map
+            st.info(f"Generating elevation map for coordinates: {center_lat:.6f}, {center_lon:.6f}")
+            m = create_contour_map(center_lat, center_lon, intervals)
+            
+            # Display the map
+            st.subheader("Elevation Contour Map")
+            
+            # Use streamlit_folium for display
+            try:
+                from streamlit_folium import st_folium
+                st_folium(m, height=600, width=700)
+            except ImportError:
+                st.error("streamlit_folium is required for map display")
+        except Exception as e:
+            st.error(f"Error generating elevation map: {str(e)}")
+            st.error("Please check your coordinates and try again.")
         
         # Instructions
         st.info("""
