@@ -28,6 +28,7 @@ import climate_resilience
 # Import map modules
 import simple_artistic_maps
 import felt_inspired_maps
+import interactive_contour_map
 import embedded_felt_map
 import animated_earth
 
@@ -687,8 +688,8 @@ with col1:
         st.rerun()
 
 with col2:
-    if st.button("📊 Show temperature trends from the past 5 years"):
-        st.session_state.active_function = "temperature_trends"
+    if st.button("🗺️ Interactive terrain contour map"):
+        st.session_state.active_function = "contour_map"
         st.rerun()
 
 with col3:
@@ -1194,6 +1195,10 @@ from simple_artistic_map_demo import run_artistic_map_demo
 if st.session_state.active_function == "artistic_maps":
     # Run the simplified artistic map demo
     run_artistic_map_demo()
+    
+elif st.session_state.active_function == "contour_map":
+    # Interactive terrain contour map
+    interactive_contour_map.display_interactive_contour_map()
     
 elif st.session_state.active_function == "precipitation_map":
     st.subheader("Precipitation Map for Your Region")
