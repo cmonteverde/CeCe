@@ -177,7 +177,7 @@ def create_contour_map(lat: float, lon: float, intervals: List[int] = [5, 10, 20
                     color = 'red'
                 
                 folium.CircleMarker(
-                    location=[row['lat'], row['lon']],
+                    location=[float(row['lat']), float(row['lon'])],
                     radius=3,
                     popup=f"Elevation: {row['elevation']:.1f}m",
                     color=color,
