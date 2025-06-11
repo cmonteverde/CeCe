@@ -31,6 +31,7 @@ import felt_inspired_maps
 import interactive_contour_map
 import embedded_felt_map
 import animated_earth
+import satellite_homepage
 
 # Import our API status checker and helper
 import test_api_status
@@ -478,7 +479,37 @@ if 'current_query' not in st.session_state:
     st.session_state.current_query = None  # Track the current query being processed
 if 'query_processed' not in st.session_state:
     st.session_state.query_processed = True  # Flag to track if query has been processed
+if 'show_homepage' not in st.session_state:
+    st.session_state.show_homepage = True  # Show satellite homepage by default
 
+# Check if we should show the satellite homepage
+if st.session_state.show_homepage:
+    # Show satellite homepage
+    map_data = satellite_homepage.create_satellite_homepage()
+    
+    # Add a section below the map for transitioning to full interface
+    st.markdown("""
+    <div class="climate-tools-section" style="background: #000; color: white; padding: 60px 40px; text-align: center;">
+        <h2 style="font-size: 36px; margin-bottom: 30px; background: linear-gradient(135deg, #64B5F6, #1E88E5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Explore Climate Intelligence
+        </h2>
+        <p style="font-size: 20px; margin-bottom: 40px; color: #BBDEFB; max-width: 800px; margin-left: auto; margin-right: auto;">
+            Access comprehensive climate analysis tools, real-time weather data, and AI-powered insights to understand our changing planet.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Add button to enter full interface
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🚀 Launch Climate Copilot", type="primary", use_container_width=True):
+            st.session_state.show_homepage = False
+            st.rerun()
+    
+    # Stop execution here for homepage
+    st.stop()
+
+# Regular Climate Copilot interface below this point
 # Logo in left corner (smaller)
 st.markdown("""
 <div style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
