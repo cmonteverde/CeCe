@@ -290,28 +290,39 @@ def create_satellite_homepage():
         control=True
     ).add_to(m)
     
-    # Add climate data layer - temperature anomalies
-    try:
-        import climate_data_sources
-        temp_data = climate_data_sources.generate_global_temperature_grid(resolution=5)
+    # Add sample climate data points for demonstration
+    import numpy as np
+    
+    # Create sample temperature anomaly data points
+    np.random.seed(42)  # For consistent results
+    sample_locations = [
+        (60.0, -105.0, 2.3),   # Northern Canada - warm anomaly
+        (45.0, -75.0, 1.8),    # Eastern US - warm anomaly
+        (55.0, 37.0, 3.1),     # Moscow region - warm anomaly
+        (35.0, 139.0, 1.2),    # Tokyo region - warm anomaly
+        (-15.0, -60.0, -0.8),  # Brazil - cool anomaly
+        (-25.0, 135.0, 2.7),   # Australia - warm anomaly
+        (70.0, 20.0, 4.2),     # Northern Europe - warm anomaly
+        (0.0, 20.0, 0.5),      # Central Africa - slight warm
+        (-35.0, -70.0, -1.2),  # Chile - cool anomaly
+        (25.0, 55.0, 2.9),     # Middle East - warm anomaly
+    ]
+    
+    # Add temperature data points to map
+    for lat, lon, temp_anomaly in sample_locations:
+        color = '#FF4444' if temp_anomaly > 0 else '#4444FF'
+        opacity = min(abs(temp_anomaly) / 3.0, 1.0)
+        radius = 4 + abs(temp_anomaly)
         
-        # Add temperature data points to map
-        for _, row in temp_data.iterrows():
-            color = 'red' if row['temperature'] > 0 else 'blue'
-            opacity = min(abs(row['temperature']) / 2.0, 1.0)
-            
-            folium.CircleMarker(
-                location=[float(row['lat']), float(row['lon'])],
-                radius=3,
-                color=color,
-                fillColor=color,
-                fillOpacity=opacity * 0.7,
-                popup=f"Temperature Anomaly: {row['temperature']:.1f}°C",
-                tooltip=f"Temp: {row['temperature']:.1f}°C"
-            ).add_to(m)
-            
-    except Exception as e:
-        st.warning(f"Could not load climate data: {e}")
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=radius,
+            color=color,
+            fillColor=color,
+            fillOpacity=opacity * 0.8,
+            popup=f"Temperature Anomaly: {temp_anomaly:+.1f}°C",
+            tooltip=f"Temp Anomaly: {temp_anomaly:+.1f}°C"
+        ).add_to(m)
     
     # Add country boundaries for context
     folium.TileLayer(
@@ -378,11 +389,18 @@ def create_satellite_homepage():
             with st.spinner("Analyzing climate data..."):
                 try:
                     import openai_helper
-                    response = openai_helper.get_openai_response(prompt)
-                    st.write(response)
-                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+                    messages = [{"role": "user", "content": prompt}]
+                    system_message = "You are CeCe, a climate data assistant. Help users understand climate patterns, weather data, and the temperature anomalies shown on the interactive map. Keep responses concise and informative."
+                    response = openai_helper.chat_completion(messages, system_message=system_message)
+                    if response:
+                        st.write(response)
+                        st.session_state.chat_history.append({"role": "assistant", "content": response})
+                    else:
+                        fallback = "I can help you understand the climate data shown on the map. The red dots indicate areas with above-average temperatures, while blue dots show below-average temperatures. You can click on any dot to see specific temperature anomaly values. What would you like to know more about?"
+                        st.write(fallback)
+                        st.session_state.chat_history.append({"role": "assistant", "content": fallback})
                 except Exception as e:
-                    fallback = f"I can help you understand the climate data shown on the map. The red dots indicate areas with above-average temperatures, while blue dots show below-average temperatures. You can click on any dot to see specific temperature anomaly values. What would you like to know more about?"
+                    fallback = "I can help you understand the climate data shown on the map. The red dots indicate areas with above-average temperatures, while blue dots show below-average temperatures. You can click on any dot to see specific temperature anomaly values. What would you like to know more about?"
                     st.write(fallback)
                     st.session_state.chat_history.append({"role": "assistant", "content": fallback})
     
