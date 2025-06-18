@@ -31,28 +31,19 @@ def create_satellite_homepage():
     Create a full-screen satellite map homepage with Climate Copilot interface
     """
     
-    # Remove default Streamlit styling
+    # Minimal styling to preserve scrollability
     st.markdown("""
     <style>
     .main > div {
-        padding-top: 0rem;
-        padding-bottom: 0rem;
-        padding-left: 0rem;
-        padding-right: 0rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     
     .block-container {
-        padding: 0rem;
+        padding: 1rem;
         max-width: 100%;
-    }
-    
-    header[data-testid="stHeader"] {
-        display: none;
-    }
-    
-    .stApp {
-        margin: 0;
-        padding: 0;
     }
     
     .satellite-homepage {
@@ -267,120 +258,133 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Create the base satellite map
-    # Default to a nice global view
+    # Show logo and title first
+    logo_base64 = get_logo_base64()
+    if logo_base64:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(f"data:image/png;base64,{logo_base64}", width=150)
+            st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Climate CoPilot</h1>", unsafe_allow_html=True)
+    else:
+        st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Climate CoPilot</h1>", unsafe_allow_html=True)
+    
+    st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 30px;'>AI-Powered Climate Intelligence Platform</p>", unsafe_allow_html=True)
+    
+    # Create the base satellite map with dark styling
     m = folium.Map(
-        location=[40.0, -20.0],  # Atlantic Ocean view
-        zoom_start=3,
+        location=[20.0, 0.0],  # Global view centered on equator
+        zoom_start=2,
         tiles=None,
-        zoomControl=False,
+        zoomControl=True,
         scrollWheelZoom=True,
         doubleClickZoom=True,
         dragging=True
     )
     
-    # Add satellite imagery
+    # Add dark-themed base map
     folium.TileLayer(
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri',
-        name='Satellite',
+        tiles='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+        attr='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>',
+        name='Dark Base',
         overlay=False,
-        control=False
+        control=True
     ).add_to(m)
     
-    # Add a subtle label overlay
+    # Add climate data layer - temperature anomalies
+    try:
+        import climate_data_sources
+        temp_data = climate_data_sources.generate_global_temperature_grid(resolution=5)
+        
+        # Add temperature data points to map
+        for _, row in temp_data.iterrows():
+            color = 'red' if row['temperature'] > 0 else 'blue'
+            opacity = min(abs(row['temperature']) / 2.0, 1.0)
+            
+            folium.CircleMarker(
+                location=[float(row['lat']), float(row['lon'])],
+                radius=3,
+                color=color,
+                fillColor=color,
+                fillOpacity=opacity * 0.7,
+                popup=f"Temperature Anomaly: {row['temperature']:.1f}°C",
+                tooltip=f"Temp: {row['temperature']:.1f}°C"
+            ).add_to(m)
+            
+    except Exception as e:
+        st.warning(f"Could not load climate data: {e}")
+    
+    # Add country boundaries for context
     folium.TileLayer(
         tiles='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
         attr='Esri',
-        name='Labels',
+        name='Boundaries',
         overlay=True,
-        control=False,
-        opacity=0.6
+        control=True,
+        opacity=0.3
     ).add_to(m)
     
-    # Get logo for header
-    logo_base64 = get_logo_base64()
-    logo_img = f'<img src="data:image/png;base64,{logo_base64}" class="logo-image">' if logo_base64 else ''
-    
-    # Create the overlay HTML
-    overlay_html = f"""
-    <div class="satellite-homepage">
-        <div class="overlay-header">
-            <div class="logo-section">
-                {logo_img}
-                <div class="logo-text">Climate CoPilot</div>
+    # Add legend for climate data
+    st.markdown("""
+    <div style="background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 10px; margin: 20px 0;">
+        <h4 style="margin: 0 0 10px 0; color: #64B5F6;">Global Temperature Anomalies</h4>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 12px; height: 12px; background: red; border-radius: 50%;"></div>
+                <span>Above Average</span>
             </div>
-            <div class="header-nav">
-                <div class="nav-item">Climate Data</div>
-                <div class="nav-item">Visualizations</div>
-                <div class="nav-item">Analysis</div>
-                <div class="nav-item">About</div>
-                <button class="cta-button" onclick="document.querySelector('[data-testid=stSidebar]').style.display='block'">Get Started</button>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <div style="width: 12px; height: 12px; background: blue; border-radius: 50%;"></div>
+                <span>Below Average</span>
             </div>
-        </div>
-        
-        <div class="hero-overlay">
-            <div class="hero-title">Climate Intelligence,<br>Everywhere</div>
-            <div class="hero-subtitle">Powered by Real-Time Earth Data</div>
-            <div class="hero-description">
-                Explore climate patterns, analyze environmental trends, and make data-driven decisions 
-                with our AI-powered climate analysis platform. Built on authentic NASA and global climate datasets.
-            </div>
-            <div class="hero-buttons">
-                <button class="hero-button" onclick="window.scrollTo(0, document.body.scrollHeight)">Start Exploring</button>
-                <button class="hero-button secondary" onclick="document.querySelector('[data-testid=stSidebar]').style.display='block'">View Tools</button>
-            </div>
-        </div>
-        
-        <div class="feature-pills">
-            <div class="feature-pill">🌡️ Temperature Analysis</div>
-            <div class="feature-pill">🌧️ Precipitation Maps</div>
-            <div class="feature-pill">🗺️ Terrain Contours</div>
-            <div class="feature-pill">📊 Climate Trends</div>
-            <div class="feature-pill">🤖 AI Insights</div>
         </div>
     </div>
-    """
+    """, unsafe_allow_html=True)
     
-    # Display the map with overlay
+    # Display the scrollable map
     map_data = st_folium(
         m, 
-        height=700,
+        height=600,
         width=None,
         returned_objects=["last_clicked"],
         key="satellite_homepage_map"
     )
     
-    # Add overlay after map
-    st.markdown(overlay_html, unsafe_allow_html=True)
+    # Add chat interface below the map
+    st.markdown("---")
+    st.markdown("### Ask CeCe about Climate Data")
     
-    # Add JavaScript for interactions
-    st.markdown("""
-    <script>
-    // Hide Streamlit elements
-    const style = document.createElement('style');
-    style.textContent = `
-        .main .block-container {
-            padding: 0 !important;
-        }
-        footer {
-            display: none !important;
-        }
-        .stApp > header {
-            display: none !important;
-        }
-    `;
-    document.head.appendChild(style);
+    # Initialize chat history if not exists
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = [
+            {"role": "assistant", "content": "Hi! I'm CeCe, your Climate Copilot. Ask me about climate patterns, weather data, or explore the temperature anomalies shown on the map above."}
+        ]
     
-    // Scroll to tools when button is clicked
-    function scrollToTools() {
-        const toolsSection = document.querySelector('.climate-tools-section');
-        if (toolsSection) {
-            toolsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-    </script>
-    """, unsafe_allow_html=True)
+    # Display chat messages
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+    
+    # Chat input
+    if prompt := st.chat_input("Ask about climate data, weather patterns, or map features..."):
+        # Add user message to chat history
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+        
+        # Display user message
+        with st.chat_message("user"):
+            st.write(prompt)
+        
+        # Generate and display assistant response
+        with st.chat_message("assistant"):
+            with st.spinner("Analyzing climate data..."):
+                try:
+                    import openai_helper
+                    response = openai_helper.get_openai_response(prompt)
+                    st.write(response)
+                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+                except Exception as e:
+                    fallback = f"I can help you understand the climate data shown on the map. The red dots indicate areas with above-average temperatures, while blue dots show below-average temperatures. You can click on any dot to see specific temperature anomaly values. What would you like to know more about?"
+                    st.write(fallback)
+                    st.session_state.chat_history.append({"role": "assistant", "content": fallback})
     
     return map_data
 
