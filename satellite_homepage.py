@@ -270,25 +270,16 @@ def create_satellite_homepage():
     
     st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 30px;'>AI-Powered Climate Intelligence Platform</p>", unsafe_allow_html=True)
     
-    # Create the base satellite map with dark styling
+    # Create the base map with dark styling
     m = folium.Map(
         location=[20.0, 0.0],  # Global view centered on equator
         zoom_start=2,
-        tiles=None,
+        tiles='cartodbdark_matter',
         zoomControl=True,
         scrollWheelZoom=True,
         doubleClickZoom=True,
         dragging=True
     )
-    
-    # Add dark-themed base map
-    folium.TileLayer(
-        tiles='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
-        attr='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>',
-        name='Dark Base',
-        overlay=False,
-        control=True
-    ).add_to(m)
     
     # Add sample climate data points for demonstration
     import numpy as np
@@ -324,15 +315,8 @@ def create_satellite_homepage():
             tooltip=f"Temp Anomaly: {temp_anomaly:+.1f}°C"
         ).add_to(m)
     
-    # Add country boundaries for context
-    folium.TileLayer(
-        tiles='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        attr='Esri',
-        name='Boundaries',
-        overlay=True,
-        control=True,
-        opacity=0.3
-    ).add_to(m)
+    # Add layer control for map switching
+    folium.LayerControl().add_to(m)
     
     # Add legend for climate data
     st.markdown("""
