@@ -45,7 +45,7 @@ load_dotenv()
 
 # Page configuration
 st.set_page_config(
-    page_title="CeCe - Climate Copilot",
+    page_title="CeCe - Climate Copilot (Research Prototype)",
     page_icon="🌤️",
     layout="wide",
     initial_sidebar_state="collapsed",
