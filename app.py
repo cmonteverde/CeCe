@@ -488,36 +488,25 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
     
-    # Add a section below the map for transitioning to full interface
-    st.markdown("""
-    <div class="climate-tools-section" style="background: #000; color: white; padding: 60px 40px; text-align: center;">
-        <h2 style="font-size: 36px; margin-bottom: 30px; background: linear-gradient(135deg, #64B5F6, #1E88E5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            Explore Climate Intelligence
-        </h2>
-        <p style="font-size: 20px; margin-bottom: 40px; color: #BBDEFB; max-width: 800px; margin-left: auto; margin-right: auto;">
-            Access comprehensive climate analysis tools, real-time weather data, and AI-powered insights to understand our changing planet.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Add prominent CTA button to enter full interface
+    # Prominent Launch CTA button styled over the blurred preview
     st.markdown("""
     <style>
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
         color: white !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: 700 !important;
-        padding: 18px 40px !important;
+        padding: 20px 50px !important;
         border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 25px rgba(30, 144, 255, 0.35) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 8px 30px rgba(30, 144, 255, 0.4) !important;
         transition: all 0.3s ease !important;
         letter-spacing: 0.5px !important;
+        margin-top: -20px !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
         transform: translateY(-3px) !important;
-        box-shadow: 0 12px 35px rgba(30, 144, 255, 0.5) !important;
+        box-shadow: 0 14px 40px rgba(30, 144, 255, 0.55) !important;
     }
     </style>
     """, unsafe_allow_html=True)
