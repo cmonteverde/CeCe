@@ -264,12 +264,46 @@ def create_satellite_homepage():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.image(f"data:image/png;base64,{logo_base64}", width=150)
-            st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Climate CoPilot</h1>", unsafe_allow_html=True)
+            st.markdown("""
+            <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 10px;
+                background: linear-gradient(135deg, #64B5F6, #1E88E5);
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+                Climate CoPilot
+            </h1>
+            """, unsafe_allow_html=True)
     else:
-        st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Climate CoPilot</h1>", unsafe_allow_html=True)
-    
-    st.markdown("<p style='text-align: center; font-size: 18px; margin-bottom: 30px;'>AI-Powered Climate Intelligence Platform</p>", unsafe_allow_html=True)
-    
+        st.markdown("""
+        <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 10px;
+            background: linear-gradient(135deg, #64B5F6, #1E88E5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
+            Climate CoPilot
+        </h1>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <p style='text-align: center; font-size: 22px; margin-bottom: 10px; color: #BBDEFB; font-weight: 300; letter-spacing: 1px;'>
+        AI-Powered Climate Intelligence Platform
+    </p>
+    """, unsafe_allow_html=True)
+
+    # Feature highlight cards
+    st.markdown("""
+    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 30px auto 50px auto; max-width: 800px;">
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
+            <span style="font-size: 20px;">&#127758;</span>
+            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Real-Time Climate Data</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
+            <span style="font-size: 20px;">&#129302;</span>
+            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">AI-Powered Analysis</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
+            <span style="font-size: 20px;">&#128202;</span>
+            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Interactive Visualizations</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Create the base map with dark styling
     m = folium.Map(
         location=[20.0, 0.0],  # Global view centered on equator
