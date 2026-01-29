@@ -360,6 +360,9 @@ def create_satellite_homepage():
         "></div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Return a flag to indicate button should be placed here
+    return "show_button_here"
 
     # --- COMMENTED OUT: Temperature anomalies, legend, and Folium map ---
     # These are disabled for a cleaner landing page. Uncomment to restore.

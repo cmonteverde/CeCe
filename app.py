@@ -489,9 +489,17 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
     
-    # Prominent Launch CTA button styled over the blurred preview
+    # Prominent Launch CTA button positioned in the CENTER of the blurred preview
     st.markdown("""
     <style>
+    .launch-button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -280px;
+        margin-bottom: 240px;
+        position: relative;
+        z-index: 100;
+    }
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
         color: white !important;
@@ -503,7 +511,6 @@ if st.session_state.show_homepage:
         box-shadow: 0 8px 30px rgba(30, 144, 255, 0.4) !important;
         transition: all 0.3s ease !important;
         letter-spacing: 0.5px !important;
-        margin-top: -20px !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
         transform: translateY(-3px) !important;
@@ -511,11 +518,14 @@ if st.session_state.show_homepage:
     }
     </style>
     """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="launch-button-container">', unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Launch Climate Copilot", type="primary", use_container_width=True):
             st.session_state.show_homepage = False
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Stop execution here for homepage
     st.stop()
