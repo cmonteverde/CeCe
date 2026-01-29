@@ -500,10 +500,30 @@ if st.session_state.show_homepage:
     </div>
     """, unsafe_allow_html=True)
     
-    # Add button to enter full interface
+    # Add prominent CTA button to enter full interface
+    st.markdown("""
+    <style>
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
+        color: white !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        padding: 18px 40px !important;
+        border: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 25px rgba(30, 144, 255, 0.35) !important;
+        transition: all 0.3s ease !important;
+        letter-spacing: 0.5px !important;
+    }
+    div[data-testid="stButton"] > button[kind="primary"]:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 35px rgba(30, 144, 255, 0.5) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Launch Climate Copilot", type="primary", use_container_width=True):
+        if st.button("Launch Climate Copilot", type="primary", use_container_width=True):
             st.session_state.show_homepage = False
             st.rerun()
     
