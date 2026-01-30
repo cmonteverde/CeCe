@@ -15,6 +15,10 @@ The application is built as a monolithic **Streamlit** web application (`app.py`
 
 ### Core Application
 *   **`app.py`**: The main entry point. It handles the UI layout, state management (`st.session_state`), and routing between different features (e.g., "Precipitation Map", "Climate Story").
+*   **`satellite_homepage.py`**: The "Landing Page" module.
+    *   **Visual Style:** Implements a "Glassmorphism" design aesthetic.
+    *   **Key Elements:** "Decode the Planet" headline, blurred interface preview, interactive "Launch" button.
+    *   **Background:** Uses `assets/topography.png` for a stylized backdrop.
 
 ### Data Integration
 *   **`nasa_data.py`**: The primary engine for meteorological data.
@@ -24,7 +28,7 @@ The application is built as a monolithic **Streamlit** web application (`app.py`
 *   **`climate_data_sources.py`**: Handles global climate indicators.
     *   **Sources:** NOAA NCEI (Global Temp), NOAA GML (CO2), CSIRO (Sea Level).
     *   **Method:** direct CSV downloads and parsing.
-*   **`noaa_nws.py`** (New/Planned): Integration with the National Weather Service API for real-time alerts and forecasts.
+*   **`noaa_nws.py`**: Integration with the National Weather Service API for real-time alerts and forecasts (US locations).
 
 ### Analytics & AI
 *   **`climate_resilience.py`**: Generates industry-specific risk reports (e.g., crop yield risks for Agriculture) based on climate projections (RCP scenarios).
@@ -48,7 +52,14 @@ The application is built as a monolithic **Streamlit** web application (`app.py`
 | **Nominatim** | API | Geocoding (City name to Lat/Lon). | ✅ Active |
 | **NOAA NWS** | API (REST) | Real-time US weather alerts and forecasts. | ✅ Active |
 
-## 5. Best Practices & Roadmap Recommendations
+## 5. Visual Design (Phase 2 Update)
+The application has undergone a visual polish phase ("Phase 2"):
+*   **Homepage:** Replaced generic layout with a high-impact landing page (`satellite_homepage.py`).
+*   **Styling:** Adopted "Glassmorphism" (translucent cards, blurred backgrounds).
+*   **Typography:** Updated headers to "Decode the Planet".
+*   **Assets:** Replaced the spinning globe with a high-resolution topography background (`assets/topography.png`).
+
+## 6. Best Practices & Roadmap Recommendations
 
 To further enhance the application, the following APIs and practices are recommended:
 
