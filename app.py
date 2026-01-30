@@ -39,6 +39,7 @@ import test_api_status
 import openai_helper
 import felt_map_demo
 import globe_map
+import noaa_nws
 
 # Load environment variables
 load_dotenv()
@@ -764,9 +765,10 @@ with col1:
         st.session_state.active_function = "artistic_maps"
         st.rerun()
         
-# Placeholder for future buttons
 with col2:
-    pass
+    if st.button("📢 Real-time Weather Alerts (NOAA)"):
+        st.session_state.active_function = "nws_alerts"
+        st.rerun()
     
 with col3:
     pass
@@ -3176,6 +3178,100 @@ elif st.session_state.active_function == "export_anomalies":
                     
                 except Exception as e:
                     st.error(f"Error fetching data: {str(e)}")
+
+elif st.session_state.active_function == "nws_alerts":
+    st.subheader("📢 Real-time Weather Alerts & Forecast (NOAA)")
+    st.markdown("Get official real-time weather alerts and forecasts for US locations from the National Weather Service.")
+
+    # Location selection
+    location_method = st.radio("Select location input method:", ["City Name", "Coordinates"], horizontal=True, key="nws_location_method")
+
+    if location_method == "City Name":
+        city = st.text_input("Enter US City (e.g., 'Miami, FL', 'Topeka, KS')",
+                             value="San Francisco, CA" if "last_city" not in st.session_state else st.session_state.last_city,
+                             key="nws_city_input")
+
+        if city:
+            st.session_state.last_city = city
+            lat, lon = get_city_coordinates(city)
+            if lat and lon:
+                st.success(f"Location found: {lat:.4f}, {lon:.4f}")
+                latitude = lat
+                longitude = lon
+                st.session_state.user_location = {"lat": latitude, "lon": longitude}
+            else:
+                st.warning("Could not find coordinates for this city. Please check the spelling.")
+                latitude = st.session_state.user_location["lat"]
+                longitude = st.session_state.user_location["lon"]
+        else:
+            latitude = st.session_state.user_location["lat"]
+            longitude = st.session_state.user_location["lon"]
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            latitude = st.number_input("Latitude", value=st.session_state.user_location["lat"],
+                                      min_value=-90.0, max_value=90.0, key="nws_lat_input")
+        with col2:
+            longitude = st.number_input("Longitude", value=st.session_state.user_location["lon"],
+                                       min_value=-180.0, max_value=180.0, key="nws_lon_input")
+
+        st.session_state.user_location = {"lat": latitude, "lon": longitude}
+
+    if st.button("Get Alerts & Forecast"):
+        with st.spinner("Contacting National Weather Service..."):
+            # 1. Get Alerts
+            alerts_data = noaa_nws.get_active_alerts(latitude, longitude)
+
+            st.markdown("### 🚨 Active Alerts")
+            if "error" in alerts_data:
+                st.error(alerts_data["error"])
+            elif "features" in alerts_data:
+                alerts = alerts_data["features"]
+                if not alerts:
+                    st.success("✅ No active weather alerts for this location.")
+                else:
+                    for alert in alerts:
+                        props = alert["properties"]
+                        severity = props.get("severity", "Unknown")
+                        event = props.get("event", "Unknown Event")
+                        headline = props.get("headline", "")
+                        description = props.get("description", "")
+                        instruction = props.get("instruction", "")
+
+                        # Color code based on severity
+                        color = "red" if severity in ["Extreme", "Severe"] else "orange"
+
+                        st.markdown(f"""
+                        <div style="border: 2px solid {color}; border-radius: 5px; padding: 15px; margin-bottom: 10px; background-color: rgba(255,0,0,0.1);">
+                            <h4 style="color: {color}; margin-top: 0;">{event} ({severity})</h4>
+                            <p><strong>{headline}</strong></p>
+                            <details>
+                                <summary>Show Description</summary>
+                                <p>{description}</p>
+                                <p><strong>Instructions:</strong> {instruction}</p>
+                            </details>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+            # 2. Get Forecast
+            st.markdown("### 🌦️ 7-Day Forecast")
+            forecast_data = noaa_nws.get_forecast(latitude, longitude)
+
+            if "error" in forecast_data:
+                st.warning(f"Could not fetch forecast: {forecast_data['error']}")
+                if "US only" in forecast_data['error']:
+                    st.info("Note: The NOAA NWS API only covers United States locations.")
+            else:
+                forecast_df = noaa_nws.parse_forecast_to_df(forecast_data)
+
+                if not forecast_df.empty:
+                    # Display as a nice table or cards
+                    for i, row in forecast_df.iterrows():
+                        with st.expander(f"{row['Period']}: {row['Forecast']} ({row['Temperature']})"):
+                            st.write(f"**Wind:** {row['Wind']}")
+                            st.write(f"**Details:** {row['Details']}")
+                else:
+                    st.info("No forecast data available.")
 
 # Display chat history
 if st.session_state.chat_history:
