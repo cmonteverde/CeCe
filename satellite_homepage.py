@@ -261,49 +261,56 @@ def create_satellite_homepage():
     # Show logo and title with generous spacing
     logo_base64 = get_logo_base64()
 
+    # Get topography map for the background
+    try:
+        with open("assets/topography.png", "rb") as f:
+            topo_base64 = base64.b64encode(f.read()).decode()
+    except:
+        topo_base64 = None
+
     # Add vertical breathing room at top
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
 
     if logo_base64:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(f"data:image/png;base64,{logo_base64}", width=150)
+            st.image(f"data:image/png;base64,{logo_base64}", width=180)
             st.markdown("""
-            <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
-                background: linear-gradient(135deg, #64B5F6, #1E88E5);
+            <h1 style='text-align: center; font-size: 64px; font-weight: 800; margin-bottom: 10px; margin-top: 30px; letter-spacing: -1px;
+                background: linear-gradient(135deg, #FFFFFF 0%, #64B5F6 100%);
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-                Climate CoPilot
+                Decode the Planet.
             </h1>
             """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
-            background: linear-gradient(135deg, #64B5F6, #1E88E5);
+        <h1 style='text-align: center; font-size: 64px; font-weight: 800; margin-bottom: 10px; margin-top: 30px; letter-spacing: -1px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #64B5F6 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            Climate CoPilot
+            Decode the Planet.
         </h1>
         """, unsafe_allow_html=True)
 
     st.markdown("""
-    <p style='text-align: center; font-size: 22px; margin-bottom: 40px; color: #BBDEFB; font-weight: 300; letter-spacing: 1px;'>
-        AI-Powered Climate Intelligence Platform
+    <p style='text-align: center; font-size: 24px; margin-bottom: 50px; color: #BBDEFB; font-weight: 300; letter-spacing: 0.5px;'>
+        CeCe: The World's First AI Climate Copilot
     </p>
     """, unsafe_allow_html=True)
 
     # Feature highlight cards
     st.markdown("""
-    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 0 auto 60px auto; max-width: 800px;">
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 0 auto 70px auto; max-width: 900px;">
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 12px 24px; backdrop-filter: blur(5px);">
             <span style="font-size: 20px;">&#127758;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Real-Time Climate Data</span>
+            <span style="color: #E3F2FD; font-size: 16px; font-weight: 500;">Predictive Analytics</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#129302;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">AI-Powered Analysis</span>
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 12px 24px; backdrop-filter: blur(5px);">
+            <span style="font-size: 20px;">&#128225;</span>
+            <span style="color: #E3F2FD; font-size: 16px; font-weight: 500;">Real-Time Satellites</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#128202;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Interactive Visualizations</span>
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 12px 24px; backdrop-filter: blur(5px);">
+            <span style="font-size: 20px;">&#9889;</span>
+            <span style="color: #E3F2FD; font-size: 16px; font-weight: 500;">Global Risk Modeling</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -314,48 +321,66 @@ def create_satellite_homepage():
     if logo_base64:
         preview_logo = f'<img src="data:image/png;base64,{logo_base64}" width="60" style="border-radius: 50%; margin-right: 12px;">'
 
+    # Build map background string
+    map_bg_style = ""
+    if topo_base64:
+        map_bg_style = f"background-image: url('data:image/png;base64,{topo_base64}'); background-size: cover; background-position: center;"
+    else:
+        map_bg_style = "background: linear-gradient(135deg, #1E90FF, #000080);"
+
     st.markdown(f"""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
         <!-- Blurred mock preview of the main interface -->
         <div style="
             background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 40%, #1b1040 100%);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 40px;
-            filter: blur(3px);
-            -webkit-filter: blur(3px);
+            filter: blur(4px);
+            -webkit-filter: blur(4px);
             border: 1px solid rgba(100,181,246,0.15);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             pointer-events: none;
             user-select: none;
+            overflow: hidden;
         ">
             <!-- Mock header -->
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
                 {preview_logo}
-                <span style="font-size: 22px; font-weight: bold; color: #64B5F6;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+                <span style="font-size: 24px; font-weight: 800; color: #FFFFFF; letter-spacing: 0.5px;">CECE <span style="font-weight: 300; opacity: 0.7;">|</span> CLIMATE AGENT</span>
             </div>
             <!-- Mock welcome message -->
-            <div style="background: rgba(30,136,229,0.15); border-radius: 12px; padding: 20px; margin-bottom: 25px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                <p style="color: #B0BEC5; font-size: 14px; margin: 0;">CeCe (Climate Copilot)</p>
-                <p style="color: #E0E0E0; font-size: 15px; margin: 8px 0 0 0;">Welcome! I can help you analyze climate data, weather patterns, and environmental risks across industries...</p>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 16px; padding: 24px; margin-bottom: 30px; max-width: 700px; margin-left: auto; margin-right: auto; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; gap: 15px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #64B5F6, #1E88E5);"></div>
+                    <div>
+                        <div style="height: 10px; width: 100px; background: rgba(255,255,255,0.2); border-radius: 5px; margin-bottom: 10px;"></div>
+                        <div style="height: 8px; width: 300px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 6px;"></div>
+                        <div style="height: 8px; width: 250px; background: rgba(255,255,255,0.1); border-radius: 4px;"></div>
+                    </div>
+                </div>
             </div>
-            <!-- Mock earth visualization placeholder -->
-            <div style="background: rgba(0,0,0,0.4); border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
-                <span style="color: #37474F; font-size: 48px;">&#127758;</span>
+            <!-- Mock map visualization -->
+            <div style="{map_bg_style} border-radius: 16px; height: 220px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;">
+                <!-- Overlay on map to make it look like a screen -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3);"></div>
+                <!-- Fake UI elements on map -->
+                <div style="position: absolute; top: 20px; right: 20px; width: 40px; height: 140px; background: rgba(0,0,0,0.5); border-radius: 20px;"></div>
+                <div style="position: absolute; bottom: 20px; left: 20px; width: 120px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 10px;"></div>
             </div>
             <!-- Mock industry buttons -->
-            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Agriculture</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Energy</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Insurance</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Transportation</div>
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; opacity: 0.7;">
+                <div style="background: rgba(147,112,219,0.1); border: 1px solid rgba(147,112,219,0.2); border-radius: 12px; padding: 14px 24px; color: #9370DB; font-size: 13px;">Agriculture</div>
+                <div style="background: rgba(147,112,219,0.1); border: 1px solid rgba(147,112,219,0.2); border-radius: 12px; padding: 14px 24px; color: #9370DB; font-size: 13px;">Energy</div>
+                <div style="background: rgba(147,112,219,0.1); border: 1px solid rgba(147,112,219,0.2); border-radius: 12px; padding: 14px 24px; color: #9370DB; font-size: 13px;">Insurance</div>
             </div>
         </div>
         <!-- Overlay gradient fade at bottom to blend into background -->
         <div style="
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 80px;
-            background: linear-gradient(transparent, #000000);
-            border-radius: 0 0 20px 20px;
+            height: 150px;
+            background: linear-gradient(to bottom, transparent 0%, #000000 100%);
+            border-radius: 0 0 24px 24px;
             pointer-events: none;
         "></div>
     </div>
