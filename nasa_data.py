@@ -9,52 +9,23 @@ import requests
 import json
 import pandas as pd
 import numpy as np
-import hashlib
 import time
 import functools
 from datetime import datetime, timedelta
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
-# Create a cache to store API results
-_api_cache = {}
-
-def fetch_nasa_power_data(lat, lon, start_date, end_date, parameters=None):
+@functools.lru_cache(maxsize=128)
+def _fetch_nasa_power_data_cached(lat, lon, start_date, end_date, parameters_tuple):
     """
-    Fetch climate data from NASA POWER API with caching for improved performance
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        start_date: Start date in format 'YYYY-MM-DD'
-        end_date: End date in format 'YYYY-MM-DD'
-        parameters: List of parameters to fetch
-    
-    Returns:
-        DataFrame with climate data
+    Internal cached function for fetching NASA POWER data.
     """
-    if parameters is None:
-        # Default parameters for climate data
-        parameters = [
-            "T2M",          # Temperature at 2 Meters (°C)
-            "T2M_MAX",      # Maximum Temperature at 2 Meters (°C)
-            "T2M_MIN",      # Minimum Temperature at 2 Meters (°C)
-            "PRECTOTCORR",  # Precipitation Corrected (mm/day)
-            "RH2M",         # Relative Humidity at 2 Meters (%)
-            "WS2M"          # Wind Speed at 2 Meters (m/s)
-        ]
+    parameters = list(parameters_tuple)
     
     # Generate a cache key for this specific request
     # Round coordinates to 4 decimal places to improve cache hits
     lat_rounded = round(lat, 4)
     lon_rounded = round(lon, 4)
-    params_str = ','.join(sorted(parameters))
-    cache_key = f"{lat_rounded}_{lon_rounded}_{start_date}_{end_date}_{params_str}"
-    cache_hash = hashlib.md5(cache_key.encode()).hexdigest()
-    
-    # Check if we already have cached results
-    if cache_hash in _api_cache:
-        return _api_cache[cache_hash]
     
     # Convert dates to required format (YYYYMMDD)
     start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
@@ -121,37 +92,45 @@ def fetch_nasa_power_data(lat, lon, start_date, end_date, parameters=None):
         for param in parameters:
             df[param] = values[param]
         
-        # Store the result in cache
-        _api_cache[cache_hash] = df
-        
-        # Cache management - limit cache size to prevent memory issues
-        if len(_api_cache) > 100:  # If cache is too large
-            # Remove random 20% of cache entries
-            cache_keys = list(_api_cache.keys())
-            keys_to_remove = np.random.choice(cache_keys, size=int(len(cache_keys) * 0.2), replace=False)
-            for key in keys_to_remove:
-                del _api_cache[key]
-        
         return df
     
     except Exception as e:
         raise Exception(f"Error fetching NASA POWER data: {str(e)}")
 
-def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0, fast_mode=True):
+def fetch_nasa_power_data(lat, lon, start_date, end_date, parameters=None):
     """
-    Fetch precipitation data for a region around a point from NASA POWER API
+    Fetch climate data from NASA POWER API with caching for improved performance
     
     Args:
-        lat: Center latitude (-90 to 90)
-        lon: Center longitude (-180 to 180)
+        lat: Latitude (-90 to 90)
+        lon: Longitude (-180 to 180)
         start_date: Start date in format 'YYYY-MM-DD'
         end_date: End date in format 'YYYY-MM-DD'
-        radius_degrees: Radius of the region in degrees (default: 1.0)
-        fast_mode: If True, uses faster interpolation for better performance (default: True)
+        parameters: List of parameters to fetch
     
     Returns:
-        DataFrame with precipitation data for points in the region
+        DataFrame with climate data
     """
+    if parameters is None:
+        # Default parameters for climate data
+        parameters = [
+            "T2M",          # Temperature at 2 Meters (°C)
+            "T2M_MAX",      # Maximum Temperature at 2 Meters (°C)
+            "T2M_MIN",      # Minimum Temperature at 2 Meters (°C)
+            "PRECTOTCORR",  # Precipitation Corrected (mm/day)
+            "RH2M",         # Relative Humidity at 2 Meters (%)
+            "WS2M"          # Wind Speed at 2 Meters (m/s)
+        ]
+
+    # Convert parameters to tuple for caching
+    parameters_tuple = tuple(sorted(parameters))
+
+    # Get cached result and return a copy to prevent mutation
+    return _fetch_nasa_power_data_cached(lat, lon, start_date, end_date, parameters_tuple).copy()
+
+@functools.lru_cache(maxsize=32)
+def _fetch_precipitation_map_data_cached(lat, lon, start_date, end_date, radius_degrees, fast_mode):
+    """Internal cached function for precipitation map data."""
     # Create a grid of points around the center - balanced for speed and visual quality
     grid_size = 10  # Reduced back to 10 for faster loading, with improved rendering parameters
     lat_range = np.linspace(lat - radius_degrees, lat + radius_degrees, grid_size)
@@ -304,19 +283,13 @@ def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=
     # Convert to DataFrame
     return pd.DataFrame(full_grid_data)
 
-def get_temperature_trends(lat, lon, start_date, end_date):
-    """
-    Get temperature trends from NASA POWER data
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        start_date: Start date in format 'YYYY-MM-DD'
-        end_date: End date in format 'YYYY-MM-DD'
-    
-    Returns:
-        DataFrame with monthly temperature data
-    """
+def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0, fast_mode=True):
+    """Wrapper for cached precipitation data."""
+    return _fetch_precipitation_map_data_cached(lat, lon, start_date, end_date, radius_degrees, fast_mode).copy()
+
+@functools.lru_cache(maxsize=32)
+def _get_temperature_trends_cached(lat, lon, start_date, end_date):
+    """Internal cached function for temperature trends."""
     # Fetch temperature data
     df = fetch_nasa_power_data(lat, lon, start_date, end_date, 
                             parameters=["T2M", "T2M_MAX", "T2M_MIN"])
@@ -361,19 +334,14 @@ def get_temperature_trends(lat, lon, start_date, end_date):
     
     return monthly_data, trend_per_decade
 
-def get_extreme_heat_days(lat, lon, year, percentile=95):
-    """
-    Identify extreme heat days from NASA POWER data
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        year: Year to analyze
-        percentile: Percentile threshold for extreme heat (default: 95)
-    
-    Returns:
-        DataFrame with extreme heat days
-    """
+def get_temperature_trends(lat, lon, start_date, end_date):
+    """Wrapper for cached temperature trends."""
+    df, trend = _get_temperature_trends_cached(lat, lon, start_date, end_date)
+    return df.copy(), trend
+
+@functools.lru_cache(maxsize=32)
+def _get_extreme_heat_days_cached(lat, lon, year, percentile):
+    """Internal cached function for extreme heat days."""
     # Set date range for the specified year
     start_date = f"{year}-01-01"
     end_date = f"{year}-12-31"
@@ -421,21 +389,14 @@ def get_extreme_heat_days(lat, lon, year, percentile=95):
     
     return df, temp_threshold, hi_threshold
 
-def get_rainfall_comparison(lat, lon, current_start, current_end, prev_start, prev_end):
-    """
-    Compare rainfall between two time periods from NASA POWER data
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        current_start: Start date for current period in format 'YYYY-MM-DD'
-        current_end: End date for current period in format 'YYYY-MM-DD'
-        prev_start: Start date for previous period in format 'YYYY-MM-DD'
-        prev_end: End date for previous period in format 'YYYY-MM-DD'
-    
-    Returns:
-        Two DataFrames with precipitation data for current and previous periods
-    """
+def get_extreme_heat_days(lat, lon, year, percentile=95):
+    """Wrapper for cached extreme heat days."""
+    df, t_thresh, h_thresh = _get_extreme_heat_days_cached(lat, lon, year, percentile)
+    return df.copy(), t_thresh, h_thresh
+
+@functools.lru_cache(maxsize=32)
+def _get_rainfall_comparison_cached(lat, lon, current_start, current_end, prev_start, prev_end):
+    """Internal cached function for rainfall comparison."""
     # Fetch data for current period
     current_df = fetch_nasa_power_data(lat, lon, current_start, current_end, 
                                     parameters=["PRECTOTCORR"])
@@ -468,21 +429,14 @@ def get_rainfall_comparison(lat, lon, current_start, current_end, prev_start, pr
     
     return current_df, prev_df
 
-def calculate_climate_anomalies(lat, lon, start_date, end_date, variable, baseline_period):
-    """
-    Calculate climate anomalies from NASA POWER data
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        start_date: Start date in format 'YYYY-MM-DD'
-        end_date: End date in format 'YYYY-MM-DD'
-        variable: Climate variable to analyze ('temperature', 'precipitation', etc.)
-        baseline_period: Period for baseline (e.g., '1981-2010')
-    
-    Returns:
-        DataFrame with anomalies
-    """
+def get_rainfall_comparison(lat, lon, current_start, current_end, prev_start, prev_end):
+    """Wrapper for cached rainfall comparison."""
+    df1, df2 = _get_rainfall_comparison_cached(lat, lon, current_start, current_end, prev_start, prev_end)
+    return df1.copy(), df2.copy()
+
+@functools.lru_cache(maxsize=32)
+def _calculate_climate_anomalies_cached(lat, lon, start_date, end_date, variable, baseline_period):
+    """Internal cached function for climate anomalies."""
     # Map variable to NASA POWER parameter
     if variable.lower() == 'temperature':
         parameter = 'T2M'
@@ -544,3 +498,7 @@ def calculate_climate_anomalies(lat, lon, start_date, end_date, variable, baseli
         df['Anomaly Unit'] = "%"
     
     return df
+
+def calculate_climate_anomalies(lat, lon, start_date, end_date, variable, baseline_period):
+    """Wrapper for cached climate anomalies."""
+    return _calculate_climate_anomalies_cached(lat, lon, start_date, end_date, variable, baseline_period).copy()
