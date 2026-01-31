@@ -488,9 +488,17 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
 
-    # Prominent Launch CTA button styled over the blurred preview
+    # Prominent Launch CTA button positioned in the CENTER of the blurred preview
     st.markdown("""
     <style>
+    .launch-button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: -280px;
+        margin-bottom: 240px;
+        position: relative;
+        z-index: 100;
+    }
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
         color: white !important;
