@@ -8,6 +8,8 @@ for various industries based on projected climate scenarios.
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import functools
+import copy
 
 # Import NASA data module for climate projections
 import nasa_data
@@ -729,19 +731,10 @@ def get_adaptive_strategies(industry, impact_assessment):
     
     return strategies
 
-def generate_resilience_report(lat, lon, industry, target_year=2050, scenario="moderate"):
+@functools.lru_cache(maxsize=32)
+def _generate_resilience_report_cached(lat, lon, industry, target_year=2050, scenario="moderate"):
     """
-    Generate a comprehensive climate resilience report for an industry
-    
-    Args:
-        lat: Latitude (-90 to 90)
-        lon: Longitude (-180 to 180)
-        industry: Industry name
-        target_year: Target year for projections
-        scenario: Climate scenario ("optimistic", "moderate", "severe")
-    
-    Returns:
-        Dictionary with resilience report data
+    Internal cached function to generate resilience report.
     """
     # Get climate projections
     projections = get_climate_projections(lat, lon, target_year, scenario)
@@ -827,3 +820,10 @@ def generate_resilience_report(lat, lon, industry, target_year=2050, scenario="m
     }
     
     return report
+
+def generate_resilience_report(lat, lon, industry, target_year=2050, scenario="moderate"):
+    """
+    Generate a comprehensive climate resilience report for an industry.
+    Wrapper for cached function.
+    """
+    return copy.deepcopy(_generate_resilience_report_cached(lat, lon, industry, target_year, scenario))
