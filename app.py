@@ -941,7 +941,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # The actual chat input
-user_input = st.text_input("", key="chat_input", placeholder=placeholder_text)
+user_input = st.text_input("Message CeCe", key="chat_input", placeholder=placeholder_text, label_visibility="collapsed")
 
 # Add navigation buttons using Streamlit components instead of raw HTML/JS
 col1, col2 = st.columns([9, 1])
