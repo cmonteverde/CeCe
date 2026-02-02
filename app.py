@@ -287,7 +287,7 @@ st.markdown(css, unsafe_allow_html=True)
 # Add topography decoration 
 st.markdown("""
 <div style="position: absolute; top: 0; right: 0; width: 45%; min-width: 400px; height: 300px; z-index: 1; overflow: visible; pointer-events: none;">
-    <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: cover; object-position: top right;">
+    <img src="data:image/png;base64,{topo_base64}" alt="" style="width: 100%; height: 100%; object-fit: cover; object-position: top right;">
 </div>
 """.format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
 
@@ -559,7 +559,7 @@ with open("public/avatar_fixed.png", "rb") as f:
 st.markdown(f"""
 <div style="display: flex; justify-content: center; align-items: center; margin: 0 auto; width: 100%;">
     <div style="display: flex; align-items: center; justify-content: center;">
-        <img src="data:image/png;base64,{avatar_base64}" width="150" 
+        <img src="data:image/png;base64,{avatar_base64}" alt="CeCe Avatar" width="150"
             style="border-radius: 50%; margin-right: 20px;">
         <span class="gradient-text" style="font-size: 32px; font-weight: bold; white-space: nowrap;">
             CECE: YOUR CLIMATE & WEATHER AGENT
