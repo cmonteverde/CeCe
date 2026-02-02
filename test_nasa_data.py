@@ -34,5 +34,21 @@ class TestNasaData(unittest.TestCase):
         self.assertTrue((df['latitude'] >= 37.7749 - 1.0).all())
         self.assertTrue((df['latitude'] <= 37.7749 + 1.0).all())
 
+    def test_fetch_precipitation_map_data_slow_mode(self):
+        # Trigger the interpolation path
+        df = nasa_data.fetch_precipitation_map_data(
+            lat=37.7749,
+            lon=-122.4194,
+            start_date="2023-01-01",
+            end_date="2023-01-20", # > 14 days
+            radius_degrees=1.0,    # > 0.5
+            fast_mode=False
+        )
+        self.assertIsInstance(df, pd.DataFrame)
+        self.assertListEqual(list(df.columns), ['latitude', 'longitude', 'precipitation'])
+        self.assertEqual(len(df), 100) # 10x10 grid is hardcoded in function?
+        # Check values
+        self.assertTrue((df['precipitation'] >= 0.01).all())
+
 if __name__ == '__main__':
     unittest.main()
