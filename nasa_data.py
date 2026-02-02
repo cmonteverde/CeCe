@@ -12,6 +12,7 @@ import numpy as np
 import time
 import functools
 from datetime import datetime, timedelta
+from scipy.spatial.distance import cdist
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
@@ -233,55 +234,51 @@ def _fetch_precipitation_map_data_cached(lat, lon, start_date, end_date, radius_
     if len(sampled_df) == 0:
         return pd.DataFrame(columns=['latitude', 'longitude', 'precipitation'])
     
-    # Now interpolate for the missing points
-    full_grid_data = []
+    # Now interpolate for the missing points using vectorized operations (significantly faster)
+    # Prepare sampled data for vectorization
+    sampled_coords = sampled_df[['latitude', 'longitude']].values.astype(np.float64)
+    sampled_precip = sampled_df['precipitation'].values.astype(np.float64)
     
-    # Add all sampled points to the full grid
-    for _, row in sampled_df.iterrows():
-        full_grid_data.append({
-            'latitude': row['latitude'],
-            'longitude': row['longitude'],
-            'precipitation': row['precipitation']
-        })
+    # Create target grid
+    lat_grid, lon_grid = np.meshgrid(lat_range, lon_range, indexing='ij')
+    target_coords = np.column_stack((lat_grid.flatten(), lon_grid.flatten()))
     
-    # For non-sampled points, interpolate from nearest sampled points
-    for grid_lat in lat_range:
-        for grid_lon in lon_range:
-            # Skip points we already have
-            if any((sampled_df['latitude'] == grid_lat) & (sampled_df['longitude'] == grid_lon)):
-                continue
-                
-            # Find nearest sampled points and interpolate
-            distances = []
-            precips = []
-            
-            for _, row in sampled_df.iterrows():
-                dist = ((row['latitude'] - grid_lat)**2 + (row['longitude'] - grid_lon)**2) ** 0.5
-                distances.append(dist)
-                precips.append(row['precipitation'])
-            
-            # Calculate distance-weighted average
-            if distances:
-                # Avoid division by zero
-                weights = [1/(d+0.0001) for d in distances]
-                total_weight = sum(weights)
-                weighted_precip = sum(w * p for w, p in zip(weights, precips)) / total_weight
-                
-                # Add some realistic variation
-                variation = 0.9 + 0.2 * np.random.random()
-                interpolated_precip = weighted_precip * variation
-                
-                # Ensure precipitation is a positive number
-                interpolated_precip = max(0.01, interpolated_precip)
-                
-                full_grid_data.append({
-                    'latitude': grid_lat,
-                    'longitude': grid_lon,
-                    'precipitation': interpolated_precip
-                })
+    # Calculate distances between all target points and all sampled points (N x M)
+    # cdist is highly optimized C implementation
+    dists = cdist(target_coords, sampled_coords)
+
+    # Inverse distance weighting
+    # Use epsilon to avoid division by zero
+    epsilon = 0.0001
+    weights = 1.0 / (dists + epsilon)
+
+    # Calculate weighted average
+    weighted_sum = np.sum(weights * sampled_precip, axis=1)
+    total_weights = np.sum(weights, axis=1)
+    interpolated_values = weighted_sum / total_weights
+
+    # Add some realistic variation (vectorized)
+    # Generate random variation for the entire grid at once
+    variation = 0.9 + 0.2 * np.random.random(interpolated_values.shape)
+    interpolated_values = interpolated_values * variation
     
-    # Convert to DataFrame
-    return pd.DataFrame(full_grid_data)
+    # Ensure precipitation is a positive number
+    interpolated_values = np.maximum(0.01, interpolated_values)
+
+    # Identify points that are effectively sampled points (distance near zero)
+    # and overwrite with exact sampled values to ensure accuracy
+    min_dists = np.min(dists, axis=1)
+    nearest_sample_idx = np.argmin(dists, axis=1)
+    is_sample = min_dists < 1e-5
+
+    interpolated_values[is_sample] = sampled_precip[nearest_sample_idx[is_sample]]
+
+    # Create result DataFrame
+    return pd.DataFrame({
+        'latitude': target_coords[:, 0],
+        'longitude': target_coords[:, 1],
+        'precipitation': interpolated_values
+    })
 
 def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0, fast_mode=True):
     """Wrapper for cached precipitation data."""
