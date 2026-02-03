@@ -34,5 +34,53 @@ class TestNasaData(unittest.TestCase):
         self.assertTrue((df['latitude'] >= 37.7749 - 1.0).all())
         self.assertTrue((df['latitude'] <= 37.7749 + 1.0).all())
 
+    def test_heat_index_calculation(self):
+        # Create a deterministic dataset
+        n_points = 100
+        t_values = np.linspace(20, 40, n_points)
+        rh_values = np.linspace(20, 90, n_points)
+
+        # Create sample DataFrame
+        mock_df = pd.DataFrame({
+            'Date': pd.date_range(start='2023-01-01', periods=n_points),
+            'T2M_MAX': t_values,
+            'RH2M': rh_values
+        })
+
+        # Update mock return value for this test
+        nasa_data.fetch_nasa_power_data.return_value = mock_df.copy()
+
+        # Clear cache
+        nasa_data._get_extreme_heat_days_cached.cache_clear()
+
+        # Call the function
+        df, _, _ = nasa_data.get_extreme_heat_days(0, 0, 2023)
+
+        # Original logic for verification
+        def calculate_heat_index_original(t, rh):
+            if t < 26:
+                return t
+            hi = -8.78469475556 + \
+                    1.61139411 * t + \
+                    2.33854883889 * rh + \
+                    -0.14611605 * t * rh + \
+                    -0.012308094 * t**2 + \
+                    -0.0164248277778 * rh**2 + \
+                    0.002211732 * t**2 * rh + \
+                    0.00072546 * t * rh**2 + \
+                    -0.000003582 * t**2 * rh**2
+            return hi
+
+        # Calculate expected values
+        expected_values = [calculate_heat_index_original(t, rh) for t, rh in zip(t_values, rh_values)]
+
+        # Compare
+        pd.testing.assert_series_equal(
+            df['Heat Index (°C)'],
+            pd.Series(expected_values, name='Heat Index (°C)'),
+            check_names=False,
+            atol=1e-5
+        )
+
 if __name__ == '__main__':
     unittest.main()
