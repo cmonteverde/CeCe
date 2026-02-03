@@ -312,7 +312,7 @@ def create_satellite_homepage():
     # Build a mock screenshot of the main interface elements
     preview_logo = ""
     if logo_base64:
-        preview_logo = f'<img src="data:image/png;base64,{logo_base64}" width="60" style="border-radius: 50%; margin-right: 12px;">'
+        preview_logo = f'<img src="data:image/png;base64,{logo_base64}" alt="" width="60" style="border-radius: 50%; margin-right: 12px;">'
 
     st.markdown(f"""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
