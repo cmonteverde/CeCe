@@ -455,29 +455,24 @@ def get_era5_extreme_heat(lat, lon, year, percentile=95):
             np.exp((17.625 * df['Temperature (°C)']) / (243.04 + df['Temperature (°C)']))
         )
         
-        # Calculate heat index
-        def calculate_heat_index(row):
-            t = row['Temperature (°C)']
-            rh = row['Relative Humidity (%)']
-            
-            # Convert to Fahrenheit for the formula
-            t_f = t * 9/5 + 32
-            
-            # Simple formula for lower temperatures
-            if t_f < 80:
-                return t
-            
-            # Full formula for higher temperatures
-            hi = -42.379 + 2.04901523 * t_f + 10.14333127 * rh
-            hi = hi - 0.22475541 * t_f * rh - 0.00683783 * t_f**2
-            hi = hi - 0.05481717 * rh**2 + 0.00122874 * t_f**2 * rh
-            hi = hi + 0.00085282 * t_f * rh**2 - 0.00000199 * t_f**2 * rh**2
-            
-            # Convert back to Celsius
-            hi_c = (hi - 32) * 5/9
-            return hi_c
+        # Calculate heat index using vectorized operations
+        t = df['Temperature (°C)']
+        rh = df['Relative Humidity (%)']
         
-        df['Heat Index (°C)'] = df.apply(calculate_heat_index, axis=1)
+        # Convert to Fahrenheit for the formula
+        t_f = t * 9/5 + 32
+
+        # Full formula calculation for all points
+        hi = -42.379 + 2.04901523 * t_f + 10.14333127 * rh
+        hi = hi - 0.22475541 * t_f * rh - 0.00683783 * t_f**2
+        hi = hi - 0.05481717 * rh**2 + 0.00122874 * t_f**2 * rh
+        hi = hi + 0.00085282 * t_f * rh**2 - 0.00000199 * t_f**2 * rh**2
+
+        # Convert back to Celsius
+        hi_c = (hi - 32) * 5/9
+
+        # Use simple formula (just temperature) where t_f < 80, else full formula
+        df['Heat Index (°C)'] = np.where(t_f < 80, t, hi_c)
         
         # Get daily maximum heat index
         daily_heat_index = df.groupby('Date')['Heat Index (°C)'].max().reset_index()
