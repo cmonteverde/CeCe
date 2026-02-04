@@ -237,7 +237,7 @@ css = """
         background-color: white;
         border-left: 3px solid #9370DB;
         border-radius: 8px;
-        color: #9370DB;
+        color: #663399;
         padding: 12px 16px;
         margin-left: 40px;
         font-size: 14px;
@@ -639,7 +639,7 @@ st.markdown('<div class="industry-buttons-container" style="display: flex; justi
 
 # Generate SVG icons for each industry
 industry_icons = {
-    "aerospace": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "aerospace": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
@@ -650,7 +650,7 @@ industry_icons = {
             C62.2,33,61.7,32.3,61,32.1z M25.5,32c0-1.9,1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5s-1.6,3.5-3.5,3.5S25.5,33.9,25.5,32z"/>
     </svg>""",
     
-    "agriculture": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "agriculture": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
@@ -661,7 +661,7 @@ industry_icons = {
         <path fill="url(#grad2)" d="M26,50c0,0-2,6-2,9c0,2.2,1.8,4,4,4s4-1.8,4-4c0-3-2-9-2-9H26z"/>
     </svg>""",
     
-    "energy": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "energy": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
@@ -670,7 +670,7 @@ industry_icons = {
         <path fill="url(#grad3)" d="M19,39L9,59h16l-6,9h2l19-22H29l6-13L19,39z"/>
     </svg>""",
     
-    "insurance": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "insurance": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
@@ -681,7 +681,7 @@ industry_icons = {
         S33.7,36,32,36z"/>
     </svg>""",
     
-    "forestry": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "forestry": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
@@ -691,7 +691,7 @@ industry_icons = {
         <path fill="url(#grad5)" d="M32,38c2,0,14-19.1,14-24.5C46,8.4,40.6,3,34,3h-4c-6.6,0-12,5.4-12,10.5C18,18.9,30,38,32,38z"/>
     </svg>""",
     
-    "catastrophes": """<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    "catastrophes": """<svg role="img" aria-hidden="true" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#1E90FF;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#9370DB;stop-opacity:1" />
