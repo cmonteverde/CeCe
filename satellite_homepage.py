@@ -294,15 +294,15 @@ def create_satellite_homepage():
     st.markdown("""
     <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 0 auto 60px auto; max-width: 800px;">
         <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#127758;</span>
+            <span style="font-size: 20px;" role="img" aria-hidden="true">&#127758;</span>
             <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Real-Time Climate Data</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#129302;</span>
+            <span style="font-size: 20px;" role="img" aria-hidden="true">&#129302;</span>
             <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">AI-Powered Analysis</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#128202;</span>
+            <span style="font-size: 20px;" role="img" aria-hidden="true">&#128202;</span>
             <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Interactive Visualizations</span>
         </div>
     </div>
@@ -317,7 +317,7 @@ def create_satellite_homepage():
     st.markdown(f"""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
         <!-- Blurred mock preview of the main interface -->
-        <div style="
+        <div aria-hidden="true" style="
             background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 40%, #1b1040 100%);
             border-radius: 20px;
             padding: 40px;
