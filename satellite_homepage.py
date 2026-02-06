@@ -317,7 +317,7 @@ def create_satellite_homepage():
     st.markdown(f"""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
         <!-- Blurred mock preview of the main interface -->
-        <div style="
+        <div aria-hidden="true" style="
             background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 40%, #1b1040 100%);
             border-radius: 20px;
             padding: 40px;
