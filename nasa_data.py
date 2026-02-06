@@ -12,6 +12,7 @@ import numpy as np
 import time
 import functools
 from datetime import datetime, timedelta
+from scipy.spatial.distance import cdist
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
@@ -233,55 +234,60 @@ def _fetch_precipitation_map_data_cached(lat, lon, start_date, end_date, radius_
     if len(sampled_df) == 0:
         return pd.DataFrame(columns=['latitude', 'longitude', 'precipitation'])
     
-    # Now interpolate for the missing points
-    full_grid_data = []
+    # Use vectorized interpolation for performance
     
-    # Add all sampled points to the full grid
-    for _, row in sampled_df.iterrows():
-        full_grid_data.append({
-            'latitude': row['latitude'],
-            'longitude': row['longitude'],
-            'precipitation': row['precipitation']
-        })
+    # 1. Create target grid coordinates
+    # indexing='ij' ensures correct shape relative to lat_range, lon_range
+    target_lats, target_lons = np.meshgrid(lat_range, lon_range, indexing='ij')
+    target_coords = np.column_stack((target_lats.ravel(), target_lons.ravel()))
     
-    # For non-sampled points, interpolate from nearest sampled points
-    for grid_lat in lat_range:
-        for grid_lon in lon_range:
-            # Skip points we already have
-            if any((sampled_df['latitude'] == grid_lat) & (sampled_df['longitude'] == grid_lon)):
-                continue
-                
-            # Find nearest sampled points and interpolate
-            distances = []
-            precips = []
-            
-            for _, row in sampled_df.iterrows():
-                dist = ((row['latitude'] - grid_lat)**2 + (row['longitude'] - grid_lon)**2) ** 0.5
-                distances.append(dist)
-                precips.append(row['precipitation'])
-            
-            # Calculate distance-weighted average
-            if distances:
-                # Avoid division by zero
-                weights = [1/(d+0.0001) for d in distances]
-                total_weight = sum(weights)
-                weighted_precip = sum(w * p for w, p in zip(weights, precips)) / total_weight
-                
-                # Add some realistic variation
-                variation = 0.9 + 0.2 * np.random.random()
-                interpolated_precip = weighted_precip * variation
-                
-                # Ensure precipitation is a positive number
-                interpolated_precip = max(0.01, interpolated_precip)
-                
-                full_grid_data.append({
-                    'latitude': grid_lat,
-                    'longitude': grid_lon,
-                    'precipitation': interpolated_precip
-                })
+    # 2. Get sampled coordinates and values
+    sampled_coords = sampled_df[['latitude', 'longitude']].values
+    sampled_values = sampled_df['precipitation'].values
     
-    # Convert to DataFrame
-    return pd.DataFrame(full_grid_data)
+    # 3. Calculate distance matrix (Target Points x Sampled Points)
+    #    cdist returns shape (n_target, n_sampled)
+    dists = cdist(target_coords, sampled_coords, metric='euclidean')
+
+    # 4. Calculate IDW weights
+    #    Avoid division by zero by adding epsilon
+    weights = 1.0 / (dists + 0.0001)
+
+    # 5. Calculate weighted average
+    #    Multiply weights by values broadcasted across rows
+    #    Sum along sampled points axis (axis 1)
+    weighted_sum = np.sum(weights * sampled_values, axis=1)
+    sum_of_weights = np.sum(weights, axis=1)
+
+    interpolated_values = weighted_sum / sum_of_weights
+
+    # 6. Apply variation (vectorized)
+    #    Generate random variation for all points
+    variation = 0.9 + 0.2 * np.random.random(len(interpolated_values))
+    final_values = interpolated_values * variation
+
+    # 7. Ensure positive values
+    final_values = np.maximum(0.01, final_values)
+
+    # Create result DataFrame
+    result_df = pd.DataFrame({
+        'latitude': target_coords[:, 0],
+        'longitude': target_coords[:, 1],
+        'precipitation': final_values
+    })
+
+    # 8. Restore exact values for sampled points
+    #    The vectorized interpolation applies smoothing and noise to all points.
+    #    We must restore the original sampled values where they exist.
+    if not sampled_df.empty:
+        # Use pandas index alignment to update values
+        # This works because coordinates come from the same linspace arrays
+        result_df.set_index(['latitude', 'longitude'], inplace=True)
+        sampled_indexed = sampled_df.set_index(['latitude', 'longitude'])
+        result_df.update(sampled_indexed)
+        result_df.reset_index(inplace=True)
+
+    return result_df
 
 def fetch_precipitation_map_data(lat, lon, start_date, end_date, radius_degrees=1.0, fast_mode=True):
     """Wrapper for cached precipitation data."""
