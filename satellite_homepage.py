@@ -10,6 +10,7 @@ import folium
 from streamlit_folium import st_folium
 import base64
 
+
 def get_logo_base64():
     """Get the Climate Copilot logo as base64"""
     try:
@@ -26,13 +27,15 @@ def get_logo_base64():
             except:
                 return None
 
+
 def create_satellite_homepage():
     """
     Create a full-screen satellite map homepage with Climate Copilot interface
     """
-    
+
     # Minimal styling to preserve scrollability
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     .main > div {
         padding-top: 1rem;
@@ -256,8 +259,10 @@ def create_satellite_homepage():
         }
     }
     </style>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # Show logo and title with generous spacing
     logo_base64 = get_logo_base64()
 
@@ -268,30 +273,40 @@ def create_satellite_homepage():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.image(f"data:image/png;base64,{logo_base64}", width=150)
-            st.markdown("""
+            st.markdown(
+                """
             <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
                 background: linear-gradient(135deg, #64B5F6, #1E88E5);
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
                 Climate CoPilot
             </h1>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
     else:
-        st.markdown("""
+        st.markdown(
+            """
         <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
             background: linear-gradient(135deg, #64B5F6, #1E88E5);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
             Climate CoPilot
         </h1>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-    st.markdown("""
+    st.markdown(
+        """
     <p style='text-align: center; font-size: 22px; margin-bottom: 40px; color: #BBDEFB; font-weight: 300; letter-spacing: 1px;'>
         AI-Powered Climate Intelligence Platform
     </p>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Feature highlight cards
-    st.markdown("""
+    st.markdown(
+        """
     <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 0 auto 60px auto; max-width: 800px;">
         <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
             <span style="font-size: 20px;">&#127758;</span>
@@ -306,15 +321,18 @@ def create_satellite_homepage():
             <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Interactive Visualizations</span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     # --- Blurred preview of the main CeCe interface as a teaser ---
     # Build a mock screenshot of the main interface elements
     preview_logo = ""
     if logo_base64:
-        preview_logo = f'<img src="data:image/png;base64,{logo_base64}" width="60" style="border-radius: 50%; margin-right: 12px;">'
+        preview_logo = f'<img src="data:image/png;base64,{logo_base64}" alt="Climate Copilot Logo" width="60" style="border-radius: 50%; margin-right: 12px;">'
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
         <!-- Blurred mock preview of the main interface -->
         <div style="
@@ -359,8 +377,10 @@ def create_satellite_homepage():
             pointer-events: none;
         "></div>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+        unsafe_allow_html=True,
+    )
+
     # Return a flag to indicate button should be placed here
     return "show_button_here"
 
@@ -489,6 +509,7 @@ def create_satellite_homepage():
     #                 st.session_state.chat_history.append({"role": "assistant", "content": fallback})
 
     return None
+
 
 if __name__ == "__main__":
     create_satellite_homepage()
