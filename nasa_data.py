@@ -72,25 +72,27 @@ def _fetch_nasa_power_data_cached(lat, lon, start_date, end_date, parameters_tup
         parameter_data = data['properties']['parameter']
         
         # Create a DataFrame from the data
-        dates = []
-        values = {param: [] for param in parameters}
+        # Use vectorized operations for faster parsing
         
-        # Get the date range from the response
-        for date_str in parameter_data[parameters[0]].keys():
-            dates.append(datetime.strptime(date_str, '%Y%m%d'))
-            
-            for param in parameters:
-                if param in parameter_data:
-                    values[param].append(parameter_data[param][date_str])
-                else:
-                    values[param].append(None)
+        # Get sorted dates from the first parameter (assumed to be the reference)
+        ref_param = parameters[0]
+        # Ensure we process dates in order
+        date_strs = sorted(parameter_data[ref_param].keys())
+
+        # Vectorized date parsing (much faster than loop with strptime)
+        dates = pd.to_datetime(date_strs, format='%Y%m%d')
         
         # Create the DataFrame
         df = pd.DataFrame({'Date': dates})
         
-        # Add the parameter values
+        # Add the parameter values using list comprehensions
         for param in parameters:
-            df[param] = values[param]
+            if param in parameter_data:
+                # Extract values in the same order as date_strs
+                # Use .get() to handle potential missing dates safely
+                df[param] = [parameter_data[param].get(d) for d in date_strs]
+            else:
+                df[param] = None
         
         return df
     
@@ -350,30 +352,23 @@ def _get_extreme_heat_days_cached(lat, lon, year, percentile):
     df = fetch_nasa_power_data(lat, lon, start_date, end_date, 
                             parameters=["T2M_MAX", "RH2M"])
     
-    # Calculate heat index
-    def calculate_heat_index(row):
-        t = row['T2M_MAX']  # Temperature in Celsius
-        rh = row['RH2M']    # Relative humidity in %
-        
-        # Simple formula for heat index
-        if t < 26:
-            return t  # Below this temperature, heat index equals temperature
-        
-        # Full formula
-        hi = -8.78469475556 + \
-             1.61139411 * t + \
-             2.33854883889 * rh + \
-             -0.14611605 * t * rh + \
-             -0.012308094 * t**2 + \
-             -0.0164248277778 * rh**2 + \
-             0.002211732 * t**2 * rh + \
-             0.00072546 * t * rh**2 + \
-             -0.000003582 * t**2 * rh**2
-        
-        return hi
+    # Calculate heat index using vectorized operations (much faster than apply)
+    t = df['T2M_MAX'].values  # Temperature in Celsius
+    rh = df['RH2M'].values    # Relative humidity in %
+
+    # Full formula for heat index
+    hi = -8.78469475556 + \
+         1.61139411 * t + \
+         2.33854883889 * rh + \
+         -0.14611605 * t * rh + \
+         -0.012308094 * t**2 + \
+         -0.0164248277778 * rh**2 + \
+         0.002211732 * t**2 * rh + \
+         0.00072546 * t * rh**2 + \
+         -0.000003582 * t**2 * rh**2
     
-    # Apply heat index calculation
-    df['Heat Index (°C)'] = df.apply(calculate_heat_index, axis=1)
+    # Apply conditional logic: if t < 26, heat index equals temperature
+    df['Heat Index (°C)'] = np.where(t < 26, t, hi)
     
     # Determine thresholds
     temp_threshold = np.percentile(df['T2M_MAX'], percentile)
