@@ -489,43 +489,47 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
     
-    # Prominent Launch CTA button positioned in the CENTER of the blurred preview
+    # Prominent Launch CTA button overlaid on top of the blurred preview
     st.markdown("""
     <style>
-    .launch-button-container {
-        display: flex;
-        justify-content: center;
-        margin-top: -280px;
-        margin-bottom: 240px;
-        position: relative;
-        z-index: 100;
+    /* Pull the button container up into the blurred preview area */
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"]:has(button[kind="primary"]) {
+        margin-top: -200px !important;
+        position: relative !important;
+        z-index: 1000 !important;
     }
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
         color: white !important;
-        font-size: 22px !important;
+        font-size: 24px !important;
         font-weight: 700 !important;
-        padding: 20px 50px !important;
+        padding: 22px 60px !important;
         border: none !important;
-        border-radius: 14px !important;
-        box-shadow: 0 8px 30px rgba(30, 144, 255, 0.4) !important;
+        border-radius: 16px !important;
+        box-shadow:
+            0 8px 32px rgba(30, 144, 255, 0.5),
+            0 0 60px rgba(147, 112, 219, 0.3),
+            inset 0 1px 0 rgba(255,255,255,0.2) !important;
         transition: all 0.3s ease !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        backdrop-filter: blur(10px) !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 14px 40px rgba(30, 144, 255, 0.55) !important;
+        transform: translateY(-4px) scale(1.02) !important;
+        box-shadow:
+            0 14px 45px rgba(30, 144, 255, 0.6),
+            0 0 80px rgba(147, 112, 219, 0.4),
+            inset 0 1px 0 rgba(255,255,255,0.3) !important;
     }
     </style>
     """, unsafe_allow_html=True)
-    
-    st.markdown('<div class="launch-button-container">', unsafe_allow_html=True)
+
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("Launch Climate Copilot", type="primary", use_container_width=True):
             st.session_state.show_homepage = False
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # Stop execution here for homepage
     st.stop()

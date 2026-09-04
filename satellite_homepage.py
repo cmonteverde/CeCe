@@ -337,9 +337,38 @@ def create_satellite_homepage():
                 <p style="color: #B0BEC5; font-size: 14px; margin: 0;">CeCe (Climate Copilot)</p>
                 <p style="color: #E0E0E0; font-size: 15px; margin: 8px 0 0 0;">Welcome! I can help you analyze climate data, weather patterns, and environmental risks across industries...</p>
             </div>
-            <!-- Mock earth visualization placeholder -->
-            <div style="background: rgba(0,0,0,0.4); border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
-                <span style="color: #37474F; font-size: 48px;">&#127758;</span>
+            <!-- Rich climate visualization mockup instead of pathetic globe -->
+            <div style="background: linear-gradient(180deg, #0a1628 0%, #0d2137 50%, #071018 100%); border-radius: 12px; height: 200px; margin-bottom: 25px; position: relative; overflow: hidden;">
+                <!-- Animated gradient overlay simulating weather patterns -->
+                <div style="position: absolute; inset: 0; background:
+                    radial-gradient(ellipse 120% 80% at 20% 40%, rgba(30, 136, 229, 0.25) 0%, transparent 50%),
+                    radial-gradient(ellipse 100% 60% at 70% 30%, rgba(100, 181, 246, 0.2) 0%, transparent 45%),
+                    radial-gradient(ellipse 80% 50% at 50% 70%, rgba(147, 112, 219, 0.15) 0%, transparent 40%);
+                "></div>
+                <!-- Simulated wind flow lines -->
+                <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.4;" viewBox="0 0 400 200" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="windGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#64B5F6;stop-opacity:0" />
+                            <stop offset="50%" style="stop-color:#64B5F6;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#64B5F6;stop-opacity:0" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M0,40 Q100,30 200,45 T400,35" stroke="url(#windGrad)" stroke-width="1.5" fill="none"/>
+                    <path d="M0,70 Q80,60 180,75 T400,65" stroke="url(#windGrad)" stroke-width="1" fill="none"/>
+                    <path d="M0,100 Q120,85 220,105 T400,95" stroke="url(#windGrad)" stroke-width="1.5" fill="none"/>
+                    <path d="M0,130 Q90,120 200,135 T400,125" stroke="url(#windGrad)" stroke-width="1" fill="none"/>
+                    <path d="M0,160 Q110,150 210,165 T400,155" stroke="url(#windGrad)" stroke-width="1.5" fill="none"/>
+                </svg>
+                <!-- Temperature anomaly dots -->
+                <div style="position: absolute; top: 25%; left: 15%; width: 12px; height: 12px; background: radial-gradient(circle, #FF6B6B 30%, transparent 70%); border-radius: 50%;"></div>
+                <div style="position: absolute; top: 35%; left: 65%; width: 16px; height: 16px; background: radial-gradient(circle, #FF8E53 30%, transparent 70%); border-radius: 50%;"></div>
+                <div style="position: absolute; top: 55%; left: 30%; width: 10px; height: 10px; background: radial-gradient(circle, #4FC3F7 30%, transparent 70%); border-radius: 50%;"></div>
+                <div style="position: absolute; top: 45%; left: 80%; width: 14px; height: 14px; background: radial-gradient(circle, #FF6B6B 30%, transparent 70%); border-radius: 50%;"></div>
+                <div style="position: absolute; top: 70%; left: 50%; width: 11px; height: 11px; background: radial-gradient(circle, #4FC3F7 30%, transparent 70%); border-radius: 50%;"></div>
+                <!-- Globe silhouette hint -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; border: 2px solid rgba(100, 181, 246, 0.15); border-radius: 50%;"></div>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 70px; border: 1px solid rgba(100, 181, 246, 0.1); border-radius: 50%;"></div>
             </div>
             <!-- Mock industry buttons -->
             <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
@@ -353,16 +382,16 @@ def create_satellite_homepage():
         <div style="
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 80px;
-            background: linear-gradient(transparent, #000000);
+            height: 100px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
             border-radius: 0 0 20px 20px;
             pointer-events: none;
         "></div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Return a flag to indicate button should be placed here
-    return "show_button_here"
+
+    # Return None - button placement handled in app.py
+    return None
 
     # --- COMMENTED OUT: Temperature anomalies, legend, and Folium map ---
     # These are disabled for a cleaner landing page. Uncomment to restore.
