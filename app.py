@@ -482,26 +482,26 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
     
-    # Clean CTA button matching new design system
+    # Section 5: Launch CeCe button - solid black pill (light theme)
     st.markdown("""
     <style>
-    /* Position button naturally below preview */
+    /* Solid black CTA button per light theme spec */
     div[data-testid="stButton"] > button[kind="primary"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
-        color: white !important;
+        background: #16161A !important;
+        color: #FFFFFF !important;
         font-size: 16px !important;
         font-weight: 600 !important;
         padding: 14px 32px !important;
         border: none !important;
         border-radius: 9999px !important;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+        box-shadow: none !important;
         transition: all 0.2s ease !important;
         letter-spacing: 0 !important;
         text-transform: none !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4) !important;
+        background: #2D2D33 !important;
+        transform: translateY(-1px) !important;
     }
     </style>
     """, unsafe_allow_html=True)
