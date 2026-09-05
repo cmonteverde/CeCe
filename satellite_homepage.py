@@ -258,28 +258,25 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Prominent purple/violet ambient glow background
+    # Background glow: purple center + warm gold corner (Section 4)
     st.markdown("""
     <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
         <div style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; background: radial-gradient(ellipse at center, rgba(147,112,219,0.25) 0%, rgba(139,92,246,0.15) 25%, rgba(99,102,241,0.08) 50%, transparent 70%); filter: blur(40px);"></div>
+        <div style="position: absolute; top: 5%; right: 10%; width: 400px; height: 400px; background: radial-gradient(ellipse at center, rgba(253,230,138,0.12) 0%, rgba(253,230,138,0.06) 40%, transparent 70%); filter: blur(60px);"></div>
     </div>
-    <style>
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    </style>
     """, unsafe_allow_html=True)
 
     # Get logo for header
     logo_base64 = get_logo_base64()
     logo_img = f'<img src="data:image/png;base64,{logo_base64}" width="32" height="32" style="border-radius: 6px;">' if logo_base64 else ''
 
-    # Gladia-style navigation header (dark pill container)
+    # Section 1: Nav bar - clean logo lockup, increased padding
     st.markdown(f"""
     <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 12px 24px; max-width: 950px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 14px 24px; max-width: 900px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 {logo_img}
                 <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
-                <span style="font-size: 13px; color: #9ca3af; font-weight: 400; margin-left: 4px;">CC, aka CeCe</span>
             </div>
             <nav style="display: flex; gap: 28px; align-items: center;">
                 <a href="#features" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
@@ -291,29 +288,29 @@ def create_satellite_homepage():
     </div>
     """, unsafe_allow_html=True)
 
-    # Add vertical breathing room before hero
-    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+    # Section 3: Hero top gap (96px from nav to headline)
+    st.markdown("<div style='height: 96px;'></div>", unsafe_allow_html=True)
 
-    # Beta pill badge - white with blinking green dot
+    # Section 2: Badge - live data sources with gold dot
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 32px;">
-        <span style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.95); border-radius: 50px; padding: 10px 20px; font-size: 14px; color: #1f2937; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-            <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 1.5s ease-in-out infinite;"></span>
-            BETA Research Preview
+        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 50px; padding: 8px 16px; font-size: 13px; color: #d1d5db; font-weight: 500;">
+            <span style="width: 6px; height: 6px; background: #FBBF24; border-radius: 50%; display: inline-block;"></span>
+            BETA — live NASA · NOAA · CSIRO data
         </span>
     </div>
     """, unsafe_allow_html=True)
 
-    # Hero section with cleaner hierarchy
+    # Section 3: Hero headline and subheadline
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 72px; font-weight: 600; margin-bottom: 12px; color: #ffffff; letter-spacing: -3px; line-height: 1.0;'>
+        <h1 style='font-size: 5.5rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.02em; line-height: 1.0; background: linear-gradient(135deg, #64B5F6, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;'>
             Climate CoPilot
         </h1>
-        <p style='font-size: 36px; margin-bottom: 40px; color: #e5e7eb; font-weight: 400; letter-spacing: -0.5px;'>
+        <p style='font-size: 1.5rem; margin-bottom: 28px; color: #B8B8CC; font-weight: 400; line-height: 1.4;'>
             Climate is complicated. Your workflow shouldn't be.
         </p>
-        <p style='font-size: 24px; margin-bottom: 50px; color: #ffffff; font-weight: 500; max-width: 750px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
+        <p style='font-size: 18px; margin-bottom: 50px; color: #A8A8BC; font-weight: 400; max-width: 65ch; margin-left: auto; margin-right: auto; line-height: 1.6;'>
             Access real-time climate data, AI-powered analysis, and interactive visualizations through a single conversational interface. No complex APIs or data wrangling required.
         </p>
     </div>
