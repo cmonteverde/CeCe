@@ -263,37 +263,42 @@ def create_satellite_homepage():
     <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
         <div style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; background: radial-gradient(ellipse at center, rgba(147,112,219,0.25) 0%, rgba(139,92,246,0.15) 25%, rgba(99,102,241,0.08) 50%, transparent 70%); filter: blur(40px);"></div>
     </div>
+    <style>
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    </style>
     """, unsafe_allow_html=True)
 
-    # Navigation header (Gladia-style)
-    st.markdown("""
-    <div style="position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="opacity: 0.9;">
-                <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
-                <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
-                <line x1="2" y1="12" x2="22" y2="12" stroke="#ffffff" stroke-width="1.5"/>
-            </svg>
-            <span style="font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+    # Get logo for header
+    logo_base64 = get_logo_base64()
+    logo_img = f'<img src="data:image/png;base64,{logo_base64}" width="32" height="32" style="border-radius: 6px;">' if logo_base64 else ''
+
+    # Gladia-style navigation header (dark pill container)
+    st.markdown(f"""
+    <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 12px 24px; max-width: 900px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                {logo_img}
+                <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+            </div>
+            <nav style="display: flex; gap: 28px; align-items: center;">
+                <a href="#features" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
+                <a href="#data" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
+                <a href="#about" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
+                <a href="https://github.com" target="_blank" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
+            </nav>
         </div>
-        <nav style="display: flex; gap: 32px; align-items: center;">
-            <a href="#features" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
-            <a href="#data" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
-            <a href="#about" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
-            <a href="https://github.com" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
-        </nav>
     </div>
     """, unsafe_allow_html=True)
 
     # Add vertical breathing room before hero
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
 
-    # Beta pill badge
+    # Beta pill badge - white with blinking green dot
     st.markdown("""
-    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 28px;">
-        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 50px; padding: 8px 18px; font-size: 13px; color: #a78bfa; font-weight: 500;">
-            <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
-            BETA — Research Preview
+    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 32px;">
+        <span style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.95); border-radius: 50px; padding: 10px 20px; font-size: 14px; color: #1f2937; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 1.5s ease-in-out infinite;"></span>
+            BETA Research Preview
         </span>
     </div>
     """, unsafe_allow_html=True)
@@ -301,19 +306,18 @@ def create_satellite_homepage():
     # Hero section with larger typography
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 88px; font-weight: 600; margin-bottom: 24px; color: #ffffff; letter-spacing: -4px; line-height: 0.95;'>
+        <h1 style='font-size: 88px; font-weight: 600; margin-bottom: 28px; color: #ffffff; letter-spacing: -4px; line-height: 0.95;'>
             Climate CoPilot
         </h1>
-        <p style='font-size: 15px; margin-bottom: 20px; color: #c4b5fd; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;'>
-            CC — aka CeCe, your climate & weather agent
+        <p style='font-size: 22px; margin-bottom: 24px; color: #c4b5fd; font-weight: 500; letter-spacing: 0.5px;'>
+            CC, aka CeCe: Your Climate & Weather Agent
         </p>
-        <p style='font-size: 20px; margin-bottom: 40px; color: #a1a1aa; font-weight: 400; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+        <p style='font-size: 24px; margin-bottom: 20px; color: #e5e7eb; font-weight: 400; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
             Climate is complicated. Your workflow shouldn't be.
         </p>
-        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 50px;">
-            <a href="#" style="display: inline-block; padding: 14px 32px; background: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Get Started</a>
-            <a href="#" style="display: inline-block; padding: 14px 32px; background: transparent; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">Learn More</a>
-        </div>
+        <p style='font-size: 18px; margin-bottom: 50px; color: #9ca3af; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+            Access real-time climate data, AI-powered analysis, and interactive visualizations through a single conversational interface. No complex APIs or data wrangling required.
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
