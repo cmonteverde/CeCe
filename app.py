@@ -284,14 +284,7 @@ css = """
 """
 st.markdown(css, unsafe_allow_html=True)
 
-# Add topography decoration 
-st.markdown("""
-<div style="position: absolute; top: 0; right: 0; width: 45%; min-width: 400px; height: 300px; z-index: 1; overflow: visible; pointer-events: none;">
-    <img src="data:image/png;base64,{topo_base64}" style="width: 100%; height: 100%; object-fit: cover; object-position: top right;">
-</div>
-""".format(topo_base64=b64encode(open("assets/topography.png", "rb").read()).decode()), unsafe_allow_html=True)
-
-# Remove the feedback button from here - we'll add it to the footer below
+# Topography decoration removed for cleaner look
 
 # Add topographic background patterns and corner elements
 st.markdown("""
