@@ -258,35 +258,32 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Show logo and title with generous spacing
-    logo_base64 = get_logo_base64()
+    # Navigation header (Gladia-style)
+    st.markdown("""
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
+        <div style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</div>
+        <nav style="display: flex; gap: 32px; align-items: center;">
+            <a href="#features" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
+            <a href="#data" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
+            <a href="#about" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
+            <a href="https://github.com" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
+        </nav>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Add vertical breathing room at top
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+    # Add vertical breathing room before hero
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
-    if logo_base64:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(f"data:image/png;base64,{logo_base64}", width=150)
-            st.markdown("""
-            <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
-                background: linear-gradient(135deg, #64B5F6, #1E88E5);
-                -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-                Climate CoPilot
-            </h1>
-            """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <h1 style='text-align: center; font-size: 52px; font-weight: 800; margin-bottom: 16px; margin-top: 20px;
-            background: linear-gradient(135deg, #64B5F6, #1E88E5);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>
-            Climate CoPilot
-        </h1>
-        """, unsafe_allow_html=True)
+    # Hero title
+    st.markdown("""
+    <h1 style='text-align: center; font-size: 56px; font-weight: 700; margin-bottom: 20px; color: #ffffff; letter-spacing: -1px; line-height: 1.1;'>
+        Climate CoPilot
+    </h1>
+    """, unsafe_allow_html=True)
 
     st.markdown("""
-    <p style='text-align: center; font-size: 22px; margin-bottom: 40px; color: #BBDEFB; font-weight: 300; letter-spacing: 1px;'>
-        AI-Powered Climate Intelligence Platform
+    <p style='text-align: center; font-size: 20px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 600px; margin-left: auto; margin-right: auto;'>
+        From raw data to insights — one place, no friction.
     </p>
     """, unsafe_allow_html=True)
 
