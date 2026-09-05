@@ -275,10 +275,11 @@ def create_satellite_homepage():
     # Gladia-style navigation header (dark pill container)
     st.markdown(f"""
     <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 12px 24px; max-width: 900px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 12px 24px; max-width: 950px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 {logo_img}
                 <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+                <span style="font-size: 13px; color: #9ca3af; font-weight: 400; margin-left: 4px;">CC, aka CeCe</span>
             </div>
             <nav style="display: flex; gap: 28px; align-items: center;">
                 <a href="#features" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
@@ -303,19 +304,16 @@ def create_satellite_homepage():
     </div>
     """, unsafe_allow_html=True)
 
-    # Hero section with larger typography
+    # Hero section with cleaner hierarchy
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 88px; font-weight: 600; margin-bottom: 28px; color: #ffffff; letter-spacing: -4px; line-height: 0.95;'>
+        <h1 style='font-size: 72px; font-weight: 600; margin-bottom: 12px; color: #ffffff; letter-spacing: -3px; line-height: 1.0;'>
             Climate CoPilot
         </h1>
-        <p style='font-size: 22px; margin-bottom: 24px; color: #c4b5fd; font-weight: 500; letter-spacing: 0.5px;'>
-            CC, aka CeCe: Your Climate & Weather Agent
-        </p>
-        <p style='font-size: 24px; margin-bottom: 20px; color: #e5e7eb; font-weight: 400; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
+        <p style='font-size: 36px; margin-bottom: 40px; color: #e5e7eb; font-weight: 400; letter-spacing: -0.5px;'>
             Climate is complicated. Your workflow shouldn't be.
         </p>
-        <p style='font-size: 18px; margin-bottom: 50px; color: #9ca3af; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+        <p style='font-size: 24px; margin-bottom: 50px; color: #ffffff; font-weight: 500; max-width: 750px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
             Access real-time climate data, AI-powered analysis, and interactive visualizations through a single conversational interface. No complex APIs or data wrangling required.
         </p>
     </div>
