@@ -258,10 +258,10 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Warm ambient glow background
+    # Prominent purple/violet ambient glow background
     st.markdown("""
     <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
-        <div style="position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(ellipse at center, rgba(251,146,60,0.12) 0%, rgba(251,146,60,0.05) 30%, transparent 70%); filter: blur(60px);"></div>
+        <div style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; background: radial-gradient(ellipse at center, rgba(147,112,219,0.25) 0%, rgba(139,92,246,0.15) 25%, rgba(99,102,241,0.08) 50%, transparent 70%); filter: blur(40px);"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -286,20 +286,34 @@ def create_satellite_homepage():
     """, unsafe_allow_html=True)
 
     # Add vertical breathing room before hero
-    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
-    # Hero section with improved typography
+    # Beta pill badge
+    st.markdown("""
+    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 28px;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 50px; padding: 8px 18px; font-size: 13px; color: #a78bfa; font-weight: 500;">
+            <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
+            BETA — Research Preview
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Hero section with larger typography
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 80px; font-weight: 800; margin-bottom: 20px; color: #ffffff; letter-spacing: -3px; line-height: 0.95;'>
+        <h1 style='font-size: 88px; font-weight: 600; margin-bottom: 24px; color: #ffffff; letter-spacing: -4px; line-height: 0.95;'>
             Climate CoPilot
         </h1>
-        <p style='font-size: 18px; margin-bottom: 16px; color: #fb923c; font-weight: 500; letter-spacing: 0.5px;'>
+        <p style='font-size: 15px; margin-bottom: 20px; color: #c4b5fd; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;'>
             CC — aka CeCe, your climate & weather agent
         </p>
-        <p style='font-size: 20px; margin-bottom: 60px; color: #a1a1aa; font-weight: 400; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
+        <p style='font-size: 20px; margin-bottom: 40px; color: #a1a1aa; font-weight: 400; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6;'>
             Climate is complicated. Your workflow shouldn't be.
         </p>
+        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 50px;">
+            <a href="#" style="display: inline-block; padding: 14px 32px; background: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Get Started</a>
+            <a href="#" style="display: inline-block; padding: 14px 32px; background: transparent; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">Learn More</a>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
