@@ -258,37 +258,37 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Section 1: Light page background - soft lavender wash
+    # Section 1: Sunrise gradient background (purple → orange → yellow → white)
     st.markdown("""
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; background: linear-gradient(180deg, #F3F0FF 0%, #FFFFFF 45%);"></div>
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; background: linear-gradient(180deg, #2D1B4E 0%, #F97316 20%, #FDE68A 35%, #FFFFFF 50%, #FFFFFF 100%);"></div>
     """, unsafe_allow_html=True)
 
-    # Get logo for header
-    logo_base64 = get_logo_base64()
-    logo_img = f'<img src="data:image/png;base64,{logo_base64}" width="32" height="32" style="border-radius: 6px;">' if logo_base64 else ''
-
-    # Section 2: Nav bar - dark charcoal pill on light background
-    st.markdown(f"""
-    <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #16161A; border-radius: 50px; padding: 14px 24px; max-width: 900px; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                {logo_img}
-                <span style="font-size: 20px; font-weight: 700; color: #F5F5F7; letter-spacing: -0.5px;">CeCe</span>
-            </div>
-            <nav style="display: flex; gap: 28px; align-items: center;">
-                <a href="#features" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
-                <a href="#data" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
-                <a href="#about" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
-                <a href="https://github.com" target="_blank" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
+    # Section 2: Oversized nav bar - "Climate CoPilot" text, 3x scale, 92-95vw width
+    st.markdown("""
+    <style>
+        @media (max-width: 768px) {
+            .nav-oversized { font-size: 24px !important; }
+            .nav-link-oversized { font-size: 24px !important; }
+            .nav-pill-oversized { padding: 20px 24px !important; flex-wrap: wrap; gap: 16px !important; justify-content: center !important; }
+        }
+    </style>
+    <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 2.5vw;">
+        <div class="nav-pill-oversized" style="display: flex; justify-content: space-between; align-items: center; background: #16161A; border-radius: 999px; padding: 24px 48px; width: 95vw; max-width: 95vw;">
+            <span class="nav-oversized" style="font-size: 45px; font-weight: 700; color: #F5F5F7; letter-spacing: -1px;">Climate CoPilot</span>
+            <nav style="display: flex; gap: 40px; align-items: center;">
+                <a href="#features" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">Features</a>
+                <a href="#data" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">Data Sources</a>
+                <a href="#about" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">About</a>
+                <a href="https://github.com" target="_blank" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">GitHub</a>
             </nav>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Section 3: Hero top gap (96px from nav to headline)
-    st.markdown("<div style='height: 96px;'></div>", unsafe_allow_html=True)
+    # Hero top gap - enough padding so headline lands on orange/white, not purple
+    st.markdown("<div style='height: 160px;'></div>", unsafe_allow_html=True)
 
-    # Section 3: Badge - white pill for light background
+    # Badge - white pill (unchanged from pass 2)
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 32px;">
         <span style="display: inline-flex; align-items: center; gap: 8px; background: #FFFFFF; border: 1px solid #E4E4EA; border-radius: 50px; padding: 8px 16px; font-size: 13px; color: #16161A; font-weight: 500;">
@@ -298,16 +298,19 @@ def create_satellite_homepage():
     </div>
     """, unsafe_allow_html=True)
 
-    # Section 4: Hero headline and subheadline - deeper gradient for light bg
+    # Section 3: Headline - the tagline becomes the headline, solid black, 8.25rem
     st.markdown("""
-    <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 5.5rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.02em; line-height: 1.0; background: linear-gradient(90deg, #0C7FF2 0%, #7C3AED 55%, #DB2777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;'>
-            Climate CoPilot
-        </h1>
-        <p style='font-size: 1.5rem; margin-bottom: 28px; color: #4B5563; font-weight: 400; line-height: 1.4;'>
+    <style>
+        @media (max-width: 768px) {
+            .headline-oversized { font-size: 4.125rem !important; }
+            .intro-oversized { font-size: 1.5rem !important; }
+        }
+    </style>
+    <div style="position: relative; z-index: 1; text-align: center; max-width: 900px; margin: 0 auto;">
+        <h1 class="headline-oversized" style='font-size: 8.25rem; font-weight: 800; margin-bottom: 40px; letter-spacing: -0.03em; line-height: 1.0; color: #000000;'>
             Climate is complicated. Your workflow shouldn't be.
-        </p>
-        <p style='font-size: 18px; margin-bottom: 50px; color: #6B7280; font-weight: 400; max-width: 65ch; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+        </h1>
+        <p class="intro-oversized" style='font-size: 3.375rem; margin-bottom: 60px; color: #000000; font-weight: 400; max-width: 65ch; margin-left: auto; margin-right: auto; line-height: 1.3;'>
             Access real-time climate data, AI-powered analysis, and interactive visualizations through a single conversational interface. No complex APIs or data wrangling required.
         </p>
     </div>
