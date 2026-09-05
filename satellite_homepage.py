@@ -258,10 +258,24 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
+    # Warm ambient glow background
+    st.markdown("""
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
+        <div style="position: absolute; top: 20%; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(ellipse at center, rgba(251,146,60,0.12) 0%, rgba(251,146,60,0.05) 30%, transparent 70%); filter: blur(60px);"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Navigation header (Gladia-style)
     st.markdown("""
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
-        <div style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</div>
+    <div style="position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="opacity: 0.9;">
+                <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+                <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+                <line x1="2" y1="12" x2="22" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+            </svg>
+            <span style="font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+        </div>
         <nav style="display: flex; gap: 32px; align-items: center;">
             <a href="#features" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
             <a href="#data" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
@@ -272,25 +286,21 @@ def create_satellite_homepage():
     """, unsafe_allow_html=True)
 
     # Add vertical breathing room before hero
-    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 80px;'></div>", unsafe_allow_html=True)
 
-    # Hero title
+    # Hero section with improved typography
     st.markdown("""
-    <h1 style='text-align: center; font-size: 72px; font-weight: 700; margin-bottom: 12px; color: #ffffff; letter-spacing: -2px; line-height: 1.0;'>
-        Climate CoPilot
-    </h1>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <p style='text-align: center; font-size: 16px; margin-bottom: 24px; color: #64B5F6; font-weight: 500; letter-spacing: 1px;'>
-        CC — aka CeCe, your climate & weather agent
-    </p>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <p style='text-align: center; font-size: 18px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 500px; margin-left: auto; margin-right: auto;'>
-        Climate is complicated. Your workflow shouldn't be.
-    </p>
+    <div style="position: relative; z-index: 1; text-align: center;">
+        <h1 style='font-size: 80px; font-weight: 800; margin-bottom: 20px; color: #ffffff; letter-spacing: -3px; line-height: 0.95;'>
+            Climate CoPilot
+        </h1>
+        <p style='font-size: 18px; margin-bottom: 16px; color: #fb923c; font-weight: 500; letter-spacing: 0.5px;'>
+            CC — aka CeCe, your climate & weather agent
+        </p>
+        <p style='font-size: 20px; margin-bottom: 60px; color: #a1a1aa; font-weight: 400; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5;'>
+            Climate is complicated. Your workflow shouldn't be.
+        </p>
+    </div>
     """, unsafe_allow_html=True)
 
     # --- Blurred preview of the main CeCe interface as a teaser ---
