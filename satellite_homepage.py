@@ -283,35 +283,12 @@ def create_satellite_homepage():
 
     st.markdown("""
     <p style='text-align: center; font-size: 20px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 600px; margin-left: auto; margin-right: auto;'>
-        From raw data to insights — one place, no friction.
+        AI-powered climate intelligence for researchers and decision-makers.
     </p>
     """, unsafe_allow_html=True)
 
-    # Feature highlight cards
-    st.markdown("""
-    <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 0 auto 60px auto; max-width: 800px;">
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#127758;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Real-Time Climate Data</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#129302;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">AI-Powered Analysis</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(30,136,229,0.12); border: 1px solid rgba(100,181,246,0.25); border-radius: 24px; padding: 10px 20px;">
-            <span style="font-size: 20px;">&#128202;</span>
-            <span style="color: #E3F2FD; font-size: 15px; font-weight: 500;">Interactive Visualizations</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
     # --- Blurred preview of the main CeCe interface as a teaser ---
-    # Build a mock screenshot of the main interface elements
-    preview_logo = ""
-    if logo_base64:
-        preview_logo = f'<img src="data:image/png;base64,{logo_base64}" width="60" style="border-radius: 50%; margin-right: 12px;">'
-
-    st.markdown(f"""
+    st.markdown("""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
         <!-- Blurred mock preview of the main interface -->
         <div style="
@@ -326,7 +303,6 @@ def create_satellite_homepage():
         ">
             <!-- Mock header -->
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
-                {preview_logo}
                 <span style="font-size: 22px; font-weight: bold; color: #64B5F6;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
             </div>
             <!-- Mock welcome message -->
