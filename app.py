@@ -489,45 +489,33 @@ if st.session_state.show_homepage:
     # Show satellite homepage
     map_data = satellite_homepage.create_satellite_homepage()
     
-    # Prominent Launch CTA button overlaid on top of the blurred preview
+    # Clean CTA button matching new design system
     st.markdown("""
     <style>
-    /* Pull the button container up into the blurred preview area */
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"]:has(button[kind="primary"]) {
-        margin-top: -200px !important;
-        position: relative !important;
-        z-index: 1000 !important;
-    }
+    /* Position button naturally below preview */
     div[data-testid="stButton"] > button[kind="primary"] {
-        background: linear-gradient(135deg, #1E90FF, #9370DB) !important;
+        background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
         color: white !important;
-        font-size: 24px !important;
-        font-weight: 700 !important;
-        padding: 22px 60px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        padding: 14px 32px !important;
         border: none !important;
-        border-radius: 16px !important;
-        box-shadow:
-            0 8px 32px rgba(30, 144, 255, 0.5),
-            0 0 60px rgba(147, 112, 219, 0.3),
-            inset 0 1px 0 rgba(255,255,255,0.2) !important;
-        transition: all 0.3s ease !important;
-        letter-spacing: 1px !important;
-        text-transform: uppercase !important;
-        backdrop-filter: blur(10px) !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3) !important;
+        transition: all 0.2s ease !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
-        transform: translateY(-4px) scale(1.02) !important;
-        box-shadow:
-            0 14px 45px rgba(30, 144, 255, 0.6),
-            0 0 80px rgba(147, 112, 219, 0.4),
-            inset 0 1px 0 rgba(255,255,255,0.3) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("Launch Climate Copilot", type="primary", use_container_width=True):
+        if st.button("Launch CeCe", type="primary", use_container_width=True):
             st.session_state.show_homepage = False
             st.rerun()
     
