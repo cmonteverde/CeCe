@@ -55,17 +55,17 @@ st.set_page_config(
     }
 )
 
-# Set the page background to completely black
+# Set the page background to sunrise gradient (pass 3/4)
 st.markdown("""
 <style>
     .appview-container, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #000000;
+        background: linear-gradient(180deg, #2D1B4E 0%, #F97316 20%, #FDE68A 35%, #FFFFFF 50%, #FFFFFF 100%) !important;
     }
     [data-testid="stToolbar"] {
         right: 2rem;
     }
     section[data-testid="stSidebar"] {
-        background-color: #0D0D0D;
+        background-color: #F3F4F6;
     }
 </style>
 """, unsafe_allow_html=True)

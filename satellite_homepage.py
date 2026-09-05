@@ -258,28 +258,18 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Section 1: Sunrise gradient background (purple → orange → yellow → white)
-    st.markdown("""
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; background: linear-gradient(180deg, #2D1B4E 0%, #F97316 20%, #FDE68A 35%, #FFFFFF 50%, #FFFFFF 100%);"></div>
-    """, unsafe_allow_html=True)
+    # Background gradient is now applied via app.py on Streamlit's container elements
 
-    # Section 2: Oversized nav bar - "Climate CoPilot" text, 3x scale, 92-95vw width
+    # Nav bar - "Climate CoPilot" text, normal size, content-hugging width
     st.markdown("""
-    <style>
-        @media (max-width: 768px) {
-            .nav-oversized { font-size: 24px !important; }
-            .nav-link-oversized { font-size: 24px !important; }
-            .nav-pill-oversized { padding: 20px 24px !important; flex-wrap: wrap; gap: 16px !important; justify-content: center !important; }
-        }
-    </style>
-    <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 2.5vw;">
-        <div class="nav-pill-oversized" style="display: flex; justify-content: space-between; align-items: center; background: #16161A; border-radius: 999px; padding: 24px 48px; width: 95vw; max-width: 95vw;">
-            <span class="nav-oversized" style="font-size: 45px; font-weight: 700; color: #F5F5F7; letter-spacing: -1px;">Climate CoPilot</span>
-            <nav style="display: flex; gap: 40px; align-items: center;">
-                <a href="#features" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">Features</a>
-                <a href="#data" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">Data Sources</a>
-                <a href="#about" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">About</a>
-                <a href="https://github.com" target="_blank" class="nav-link-oversized" style="color: #F5F5F7; text-decoration: none; font-size: 45px; font-weight: 500;">GitHub</a>
+    <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #16161A; border-radius: 50px; padding: 14px 24px; max-width: 900px; width: 100%;">
+            <span style="font-size: 20px; font-weight: 700; color: #F5F5F7; letter-spacing: -0.5px;">Climate CoPilot</span>
+            <nav style="display: flex; gap: 28px; align-items: center;">
+                <a href="#features" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
+                <a href="#data" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
+                <a href="#about" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
+                <a href="https://github.com" target="_blank" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
             </nav>
         </div>
     </div>
