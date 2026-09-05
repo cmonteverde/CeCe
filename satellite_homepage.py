@@ -258,10 +258,24 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
+    # Prominent purple/violet ambient glow background
+    st.markdown("""
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
+        <div style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; background: radial-gradient(ellipse at center, rgba(147,112,219,0.25) 0%, rgba(139,92,246,0.15) 25%, rgba(99,102,241,0.08) 50%, transparent 70%); filter: blur(40px);"></div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Navigation header (Gladia-style)
     st.markdown("""
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
-        <div style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</div>
+    <div style="position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; max-width: 1200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="opacity: 0.9;">
+                <circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+                <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+                <line x1="2" y1="12" x2="22" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+            </svg>
+            <span style="font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+        </div>
         <nav style="display: flex; gap: 32px; align-items: center;">
             <a href="#features" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
             <a href="#data" style="color: #94a3b8; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
@@ -274,23 +288,33 @@ def create_satellite_homepage():
     # Add vertical breathing room before hero
     st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
 
-    # Hero title
+    # Beta pill badge
     st.markdown("""
-    <h1 style='text-align: center; font-size: 72px; font-weight: 700; margin-bottom: 12px; color: #ffffff; letter-spacing: -2px; line-height: 1.0;'>
-        Climate CoPilot
-    </h1>
+    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 28px;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 50px; padding: 8px 18px; font-size: 13px; color: #a78bfa; font-weight: 500;">
+            <span style="width: 6px; height: 6px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
+            BETA — Research Preview
+        </span>
+    </div>
     """, unsafe_allow_html=True)
 
+    # Hero section with larger typography
     st.markdown("""
-    <p style='text-align: center; font-size: 16px; margin-bottom: 24px; color: #64B5F6; font-weight: 500; letter-spacing: 1px;'>
-        CC — aka CeCe, your climate & weather agent
-    </p>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <p style='text-align: center; font-size: 18px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 500px; margin-left: auto; margin-right: auto;'>
-        Climate is complicated. Your workflow shouldn't be.
-    </p>
+    <div style="position: relative; z-index: 1; text-align: center;">
+        <h1 style='font-size: 88px; font-weight: 600; margin-bottom: 24px; color: #ffffff; letter-spacing: -4px; line-height: 0.95;'>
+            Climate CoPilot
+        </h1>
+        <p style='font-size: 15px; margin-bottom: 20px; color: #c4b5fd; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;'>
+            CC — aka CeCe, your climate & weather agent
+        </p>
+        <p style='font-size: 20px; margin-bottom: 40px; color: #a1a1aa; font-weight: 400; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+            Climate is complicated. Your workflow shouldn't be.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 50px;">
+            <a href="#" style="display: inline-block; padding: 14px 32px; background: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 600;">Get Started</a>
+            <a href="#" style="display: inline-block; padding: 14px 32px; background: transparent; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">Learn More</a>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
     # --- Blurred preview of the main CeCe interface as a teaser ---
