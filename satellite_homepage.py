@@ -276,14 +276,20 @@ def create_satellite_homepage():
 
     # Hero title
     st.markdown("""
-    <h1 style='text-align: center; font-size: 56px; font-weight: 700; margin-bottom: 20px; color: #ffffff; letter-spacing: -1px; line-height: 1.1;'>
+    <h1 style='text-align: center; font-size: 72px; font-weight: 700; margin-bottom: 12px; color: #ffffff; letter-spacing: -2px; line-height: 1.0;'>
         Climate CoPilot
     </h1>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <p style='text-align: center; font-size: 20px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 600px; margin-left: auto; margin-right: auto;'>
-        AI-powered climate intelligence for researchers and decision-makers.
+    <p style='text-align: center; font-size: 16px; margin-bottom: 24px; color: #64B5F6; font-weight: 500; letter-spacing: 1px;'>
+        CC — aka CeCe, your climate & weather agent
+    </p>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <p style='text-align: center; font-size: 18px; margin-bottom: 50px; color: #94a3b8; font-weight: 400; max-width: 500px; margin-left: auto; margin-right: auto;'>
+        Climate is complicated. Your workflow shouldn't be.
     </p>
     """, unsafe_allow_html=True)
 
