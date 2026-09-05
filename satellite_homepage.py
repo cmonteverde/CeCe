@@ -258,31 +258,28 @@ def create_satellite_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Background glow: purple center + warm gold corner (Section 4)
+    # Section 1: Light page background - soft lavender wash
     st.markdown("""
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;">
-        <div style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px; background: radial-gradient(ellipse at center, rgba(147,112,219,0.25) 0%, rgba(139,92,246,0.15) 25%, rgba(99,102,241,0.08) 50%, transparent 70%); filter: blur(40px);"></div>
-        <div style="position: absolute; top: 5%; right: 10%; width: 400px; height: 400px; background: radial-gradient(ellipse at center, rgba(253,230,138,0.12) 0%, rgba(253,230,138,0.06) 40%, transparent 70%); filter: blur(60px);"></div>
-    </div>
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; background: linear-gradient(180deg, #F3F0FF 0%, #FFFFFF 45%);"></div>
     """, unsafe_allow_html=True)
 
     # Get logo for header
     logo_base64 = get_logo_base64()
     logo_img = f'<img src="data:image/png;base64,{logo_base64}" width="32" height="32" style="border-radius: 6px;">' if logo_base64 else ''
 
-    # Section 1: Nav bar - clean logo lockup, increased padding
+    # Section 2: Nav bar - dark charcoal pill on light background
     st.markdown(f"""
     <div style="position: relative; z-index: 1; display: flex; justify-content: center; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(40,40,45,0.95); border-radius: 50px; padding: 14px 24px; max-width: 900px; width: 100%; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #16161A; border-radius: 50px; padding: 14px 24px; max-width: 900px; width: 100%;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 {logo_img}
-                <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">CeCe</span>
+                <span style="font-size: 20px; font-weight: 700; color: #F5F5F7; letter-spacing: -0.5px;">CeCe</span>
             </div>
             <nav style="display: flex; gap: 28px; align-items: center;">
-                <a href="#features" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
-                <a href="#data" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
-                <a href="#about" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
-                <a href="https://github.com" target="_blank" style="color: #d1d5db; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
+                <a href="#features" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Features</a>
+                <a href="#data" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">Data Sources</a>
+                <a href="#about" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">About</a>
+                <a href="https://github.com" target="_blank" style="color: #F5F5F7; text-decoration: none; font-size: 15px; font-weight: 500;">GitHub</a>
             </nav>
         </div>
     </div>
@@ -291,72 +288,73 @@ def create_satellite_homepage():
     # Section 3: Hero top gap (96px from nav to headline)
     st.markdown("<div style='height: 96px;'></div>", unsafe_allow_html=True)
 
-    # Section 2: Badge - live data sources with gold dot
+    # Section 3: Badge - white pill for light background
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 32px;">
-        <span style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 50px; padding: 8px 16px; font-size: 13px; color: #d1d5db; font-weight: 500;">
+        <span style="display: inline-flex; align-items: center; gap: 8px; background: #FFFFFF; border: 1px solid #E4E4EA; border-radius: 50px; padding: 8px 16px; font-size: 13px; color: #16161A; font-weight: 500;">
             <span style="width: 6px; height: 6px; background: #FBBF24; border-radius: 50%; display: inline-block;"></span>
             BETA — live NASA · NOAA · CSIRO data
         </span>
     </div>
     """, unsafe_allow_html=True)
 
-    # Section 3: Hero headline and subheadline
+    # Section 4: Hero headline and subheadline - deeper gradient for light bg
     st.markdown("""
     <div style="position: relative; z-index: 1; text-align: center;">
-        <h1 style='font-size: 5.5rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.02em; line-height: 1.0; background: linear-gradient(135deg, #64B5F6, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;'>
+        <h1 style='font-size: 5.5rem; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.02em; line-height: 1.0; background: linear-gradient(90deg, #0C7FF2 0%, #7C3AED 55%, #DB2777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;'>
             Climate CoPilot
         </h1>
-        <p style='font-size: 1.5rem; margin-bottom: 28px; color: #B8B8CC; font-weight: 400; line-height: 1.4;'>
+        <p style='font-size: 1.5rem; margin-bottom: 28px; color: #4B5563; font-weight: 400; line-height: 1.4;'>
             Climate is complicated. Your workflow shouldn't be.
         </p>
-        <p style='font-size: 18px; margin-bottom: 50px; color: #A8A8BC; font-weight: 400; max-width: 65ch; margin-left: auto; margin-right: auto; line-height: 1.6;'>
+        <p style='font-size: 18px; margin-bottom: 50px; color: #6B7280; font-weight: 400; max-width: 65ch; margin-left: auto; margin-right: auto; line-height: 1.6;'>
             Access real-time climate data, AI-powered analysis, and interactive visualizations through a single conversational interface. No complex APIs or data wrangling required.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Blurred preview of the main CeCe interface as a teaser ---
+    # Section 6: Chat preview card - light theme
     st.markdown("""
     <div style="position: relative; max-width: 900px; margin: 0 auto 40px auto;">
-        <!-- Blurred mock preview of the main interface -->
+        <!-- Light preview card -->
         <div style="
-            background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 40%, #1b1040 100%);
+            background: #FAFAFC;
             border-radius: 20px;
             padding: 40px;
-            filter: blur(3px);
-            -webkit-filter: blur(3px);
-            border: 1px solid rgba(100,181,246,0.15);
+            filter: blur(2px);
+            -webkit-filter: blur(2px);
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
             pointer-events: none;
             user-select: none;
         ">
             <!-- Mock header -->
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
-                <span style="font-size: 22px; font-weight: bold; color: #64B5F6;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
+                <span style="font-size: 20px; font-weight: bold; color: #16161A;">CECE: YOUR CLIMATE & WEATHER AGENT</span>
             </div>
             <!-- Mock welcome message -->
-            <div style="background: rgba(30,136,229,0.15); border-radius: 12px; padding: 20px; margin-bottom: 25px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                <p style="color: #B0BEC5; font-size: 14px; margin: 0;">CeCe (Climate Copilot)</p>
-                <p style="color: #E0E0E0; font-size: 15px; margin: 8px 0 0 0;">Welcome! I can help you analyze climate data, weather patterns, and environmental risks across industries...</p>
+            <div style="background: #F3F4F6; border-radius: 12px; padding: 20px; margin-bottom: 25px; max-width: 700px; margin-left: auto; margin-right: auto;">
+                <p style="color: #6B7280; font-size: 14px; margin: 0;">CeCe (Climate Copilot)</p>
+                <p style="color: #374151; font-size: 15px; margin: 8px 0 0 0;">Welcome! I can help you analyze climate data, weather patterns, and environmental risks across industries...</p>
             </div>
             <!-- Mock earth visualization placeholder -->
-            <div style="background: rgba(0,0,0,0.4); border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
-                <span style="color: #37474F; font-size: 48px;">&#127758;</span>
+            <div style="background: #E5E7EB; border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                <span style="color: #9CA3AF; font-size: 48px;">&#127758;</span>
             </div>
-            <!-- Mock industry buttons -->
+            <!-- Section 7: Category buttons - outlined chips -->
             <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Agriculture</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Energy</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Insurance</div>
-                <div style="background: rgba(147,112,219,0.2); border: 1px solid rgba(147,112,219,0.3); border-radius: 10px; padding: 12px 18px; color: #9370DB; font-size: 13px;">Transportation</div>
+                <div style="background: transparent; border: 1px solid #D1D5DB; border-radius: 10px; padding: 12px 18px; color: #374151; font-size: 13px;">Agriculture</div>
+                <div style="background: transparent; border: 1px solid #D1D5DB; border-radius: 10px; padding: 12px 18px; color: #374151; font-size: 13px;">Energy</div>
+                <div style="background: transparent; border: 1px solid #D1D5DB; border-radius: 10px; padding: 12px 18px; color: #374151; font-size: 13px;">Insurance</div>
+                <div style="background: transparent; border: 1px solid #D1D5DB; border-radius: 10px; padding: 12px 18px; color: #374151; font-size: 13px;">Transportation</div>
             </div>
         </div>
-        <!-- Overlay gradient fade at bottom to blend into background -->
+        <!-- Overlay gradient fade at bottom to blend into light background -->
         <div style="
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 80px;
-            background: linear-gradient(transparent, #000000);
+            background: linear-gradient(transparent, #FFFFFF);
             border-radius: 0 0 20px 20px;
             pointer-events: none;
         "></div>
